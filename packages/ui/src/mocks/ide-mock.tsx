@@ -1,6 +1,7 @@
 import { PRODUCTS } from "@codeloom/config";
 
 import { BorderBeam } from "../magic/border-beam";
+import { cn } from "../lib/utils";
 
 const product = PRODUCTS.ide;
 
@@ -14,9 +15,9 @@ const code = [
   { n: 16, t: "}", c: "text-zinc-200" },
 ];
 
-export function IdeMock() {
+export function IdeMock({ className }: { className?: string }) {
   return (
-    <div className="relative mx-auto max-w-4xl">
+    <div className={cn("relative mx-auto max-w-4xl", className)}>
       <div className="absolute -inset-8 rounded-[32px] bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.2),transparent_70%)] blur-2xl" />
       <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b10] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)]">
         <BorderBeam colorFrom={product.accent.from} colorTo={product.accent.to} size={140} />

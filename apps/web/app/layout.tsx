@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, IBM_Plex_Mono, IBM_Plex_Sans, Newsreader, Syne } from "next/font/google";
 import { AUTHOR, PRODUCTS } from "@codeloom/config";
 
 import "./globals.css";
@@ -12,6 +12,28 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-geist-mono",
+});
+
+const syne = Syne({
+  subsets: ["latin"],
+  variable: "--font-syne",
+});
+
+const plexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-ibm-plex-sans",
+});
+
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-ibm-plex-mono",
+});
+
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  variable: "--font-newsreader",
 });
 
 const product = PRODUCTS.agent;
@@ -41,7 +63,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} ${syne.variable} ${plexSans.variable} ${plexMono.variable} ${newsreader.variable}`}
+    >
       <body className="antialiased">{children}</body>
     </html>
   );

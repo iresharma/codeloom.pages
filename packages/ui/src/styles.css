@@ -1,6 +1,10 @@
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-syne), var(--font-geist-sans), ui-sans-serif, sans-serif;
+  --font-plex: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-plex-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  --font-serif: var(--font-newsreader), ui-serif, Georgia, serif;
   --color-background: #050507;
   --color-foreground: #f4f4f5;
   --color-muted: #a1a1aa;
@@ -16,6 +20,9 @@
   --animate-meteor: meteor 5s linear infinite;
   --animate-grid: grid 15s linear infinite;
   --animate-pulse-slow: pulse 6s ease-in-out infinite;
+  --animate-spotlight: spotlight 2s ease 0.75s 1 forwards;
+  --animate-crt-flicker: crt-flicker 6s linear infinite;
+  --animate-caret: caret 1s step-end infinite;
 }
 
 @keyframes marquee {
@@ -98,6 +105,44 @@
   }
 }
 
+@keyframes spotlight {
+  0% {
+    opacity: 0;
+    transform: translate(-72%, -62%) scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -40%) scale(1);
+  }
+}
+
+@keyframes crt-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  93% {
+    opacity: 0.92;
+  }
+  94% {
+    opacity: 1;
+  }
+}
+
+@keyframes caret {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
 html,
 body {
   background: var(--color-background);
@@ -126,4 +171,68 @@ body {
   background-clip: text;
   color: transparent;
   animation: gradient 6s linear infinite;
+}
+
+.theme-agent {
+  --color-background: #07060b;
+  --color-foreground: #f5f0e8;
+  --color-muted: #b3a99a;
+  --color-card: #100e16;
+  --color-border: rgba(255, 196, 120, 0.12);
+  background: #07060b;
+  color: #f5f0e8;
+  font-family: var(--font-sans);
+}
+
+.theme-agent h1,
+.theme-agent h2,
+.theme-agent .font-display {
+  font-family: var(--font-display);
+}
+
+.theme-ide {
+  --color-background: #1e1e1e;
+  --color-foreground: #d4d4d4;
+  --color-muted: #9d9d9d;
+  --color-card: #252526;
+  --color-border: rgba(255, 255, 255, 0.08);
+  background: #1e1e1e;
+  color: #d4d4d4;
+  font-family: var(--font-sans);
+}
+
+.theme-tui {
+  --font-sans: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  --color-background: #03140c;
+  --color-foreground: #d8ffe8;
+  --color-muted: #6fbf90;
+  --color-card: #061c12;
+  --color-border: rgba(52, 211, 153, 0.22);
+  background: #03140c;
+  color: #d8ffe8;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+}
+
+.theme-cli {
+  --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  --color-background: #f4efe4;
+  --color-foreground: #1c1812;
+  --color-muted: #6b6358;
+  --color-card: #fffdf7;
+  --color-border: rgba(28, 24, 18, 0.12);
+  background: #f4efe4;
+  color: #1c1812;
+  font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.theme-cli h1,
+.theme-cli h2,
+.theme-cli .font-serif {
+  font-family: var(--font-serif);
+}
+
+.theme-cli ::selection {
+  background: color-mix(in srgb, #0ea5e9 35%, transparent);
 }

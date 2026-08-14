@@ -1,37 +1,31 @@
 import { type Product } from "@codeloom/config";
-import { type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 
-import { Cta } from "./cta";
-import { Ecosystem } from "./ecosystem";
-import { Footer } from "./footer";
-import { Navbar } from "./navbar";
-import { Stats } from "./stats";
 import { cn } from "../lib/utils";
 
 export function ProductShell({
   product,
   children,
+  className,
 }: {
   product: Product;
   children: ReactNode;
+  className?: string;
 }) {
   return (
     <div
-      className={cn("min-h-screen bg-background text-foreground")}
+      data-product={product.id}
+      className={cn("theme-product min-h-screen text-foreground", `theme-${product.id}`, className)}
       style={
         {
           "--product-accent": product.accent.solid,
           "--product-from": product.accent.from,
           "--product-to": product.accent.to,
-        } as React.CSSProperties
+          "--product-glow": product.accent.glow,
+        } as CSSProperties
       }
     >
-      <Navbar product={product} />
-      <main>{children}</main>
-      <Stats product={product} />
-      <Ecosystem current={product} />
-      <Cta product={product} />
-      <Footer product={product} />
+      {children}
     </div>
   );
 }
