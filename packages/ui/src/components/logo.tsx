@@ -4,7 +4,17 @@ import { useId } from "react";
 
 import { cn } from "../lib/utils";
 
-export function Logo({ className, markOnly }: { className?: string; markOnly?: boolean }) {
+export function Logo({
+  className,
+  markOnly,
+  label = "CodeLoom",
+  invert = false,
+}: {
+  className?: string;
+  markOnly?: boolean;
+  label?: string;
+  invert?: boolean;
+}) {
   const id = useId();
 
   return (
@@ -12,8 +22,8 @@ export function Logo({ className, markOnly }: { className?: string; markOnly?: b
       <svg viewBox="0 0 32 32" className="size-7 shrink-0" aria-hidden>
         <defs>
           <linearGradient id={id} x1="0" y1="0" x2="32" y2="32">
-            <stop offset="0%" stopColor="var(--product-from, #ffaa40)" />
-            <stop offset="100%" stopColor="var(--product-to, #9c40ff)" />
+            <stop offset="0%" stopColor={invert ? "#1c1812" : "var(--product-from, #ffaa40)"} />
+            <stop offset="100%" stopColor={invert ? "#0ea5e9" : "var(--product-to, #9c40ff)"} />
           </linearGradient>
         </defs>
         <rect x="1.5" y="1.5" width="29" height="29" rx="8" fill="none" stroke={`url(#${id})`} strokeWidth="1.5" />
@@ -34,7 +44,9 @@ export function Logo({ className, markOnly }: { className?: string; markOnly?: b
         />
       </svg>
       {markOnly ? null : (
-        <span className="text-[15px] font-semibold tracking-tight text-white">CodeLoom</span>
+        <span className={cn("text-[15px] font-semibold tracking-tight", invert ? "text-[#1c1812]" : "text-white")}>
+          {label}
+        </span>
       )}
     </span>
   );
