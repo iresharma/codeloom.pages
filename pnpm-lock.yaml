@@ -15,7 +15,118 @@ importers:
         specifier: ^5.9.2
         version: 5.9.3
 
-  apps/web:
+  apps/agent:
+    dependencies:
+      '@codeloom/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@codeloom/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      next:
+        specifier: ^15.5.2
+        version: 15.5.23(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react:
+        specifier: ^19.1.1
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.1.1
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4.1.12
+        version: 4.3.3
+      '@types/node':
+        specifier: ^22.17.2
+        version: 22.20.1
+      '@types/react':
+        specifier: ^19.1.10
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.1.7
+        version: 19.2.4(@types/react@19.2.18)
+      tailwindcss:
+        specifier: ^4.1.12
+        version: 4.3.3
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
+  apps/cli:
+    dependencies:
+      '@codeloom/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@codeloom/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      next:
+        specifier: ^15.5.2
+        version: 15.5.23(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react:
+        specifier: ^19.1.1
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.1.1
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4.1.12
+        version: 4.3.3
+      '@types/node':
+        specifier: ^22.17.2
+        version: 22.20.1
+      '@types/react':
+        specifier: ^19.1.10
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.1.7
+        version: 19.2.4(@types/react@19.2.18)
+      tailwindcss:
+        specifier: ^4.1.12
+        version: 4.3.3
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
+  apps/ide:
+    dependencies:
+      '@codeloom/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@codeloom/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      next:
+        specifier: ^15.5.2
+        version: 15.5.23(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react:
+        specifier: ^19.1.1
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.1.1
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4.1.12
+        version: 4.3.3
+      '@types/node':
+        specifier: ^22.17.2
+        version: 22.20.1
+      '@types/react':
+        specifier: ^19.1.10
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.1.7
+        version: 19.2.4(@types/react@19.2.18)
+      tailwindcss:
+        specifier: ^4.1.12
+        version: 4.3.3
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
+  apps/tui:
     dependencies:
       '@codeloom/config':
         specifier: workspace:*

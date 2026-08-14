@@ -2,19 +2,21 @@
 
 Coming-soon landing pages for the CodeLoom family — an educational / resume project by [Iresh Sharma](https://iresharma.com).
 
-This is a single Next.js app today. Shared product copy and UI live in packages so each site can be split out later without rewriting the pages.
+Each product is its own Next.js app. Shared copy and UI live in `packages/` so the four sites stay visually consistent without sharing a server.
 
-| Product | Route (now) | Intended host |
+| Product | App | Host |
 | --- | --- | --- |
-| CodeLoom agent | `/` | [codeloom.iresharma.com](https://codeloom.iresharma.com) |
-| CodeLoom IDE | `/ide` | [ide.codeloom.iresharma.com](https://ide.codeloom.iresharma.com) |
-| CodeLoom TUI | `/tui` | [tui.codeloom.iresharma.com](https://tui.codeloom.iresharma.com) |
-| CodeLoom CLI | `/cli` | [cli.codeloom.iresharma.com](https://cli.codeloom.iresharma.com) |
+| CodeLoom agent | `apps/agent` | [codeloom.iresharma.com](https://codeloom.iresharma.com) |
+| CodeLoom IDE | `apps/ide` | [ide.codeloom.iresharma.com](https://ide.codeloom.iresharma.com) |
+| CodeLoom TUI | `apps/tui` | [tui.codeloom.iresharma.com](https://tui.codeloom.iresharma.com) |
+| CodeLoom CLI | `apps/cli` | [cli.codeloom.iresharma.com](https://cli.codeloom.iresharma.com) |
+
+Cross-product links use those hosts in production, and `localhost:3000`–`3003` during `pnpm dev`.
 
 ## Stack
 
 - pnpm workspaces + Turborepo
-- Next.js 15 (App Router) in `apps/web`
+- Next.js 15 (App Router) in `apps/*`
 - Shared UI in `packages/ui`
 - Product metadata, hosts, and GitHub URLs in `packages/config`
 
@@ -25,11 +27,20 @@ pnpm install
 pnpm dev
 ```
 
-App runs at [http://localhost:3000](http://localhost:3000).
+| App | Local URL |
+| --- | --- |
+| Agent | [http://localhost:3000](http://localhost:3000) |
+| IDE | [http://localhost:3001](http://localhost:3001) |
+| TUI | [http://localhost:3002](http://localhost:3002) |
+| CLI | [http://localhost:3003](http://localhost:3003) |
 
 ```bash
 pnpm build
 ```
+
+## Deploy
+
+Four Railway services in the `codeloom` project, one per app. Each service builds and starts with `pnpm --filter @codeloom/<app>`. Custom domains are attached in the Railway UI.
 
 ## Links on every page
 
@@ -37,23 +48,6 @@ pnpm build
 - Product repo: placeholder GitHub URL per surface (create the repo, the button is already wired)
 - [iresharma.com](https://iresharma.com)
 - [blog.iresharma.com](https://blog.iresharma.com)
-
-## Splitting into separate websites
-
-Everything is already isolated by product:
-
-1. `packages/config/src/products.ts` holds name, copy, host, path, and GitHub URLs.
-2. `packages/ui/src/landings/*` are the full pages.
-3. `apps/web` is a thin shell that imports those landings.
-
-To break them apart:
-
-1. Copy `apps/web` to `apps/ide` (or `tui` / `cli`).
-2. Keep only the landing you need in `app/page.tsx`.
-3. Point that app at the matching host.
-4. Set `NEXT_PUBLIC_SPLIT_SITES=true` so cross-product links become `https://*.codeloom.iresharma.com` instead of local routes.
-
-Middleware already rewrites `ide.codeloom.iresharma.com/` → `/ide` (and the same for TUI and CLI), so one Vercel project with multiple domains also works until you fully split.
 
 ## License
 

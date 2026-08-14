@@ -1,8 +1,14 @@
-export const SPLIT_SITES = process.env.NEXT_PUBLIC_SPLIT_SITES === "true";
+const LOCAL_PORTS: Record<string, number> = {
+  "codeloom.iresharma.com": 3000,
+  "ide.codeloom.iresharma.com": 3001,
+  "tui.codeloom.iresharma.com": 3002,
+  "cli.codeloom.iresharma.com": 3003,
+};
 
-export function productUrl(host: string, path: string) {
-  if (SPLIT_SITES) {
-    return `https://${host}`;
+export function productUrl(host: string) {
+  if (process.env.NODE_ENV !== "production") {
+    const port = LOCAL_PORTS[host];
+    if (port) return `http://localhost:${port}`;
   }
-  return path;
+  return `https://${host}`;
 }

@@ -12,7 +12,7 @@ export function Ecosystem({ current }: { current: Product }) {
       <SectionHeading
         eyebrow="Family"
         title="One loom, four surfaces"
-        description="Agent, IDE, TUI, and CLI share the same experiments. Today they live as routes. Tomorrow they can ship as their own sites without rewriting the UI."
+        description="Agent, IDE, TUI, and CLI share the same experiments. Each surface is its own site."
       />
       <div className="grid gap-4 md:grid-cols-3">
         {others.map((item) => (

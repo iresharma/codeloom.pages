@@ -13,7 +13,7 @@ export function Navbar({ product }: { product: Product }) {
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-[#050507]/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 md:px-8">
-        <a href={product.path === "/" ? "/" : product.path} className="flex items-center gap-2">
+        <a href="/" className="flex items-center gap-2">
           <Logo />
         </a>
 

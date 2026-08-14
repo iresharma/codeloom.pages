@@ -17,7 +17,7 @@ export function CliNav({ product }: { product: Product }) {
   return (
     <header className="sticky top-0 z-50 border-b border-[#1c1812]/10 bg-[#f4efe4]/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <a href={product.path} className="font-mono text-[13px] font-semibold tracking-tight text-[#1c1812]">
+        <a href="/" className="font-mono text-[13px] font-semibold tracking-tight text-[#1c1812]">
           CODELOOM(1)
         </a>
         <nav className="hidden items-center gap-4 font-mono text-[11px] tracking-wide text-[#6b6358] md:flex">
