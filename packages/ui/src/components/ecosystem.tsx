@@ -11,10 +11,10 @@ export function Ecosystem({ current }: { current: Product }) {
     <Section>
       <SectionHeading
         eyebrow="Family"
-        title="One loom, four surfaces"
-        description="Agent, IDE, TUI, and CLI share the same experiments. Each surface is its own site."
+        title="One loom, five surfaces"
+        description="Engine, Agent, IDE, TUI, and CLI share the same experiments. Each surface is its own site."
       />
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {others.map((item) => (
           <a
             key={item.id}

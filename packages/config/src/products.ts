@@ -1,7 +1,7 @@
 import { MOTHER_REPO } from "./links";
 import { productUrl } from "./site";
 
-export type ProductId = "agent" | "ide" | "tui" | "cli";
+export type ProductId = "agent" | "ide" | "tui" | "cli" | "engine";
 
 export type ProductAccent = {
   from: string;
@@ -55,6 +55,13 @@ const accents: Record<ProductId, ProductAccent> = {
     to: "#818cf8",
     solid: "#0ea5e9",
     glow: "rgba(14, 165, 233, 0.35)",
+  },
+  engine: {
+    name: "infrared",
+    from: "#ff5c33",
+    to: "#f2c14e",
+    solid: "#ff5c33",
+    glow: "rgba(255, 92, 51, 0.35)",
   },
 };
 
@@ -128,6 +135,29 @@ export const PRODUCTS: Record<ProductId, Product> = {
     keywords: ["cli coding agent", "ai cli", "codeloom cli"],
     accent: accents.cli,
   },
+  engine: {
+    id: "engine",
+    name: "CodeLoom Engine",
+    shortName: "Engine",
+    tagline: "A drop-in NDJSON Unix server for coding-agent workplaces.",
+    description:
+      "The local backend that manages sessions, wraps OpenRouter, and implements FileOps, Git, directory, and base tools — so the client you build can stay thin. Highly extendable. Still in development, and missing a lot.",
+    host: "engine.codeloom.iresharma.com",
+    path: "/",
+    href: productUrl("engine.codeloom.iresharma.com"),
+    github: "https://github.com/iresharma/codeloom-engine",
+    motherRepo: MOTHER_REPO,
+    comingSoon: true,
+    keywords: [
+      "coding agent backend",
+      "ndjson unix socket",
+      "openrouter",
+      "context folding",
+      "orchestrator subagents",
+      "codeloom engine",
+    ],
+    accent: accents.engine,
+  },
 };
 
 export const PRODUCT_LIST = Object.values(PRODUCTS);
@@ -137,6 +167,7 @@ export const HOST_TO_PRODUCT: Record<string, ProductId> = {
   "ide.codeloom.iresharma.com": "ide",
   "tui.codeloom.iresharma.com": "tui",
   "cli.codeloom.iresharma.com": "cli",
+  "engine.codeloom.iresharma.com": "engine",
 };
 
 export function productByHost(host: string | null): ProductId | null {

@@ -123,7 +123,7 @@ export function AgentLanding() {
         <section className="mx-auto max-w-7xl px-5 pb-8 md:px-8">
           <div className="grid gap-px overflow-hidden rounded-3xl border border-white/10 bg-white/5 md:grid-cols-3">
             {[
-              { label: "Surfaces in the family", value: 4, suffix: "" },
+              { label: "Surfaces in the family", value: 5, suffix: "" },
               { label: "Closed-source lines", value: 0, suffix: "" },
               { label: "Merge buttons you still own", value: 100, suffix: "%" },
             ].map((stat) => (
@@ -139,7 +139,7 @@ export function AgentLanding() {
 
         <section className="mx-auto max-w-7xl px-5 py-20 md:px-8">
           <p className="font-mono text-[11px] tracking-[0.25em] text-zinc-500 uppercase">Adjacent consoles</p>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {others.map((item) => (
               <a
                 key={item.id}

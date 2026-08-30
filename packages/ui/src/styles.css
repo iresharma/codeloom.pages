@@ -236,3 +236,51 @@ body {
 .theme-cli ::selection {
   background: color-mix(in srgb, #0ea5e9 35%, transparent);
 }
+
+.theme-engine {
+  --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  --color-background: #0c1014;
+  --color-foreground: #ece8e1;
+  --color-muted: #8ab4c8;
+  --color-card: #141a20;
+  --color-border: rgba(255, 92, 51, 0.22);
+  background: #0c1014;
+  color: #ece8e1;
+  font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.theme-engine h1,
+.theme-engine h2,
+.theme-engine h3,
+.theme-engine .font-display {
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+}
+
+.theme-engine ::selection {
+  background: color-mix(in srgb, #ff5c33 40%, transparent);
+}
+
+@keyframes fold-compress {
+  0% {
+    transform: scaleY(1);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scaleY(0.12);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scaleY(0.08);
+    opacity: 0.08;
+  }
+}
+
+@keyframes ndjson-scan {
+  0% {
+    transform: translateY(-40%);
+  }
+  100% {
+    transform: translateY(40%);
+  }
+}

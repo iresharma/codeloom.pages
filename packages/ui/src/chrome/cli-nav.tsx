@@ -27,7 +27,7 @@ export function CliNav({ product }: { product: Product }) {
             </a>
           ))}
         </nav>
-        <div className="flex items-center gap-3 font-mono text-[12px]">
+        <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 font-mono text-[12px]">
           {PRODUCT_LIST.map((item) => (
             <a
               key={item.id}

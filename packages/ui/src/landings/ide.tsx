@@ -134,7 +134,7 @@ export function IdeLanding() {
         <section className="bg-[#252526] px-4 py-16 md:px-8">
           <div className="mx-auto max-w-[1400px]">
             <p className="text-[11px] tracking-[0.2em] text-[#6a6a6a] uppercase">Extensions · family</p>
-            <div className="mt-6 grid gap-3 md:grid-cols-3">
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {others.map((item) => (
                 <a
                   key={item.id}
