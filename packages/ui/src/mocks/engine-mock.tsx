@@ -1,61 +1,85 @@
 "use client";
 
-import { motion } from "motion/react";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
+
+import { BorderBeam } from "../magic/border-beam";
 
 const lines = [
-  { t: "12:04:01.102", event: "session.open", body: 'id="s_08f1" cwd="/work/api"' },
-  { t: "12:04:01.118", event: "llm.wrap", body: "provider=openrouter model=anthropic/claude-sonnet-4" },
-  { t: "12:04:01.201", event: "tool.file.read", body: "path=src/auth.ts bytes=4120" },
-  { t: "12:04:01.340", event: "agent.spawn", body: 'role=worker task="patch flaky auth test"' },
-  { t: "12:04:03.881", event: "tool.git.status", body: "dirty=2 branch=main" },
-  { t: "12:04:08.002", event: "fold", body: "from=34 to=3 dropped=thinking,tool_noise" },
-  { t: "12:04:08.014", event: "session.delta", body: "orchestrator context += folded worker" },
+  { dir: "→", kind: "cmd", event: "StartSession", body: 'workspace="/work/api"' },
+  { dir: "←", kind: "evt", event: "SnapshotReady", body: "session=s_08f1  tree=214  git=main" },
+  { dir: "→", kind: "cmd", event: "OpenFile", body: "path=src/auth.ts" },
+  { dir: "←", kind: "evt", event: "FileContent", body: "src/auth.ts  148 lines" },
+  { dir: "→", kind: "cmd", event: "SubmitUserMessage", body: '"fix the flaky auth test"' },
+  { dir: "←", kind: "evt", event: "ChatMessageAdded", body: "role=assistant  one turn" },
+  { dir: "→", kind: "cmd", event: "RequestGit", body: "" },
+  { dir: "←", kind: "evt", event: "GitStateUpdated", body: "branch=main  dirty=true  unstaged=2" },
 ];
 
 export function EngineMock() {
+  const reduce = useReducedMotion();
+  const [visible, setVisible] = useState(reduce ? lines.length : 0);
+
+  useEffect(() => {
+    if (reduce) return;
+    let n = 0;
+    const id = window.setInterval(() => {
+      n += 1;
+      if (n > lines.length + 4) n = 0;
+      setVisible(n);
+    }, 520);
+    return () => window.clearInterval(id);
+  }, [reduce]);
+
+  const shown = reduce ? lines : lines.slice(0, Math.min(visible, lines.length));
+
   return (
     <div className="relative">
       <div className="absolute -inset-8 bg-[radial-gradient(ellipse_at_center,rgba(255,92,51,0.16),transparent_70%)] blur-2xl" />
-      <div className="relative overflow-hidden border border-[#ff5c33]/30 bg-[#080b0e] shadow-[0_40px_80px_-24px_rgba(0,0,0,0.85)]">
+      <motion.div
+        initial={reduce ? false : { opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="relative overflow-hidden border border-[#ff5c33]/30 bg-[#080b0e] shadow-[0_40px_80px_-24px_rgba(0,0,0,0.85)]"
+      >
+        <BorderBeam colorFrom="#ff5c33" colorTo="#f2c14e" size={90} duration={9} borderWidth={1.2} />
         <div className="flex items-center justify-between border-b border-[#ff5c33]/20 px-4 py-2 font-mono text-[11px]">
-          <span className="text-[#ff5c33]">codeloom-engine.sock</span>
-          <span className="text-[#8ab4c8]">NDJSON · unix · local</span>
+          <span className="text-[#ff5c33]">.engine/engine.sock</span>
+          <span className="text-[#8ab4c8]">NDJSON · unix · fan-out</span>
           <span className="text-[#f2c14e]">inspect</span>
         </div>
-        <div className="relative overflow-hidden px-4 py-3 font-mono text-[11px] leading-6 sm:text-[12px]">
+        <div className="relative min-h-[15.5rem] overflow-hidden px-4 py-3 font-mono text-[11px] leading-6 sm:text-[12px]">
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#ff5c33]/10 to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 h-px animate-engine-scan bg-gradient-to-r from-transparent via-[#ff5c33] to-transparent"
           />
-          {lines.map((line, i) => (
+          {shown.map((line) => (
             <motion.p
               key={line.event}
-              initial={{ opacity: 0, x: 8 }}
+              initial={reduce ? false : { opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.18 * i, duration: 0.35 }}
+              transition={{ duration: 0.28 }}
               className="flex flex-wrap gap-x-3"
             >
-              <span className="text-[#8ab4c8]/70">{line.t}</span>
-              <span className={line.event === "fold" ? "text-[#f2c14e]" : "text-[#ff5c33]"}>
-                {line.event}
-              </span>
-              <span className="text-[#ece8e1]/80">{line.body}</span>
+              <span className="w-3 text-[#8ab4c8]/70">{line.dir}</span>
+              <span className={line.kind === "cmd" ? "text-[#ff5c33]" : "text-[#f2c14e]"}>{line.event}</span>
+              {line.body ? <span className="text-[#ece8e1]/80">{line.body}</span> : null}
             </motion.p>
           ))}
           <motion.p
             className="mt-1 text-[#ff5c33]"
-            animate={{ opacity: [0.2, 1, 0.2] }}
+            animate={reduce ? undefined : { opacity: [0.2, 1, 0.2] }}
             transition={{ duration: 1.4, repeat: Infinity }}
           >
-            ▍ waiting on unix://
+            ▍ waiting on .engine/engine.sock
           </motion.p>
         </div>
         <div className="grid grid-cols-3 border-t border-[#ff5c33]/20 font-mono text-[10px] uppercase tracking-wider text-[#8ab4c8]">
-          <span className="border-r border-[#ff5c33]/20 px-3 py-2">sessions 1</span>
-          <span className="border-r border-[#ff5c33]/20 px-3 py-2">workers 1</span>
-          <span className="px-3 py-2 text-[#f2c14e]">folded 34→3</span>
+          <span className="border-r border-[#ff5c33]/20 px-3 py-2">sqlite sessions</span>
+          <span className="border-r border-[#ff5c33]/20 px-3 py-2">openrouter</span>
+          <span className="px-3 py-2 text-[#f2c14e]">1-turn loop</span>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

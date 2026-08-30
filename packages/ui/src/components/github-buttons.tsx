@@ -95,7 +95,7 @@ export function GithubButtons({
           href={product.motherRepo}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-2 border border-[#ff5c33] bg-[#ff5c33] px-5 py-2.5 font-mono text-[13px] font-medium tracking-wide text-[#0c1014] hover:bg-[#ff7a55]"
+          className="inline-flex items-center gap-2 border border-[#ff5c33] bg-[#ff5c33] px-5 py-2.5 font-mono text-[13px] font-medium tracking-wide text-[#0c1014] transition duration-200 hover:-translate-y-px hover:bg-[#ff7a55] active:translate-y-px"
         >
           <Github className="size-4" />
           Mother repo
@@ -104,7 +104,7 @@ export function GithubButtons({
           href={product.github}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-2 border border-[#ff5c33]/40 bg-transparent px-5 py-2.5 font-mono text-[13px] tracking-wide text-[#ece8e1] hover:border-[#ff5c33] hover:text-white"
+          className="inline-flex items-center gap-2 border border-[#ff5c33]/40 bg-transparent px-5 py-2.5 font-mono text-[13px] tracking-wide text-[#ece8e1] transition duration-200 hover:-translate-y-px hover:border-[#ff5c33] hover:text-white active:translate-y-px"
         >
           <Github className="size-4" />
           Engine repo

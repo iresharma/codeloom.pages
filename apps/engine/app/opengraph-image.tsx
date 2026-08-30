@@ -23,7 +23,7 @@ export default function OpenGraphImage() {
           color: "#ece8e1",
         }}
       >
-        <div style={{ fontSize: 22, color: "#ff5c33", letterSpacing: 8 }}>UNIX · NDJSON · IN DEVELOPMENT</div>
+        <div style={{ fontSize: 22, color: "#ff5c33", letterSpacing: 8 }}>UNIX · JSON-IPC · IN DEVELOPMENT</div>
         <div style={{ fontSize: 76, fontWeight: 700, marginTop: 16 }}>{product.name}</div>
         <div style={{ fontSize: 28, color: "#f2c14e", marginTop: 12 }}>{product.tagline}</div>
       </div>
