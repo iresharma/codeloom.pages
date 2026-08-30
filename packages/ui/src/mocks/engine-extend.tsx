@@ -9,11 +9,12 @@ const surfaces = [
   {
     id: "tools",
     label: "Tools",
+    lane: "fast lane",
     for: "the model",
     rule: "If the agent should read git, add a tool.",
     file: "tools/echo.py",
     blurb:
-      "Drop a module under tools/. Decorate the function. Restart the session — the engine imports the package tree and registers anything with @tool. No catalog list to edit. AgentLoop sends those schemas on each model call and, if the model returns tool_calls, runs them and calls again (capped at 8 turns).",
+      "Drop a module under tools/. Decorate the function. Restart the session — the engine imports the package tree and registers anything with @tool. No catalog list to edit, no client to rebuild. AgentLoop sends those schemas on each model call and, if the model returns tool_calls, runs them and calls again (capped at 8 turns).",
     code: `from tools.base import ToolContext, tool
 
 @tool(description="Echo text back.")
@@ -27,11 +28,12 @@ def echo(ctx: ToolContext, text: str) -> str:
   {
     id: "wire",
     label: "Commands / events",
+    lane: "slow lane",
     for: "the client",
     rule: "If the UI should show git without asking the LLM, add a command and an event.",
     file: "protocol/commands.py",
     blurb:
-      "The TUI (or any other language) has to know the JSON type names, so they stay in two catalog files. @command / @event fill COMMANDS / EVENTS. @handles wires a method on EngineSession. dummy_client looks up type names; start is the only nickname.",
+      "A TUI in any language has to agree on the JSON type name, so this path stays cataloged instead of dropped in. @command / @event fill COMMANDS / EVENTS; @handles wires a method on EngineSession. dummy_client looks up type names the same way any other client would — start is the only nickname it gets for free.",
     code: `@command
 @dataclass
 class OpenFile(ProtocolMessage):
@@ -70,7 +72,7 @@ export function EngineExtend() {
             )}
           >
             <p className="font-mono text-[11px] tracking-[0.2em] uppercase">
-              {item.id === "tools" ? "01" : "02"} · for {item.for}
+              {item.id === "tools" ? "01" : "02"} · {item.lane} · for {item.for}
             </p>
             <p className="mt-1 font-mono text-[15px]">{item.label}</p>
           </button>
@@ -78,7 +80,7 @@ export function EngineExtend() {
       </div>
 
       <div className="grid lg:grid-cols-[0.95fr_1.05fr]">
-        <div className="border-b border-[#ff5c33]/20 p-5 lg:border-r lg:border-b-0 md:p-6">
+        <div className="border-b border-[#ff5c33]/20 p-6 lg:border-r lg:border-b-0 md:p-8">
           <p className="font-mono text-[11px] tracking-[0.2em] text-[#f2c14e] uppercase">{current.file}</p>
           <p className="mt-3 text-[15px] leading-7 text-[#b7c9d4]">{current.blurb}</p>
           <p className="mt-4 border-l-2 border-[#ff5c33] pl-3 font-mono text-[13px] leading-6 text-[#ece8e1]">
@@ -90,7 +92,7 @@ export function EngineExtend() {
           initial={reduce ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28 }}
-          className="overflow-x-auto p-5 font-mono text-[12px] leading-7 text-[#d5dde3] sm:text-[13px] md:p-6"
+          className="overflow-x-auto p-6 font-mono text-[12px] leading-7 text-[#d5dde3] sm:text-[13px] md:p-8"
         >
           {current.code}
         </motion.pre>

@@ -48,6 +48,27 @@ const designed = [
   "LSP / tree-sitter / mutating git — still on the bench",
 ];
 
+const lanes = [
+  {
+    id: "fast",
+    label: "Fast lane",
+    sub: "tools · for the model",
+    body: "AgentLoop runs @tool calls in a loop, capped at 8 turns. If a tool is wrong, the blast radius is one session — so shipping one is cheap: drop a module under tools/, decorate the function, restart. The loop imports the package tree and finds it. Nothing to register, nothing else to touch.",
+  },
+  {
+    id: "slow",
+    label: "Slow lane",
+    sub: "commands & events · for the client",
+    body: "A TUI in Python and a pane in TypeScript both read the same JSON type name off the wire, so this path stays slow on purpose. Land it in protocol/commands.py or protocol/events.py; @command / @event / @handles keep it in one reviewable place before anything ships.",
+  },
+] as const;
+
+const extendStats = [
+  { label: "decorator away", value: 1, suffix: "", hint: "@tool — drop the file, restart" },
+  { label: "files own the wire", value: 2, suffix: "", hint: "commands.py + events.py" },
+  { label: "registries a tool touches", value: 0, suffix: "", hint: "the loop just imports the package tree" },
+];
+
 function Reveal({
   children,
   delay = 0,
@@ -180,19 +201,68 @@ export function EngineLanding() {
         </section>
 
         <section className="border-y border-[#ff5c33]/20 bg-[#080b0e]">
-          <div className="mx-auto max-w-6xl px-4 py-16 md:px-8">
-            <Reveal>
-              <p className="font-mono text-[11px] tracking-[0.25em] text-[#8ab4c8] uppercase">Extend</p>
-              <h2 className="mt-3 font-mono text-3xl text-[#ece8e1] md:text-4xl">Two surfaces. Do not mix them.</h2>
-              <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#b7c9d4]">
-                Tools are for the model — drop a file, the loop discovers it. Commands and events are the client wire
-                contract. If the agent should read git, add a tool. If the UI should show git without asking the LLM,
-                add a command and an event.
-              </p>
-            </Reveal>
-            <div className="mt-8">
-              <EngineExtend />
+          <div className="mx-auto max-w-6xl px-4 py-20 md:px-8">
+            <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+              <Reveal>
+                <p className="font-mono text-[11px] tracking-[0.25em] text-[#8ab4c8] uppercase">Design</p>
+                <h2 className="mt-3 font-mono text-3xl leading-tight text-[#ece8e1] md:text-4xl">
+                  Two audiences. Two extension paths.
+                </h2>
+              </Reveal>
+              <Reveal delay={0.1}>
+                <p className="max-w-xl text-[15px] leading-7 text-[#b7c9d4]">
+                  Engine owns the workspace; the client only renders it. That boundary is why capability had to fork
+                  into two paths, not one. A tool is a bet the model takes alone, inside a single turn — cheap to
+                  add, cheap to be wrong. A command or event is a promise every client depends on, in whatever
+                  language it&apos;s written in — expensive to get wrong, so it stays reviewable. Tools grow by
+                  convention. The wire grows by agreement.
+                </p>
+              </Reveal>
             </div>
+
+            <div className="mt-10 grid gap-px overflow-hidden border border-[#ff5c33]/25 bg-[#ff5c33]/15 md:grid-cols-2">
+              {lanes.map((lane, i) => (
+                <Reveal
+                  key={lane.id}
+                  delay={i * 0.08}
+                  className="bg-[#080b0e] px-6 py-8 transition-colors duration-300 hover:bg-[#10161c]"
+                >
+                  <p className="font-mono text-[11px] tracking-[0.2em] text-[#f2c14e] uppercase">{lane.sub}</p>
+                  <h3 className="mt-2 font-mono text-xl text-[#ece8e1]">{lane.label}</h3>
+                  <p className="mt-3 text-[14px] leading-7 text-[#b7c9d4]">{lane.body}</p>
+                </Reveal>
+              ))}
+            </div>
+
+            <div className="mt-px grid gap-px overflow-hidden border border-t-0 border-[#ff5c33]/25 bg-[#ff5c33]/15 sm:grid-cols-3">
+              {extendStats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="bg-[#080b0e] px-6 py-7 transition-colors duration-300 hover:bg-[#10161c]"
+                >
+                  <p className="font-mono text-4xl text-[#ff5c33]">
+                    <NumberTicker value={stat.value} suffix={stat.suffix} />
+                  </p>
+                  <p className="mt-2 font-mono text-[12px] text-[#ece8e1]">{stat.label}</p>
+                  <p className="mt-1 text-[13px] text-[#8ab4c8]">{stat.hint}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 py-16 md:px-8">
+          <Reveal>
+            <p className="font-mono text-[11px] tracking-[0.25em] text-[#8ab4c8] uppercase">Extend</p>
+            <h2 className="mt-3 font-mono text-3xl text-[#ece8e1] md:text-4xl">The same rule, in code.</h2>
+            <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#b7c9d4]">
+              One decorator for the fast lane, two catalog files for the slow one. If the agent should read git, add
+              a tool. If the UI should show git without asking the LLM, add a command and an event. This is what
+              each looks like from inside the source.
+            </p>
+          </Reveal>
+          <div className="mt-8">
+            <EngineExtend />
           </div>
         </section>
 
