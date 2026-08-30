@@ -77,7 +77,7 @@ export function EngineMock() {
         <div className="grid grid-cols-3 border-t border-[#ff5c33]/20 font-mono text-[10px] uppercase tracking-wider text-[#8ab4c8]">
           <span className="border-r border-[#ff5c33]/20 px-3 py-2">sqlite sessions</span>
           <span className="border-r border-[#ff5c33]/20 px-3 py-2">openrouter</span>
-          <span className="px-3 py-2 text-[#f2c14e]">1-turn loop</span>
+          <span className="px-3 py-2 text-[#f2c14e]">8-turn tools</span>
         </div>
       </motion.div>
     </div>

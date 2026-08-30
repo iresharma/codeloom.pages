@@ -10,6 +10,7 @@ import { GithubButtons } from "../components/github-buttons";
 import { ProductShell } from "../components/product-shell";
 import { GridPattern } from "../magic/grid-pattern";
 import { NumberTicker } from "../magic/number-ticker";
+import { EngineExtend } from "../mocks/engine-extend";
 import { EngineFold } from "../mocks/engine-fold";
 import { EngineMock } from "../mocks/engine-mock";
 
@@ -18,7 +19,7 @@ const others = PRODUCT_LIST.filter((item) => item.id !== product.id);
 
 const commands = [
   { name: "StartSession", meaning: "Bind a workspace. Pass session_id to resume from SQLite at .engine/session.db." },
-  { name: "SubmitUserMessage", meaning: "One user turn. Today that is a single OpenRouter completion. Designed: orch + workers." },
+  { name: "SubmitUserMessage", meaning: "One user turn. AgentLoop may run @tool calls and call the model again, capped at 8 turns." },
   { name: "RequestSnapshot", meaning: "Reconnect payload: messages, open files, rebuilt file tree, live git. Tree and git are not stored." },
   { name: "OpenFile / CloseFile", meaning: "Drive the file panel. Engine reads UTF-8 inside the workspace; the client never walks the repo." },
   { name: "RequestGit", meaning: "Branch, dirty, staged / unstaged / untracked, diffs. Rebuilt on request." },
@@ -44,7 +45,7 @@ const designed = [
   "Orchestrator that does not patch files",
   "Named subagents: ask, linter, editor, reviewer",
   "ConversationCompressor — 30+ turns → 1–5",
-  "ToolRegistry: files write/edit, git mutate, executor, tree-sitter, LSP",
+  "LSP / tree-sitter / mutating git — still on the bench",
 ];
 
 function Reveal({
@@ -118,8 +119,9 @@ export function EngineLanding() {
               transition={{ delay: 0.24, duration: 0.5 }}
               className="mt-4 max-w-xl text-[15px] leading-7 text-[#8ab4c8]"
             >
-              Shipping today: SQLite sessions, an OpenRouter wrapper, sandboxed file reads, a rebuilt file tree, and
-              git status. Designed, not built: orchestrator, named subagents, tools, and context folding. Still early.
+              Shipping today: SQLite sessions, OpenRouter, sandboxed reads, git status, drop-in{" "}
+              <span className="font-mono text-[13px] text-[#ece8e1]">@tool</span> files, and a cataloged command/event
+              wire. Designed, not built: orchestrator, named subagents, context folding. Still early.
             </motion.p>
             <motion.div
               initial={reduce ? false : { opacity: 0, y: 10 }}
@@ -155,10 +157,13 @@ export function EngineLanding() {
             <p className="font-mono text-[11px] tracking-[0.25em] text-[#8ab4c8] uppercase">Protocol</p>
             <h2 className="mt-3 font-mono text-3xl text-[#ece8e1] md:text-4xl">Commands in. Events out.</h2>
             <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#8ab4c8]">
-              The contract is dataclasses with <span className="font-mono text-[#ece8e1]">type</span>,{" "}
-              <span className="font-mono text-[#ece8e1]">to_json()</span>,{" "}
-              <span className="font-mono text-[#ece8e1]">from_json()</span>. Same messages can later ride WebSocket
-              without changing classes. The TUI does not implement tree walking, git, or agent polling — it renders.
+              Commands live in <span className="font-mono text-[#ece8e1]">protocol/commands.py</span>, events in{" "}
+              <span className="font-mono text-[#ece8e1]">protocol/events.py</span>.{" "}
+              <span className="font-mono text-[#ece8e1]">@command</span> /{" "}
+              <span className="font-mono text-[#ece8e1]">@event</span> fill the registries;{" "}
+              <span className="font-mono text-[#ece8e1]">@handles</span> lands on EngineSession. A TUI in any language
+              has to know the JSON <span className="font-mono text-[#ece8e1]">type</span> names, so they stay in those
+              two files. The client renders. It does not walk the tree.
             </p>
           </Reveal>
           <div className="mt-8 divide-y divide-[#ff5c33]/15 border-y border-[#ff5c33]/15">
@@ -176,6 +181,23 @@ export function EngineLanding() {
 
         <section className="border-y border-[#ff5c33]/20 bg-[#080b0e]">
           <div className="mx-auto max-w-6xl px-4 py-16 md:px-8">
+            <Reveal>
+              <p className="font-mono text-[11px] tracking-[0.25em] text-[#8ab4c8] uppercase">Extend</p>
+              <h2 className="mt-3 font-mono text-3xl text-[#ece8e1] md:text-4xl">Two surfaces. Do not mix them.</h2>
+              <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#b7c9d4]">
+                Tools are for the model — drop a file, the loop discovers it. Commands and events are the client wire
+                contract. If the agent should read git, add a tool. If the UI should show git without asking the LLM,
+                add a command and an event.
+              </p>
+            </Reveal>
+            <div className="mt-8">
+              <EngineExtend />
+            </div>
+          </div>
+        </section>
+
+        <section className="border-y border-[#ff5c33]/20 bg-[#0c1014]">
+          <div className="mx-auto max-w-6xl px-4 py-16 md:px-8">
             <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
               <Reveal>
                 <p className="font-mono text-[11px] tracking-[0.25em] text-[#f2c14e] uppercase">
@@ -189,10 +211,9 @@ export function EngineLanding() {
                 <p className="max-w-xl text-[15px] leading-7 text-[#b7c9d4]">
                   The bet the protocol is built for: a main agent that never writes the patch. It spawns named
                   subagents — ask, linter, editor, reviewer — then a ConversationCompressor folds each trail from 30+
-                  messages (thinking, tool calls, the mess) into 1–5. AgentLoop today is explicit:{" "}
-                  <span className="font-mono text-[13px] text-[#ece8e1]">
-                    one model turn at a time. Tools and subagents come later.
-                  </span>
+                  messages (thinking, tool calls, the mess) into 1–5. AgentLoop today already runs{" "}
+                  <span className="font-mono text-[13px] text-[#ece8e1]">@tool</span> calls in a loop (capped at 8
+                  turns). The orch and the compressor are still ahead.
                 </p>
               </Reveal>
             </div>
@@ -240,7 +261,8 @@ export function EngineLanding() {
             <h2 className="mt-3 font-mono text-3xl text-[#ece8e1]">You build the skin. Engine does the workplace.</h2>
             <p className="mt-4 max-w-2xl text-[15px] leading-7 text-[#b7c9d4]">
               Point dummy_client.py, a TUI, or something weirder at the socket. Sessions persist. File tree and git are
-              rebuilt on snapshot so the client stays a renderer. Extend the protocol; don&apos;t fork the loop.
+              rebuilt on snapshot so the client stays a renderer. New UI verbs go in the command catalog — the dummy
+              client already looks up type names. New model verbs go under tools/. Don&apos;t fork the loop.
             </p>
           </Reveal>
           <Reveal delay={0.08}>
@@ -261,9 +283,10 @@ engine> git
             <div className="mt-8 border border-[#f2c14e]/30 bg-[#f2c14e]/8 p-5">
               <p className="font-mono text-[12px] tracking-[0.18em] text-[#f2c14e] uppercase">Status</p>
               <p className="mt-2 text-[15px] leading-7 text-[#ece8e1]">
-                Still in development. Missing a lot — write tools, mutating git, LSP, tree-sitter, orchestrator,
-                compressor. The socket, the protocol, sessions, reads, git status, and a one-turn OpenRouter loop are
-                what you can actually clone today.
+                Still in development. Missing a lot — orchestrator, named subagents, compressor, LSP, tree-sitter,
+                mutating git. What you can clone today: the socket, the two catalogs,{" "}
+                <span className="font-mono text-[13px]">@tool</span> discovery, SQLite sessions, reads, git status, and
+                an OpenRouter loop that will actually run the tools the model calls.
               </p>
               <GithubButtons product={product} tone="engine" className="mt-5" />
             </div>

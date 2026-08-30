@@ -141,7 +141,7 @@ export const PRODUCTS: Record<ProductId, Product> = {
     shortName: "Engine",
     tagline: "A JSON-IPC Unix server. The TUI is just a client.",
     description:
-      "A Python engine that owns the workspace: NDJSON over .engine/engine.sock, SQLite sessions, OpenRouter, file reads, and git status. Clients send typed commands and render events. Still early — tools, subagents, and context folding are designed, not built.",
+      "A Python engine that owns the workspace: NDJSON over .engine/engine.sock, SQLite sessions, OpenRouter, and two extension surfaces — @tool files for the model, cataloged commands/events for the UI. Still early — orchestrator, subagents, and context folding are designed, not built.",
     host: "engine.codeloom.iresharma.com",
     path: "/",
     href: productUrl("engine.codeloom.iresharma.com"),
