@@ -1,5 +1,5 @@
 import type { ProductId } from "@codeloom/config";
-import { AgentLanding, CliLanding, IdeLanding, TuiLanding } from "@codeloom/ui";
+import { AgentLanding, CliLanding, EngineLanding, IdeLanding, TuiLanding } from "@codeloom/ui";
 import type { ComponentType } from "react";
 
 import { PRODUCT_ID } from "../product";
@@ -9,6 +9,7 @@ const landings: Record<ProductId, ComponentType> = {
   ide: IdeLanding,
   tui: TuiLanding,
   cli: CliLanding,
+  engine: EngineLanding,
 };
 
 export default function Page() {

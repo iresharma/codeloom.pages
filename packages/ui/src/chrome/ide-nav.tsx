@@ -38,7 +38,7 @@ export function IdeNav({ product }: { product: Product }) {
             key={item.id}
             href={item.href}
             className={cn(
-              "rounded-t-md border border-transparent px-4 py-1.5 text-[13px]",
+              "rounded-t-md border border-transparent px-3 py-1.5 text-[13px] lg:px-4",
               item.id === product.id
                 ? "border-black/20 border-b-[#1e1e1e] bg-[#1e1e1e] text-white"
                 : "text-[#9d9d9d] hover:bg-white/5",
