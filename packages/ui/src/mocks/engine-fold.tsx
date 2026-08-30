@@ -53,8 +53,8 @@ export function EngineFold() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.04 }}
-              className="origin-top border border-white/6 bg-[#10161c] px-3 py-2 font-mono text-[12px]"
-              style={{ animation: `fold-compress 4.8s ${0.4 + i * 0.12}s ease-in-out infinite alternate` }}
+              className="border border-white/6 bg-[#10161c] px-3 py-2 font-mono text-[12px]"
+              style={{ opacity: 1 - i * 0.06 }}
             >
               <span className={`mr-3 uppercase ${kindColor[row.kind]}`}>{row.kind}</span>
               <span className="text-[#ece8e1]/80">{row.text}</span>

@@ -26,7 +26,7 @@ export function EngineNav({ product }: { product: Product }) {
             key={item.id}
             href={item.href}
             className={cn(
-              "px-2.5 py-1 uppercase",
+              "px-2 py-1 uppercase sm:px-2.5",
               item.id === product.id
                 ? "bg-[#ff5c33] text-[#0c1014]"
                 : "text-[#8ab4c8] hover:bg-white/5 hover:text-[#ece8e1]",
@@ -37,7 +37,7 @@ export function EngineNav({ product }: { product: Product }) {
         ))}
         <a
           href={PERSONAL_LINKS.blog}
-          className="ml-auto px-2.5 py-1 text-[#8ab4c8]/80 hover:text-[#f2c14e]"
+          className="px-2 py-1 text-[#8ab4c8]/80 hover:text-[#f2c14e] sm:ml-auto"
         >
           journal
         </a>
