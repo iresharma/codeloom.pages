@@ -1,37 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { PRODUCT_LIST } from "@codeloom/config";
 import { motion, useReducedMotion } from "motion/react";
 
 import { BorderBeam } from "../magic/border-beam";
 
-const lines = [
-  { dir: "→", kind: "cmd", event: "StartSession", body: 'workspace="/work/api"' },
-  { dir: "←", kind: "evt", event: "SnapshotReady", body: "session=s_08f1  tree=214  git=main" },
-  { dir: "→", kind: "cmd", event: "OpenFile", body: "path=src/auth.ts" },
-  { dir: "←", kind: "evt", event: "FileContent", body: "src/auth.ts  148 lines" },
-  { dir: "→", kind: "cmd", event: "SubmitUserMessage", body: '"fix the flaky auth test"' },
-  { dir: "←", kind: "evt", event: "ChatMessageAdded", body: "role=assistant  one turn" },
-  { dir: "→", kind: "cmd", event: "RequestGit", body: "" },
-  { dir: "←", kind: "evt", event: "GitStateUpdated", body: "branch=main  dirty=true  unstaged=2" },
-];
+const spokes = [
+  { id: "agent", x: 13.5, y: 16, hint: "SubmitUserMessage", duration: 3.2, delay: 0 },
+  { id: "ide", x: 86.5, y: 16, hint: "OpenFile", duration: 3.6, delay: 0.4 },
+  { id: "tui", x: 13.5, y: 84, hint: "RequestGit", duration: 4.0, delay: 0.8 },
+  { id: "cli", x: 86.5, y: 84, hint: "StartSession", duration: 4.4, delay: 1.2 },
+] as const;
+
+const HUB = { x: 50, y: 50 };
 
 export function EngineMock() {
   const reduce = useReducedMotion();
-  const [visible, setVisible] = useState(reduce ? lines.length : 0);
-
-  useEffect(() => {
-    if (reduce) return;
-    let n = 0;
-    const id = window.setInterval(() => {
-      n += 1;
-      if (n > lines.length + 4) n = 0;
-      setVisible(n);
-    }, 520);
-    return () => window.clearInterval(id);
-  }, [reduce]);
-
-  const shown = reduce ? lines : lines.slice(0, Math.min(visible, lines.length));
+  const clients = spokes.map((s) => ({ ...s, product: PRODUCT_LIST.find((p) => p.id === s.id) }));
 
   return (
     <div className="relative">
@@ -46,34 +31,89 @@ export function EngineMock() {
         <div className="flex items-center justify-between border-b border-[#ff5c33]/20 px-4 py-2 font-mono text-[11px]">
           <span className="text-[#ff5c33]">.engine/engine.sock</span>
           <span className="text-[#8ab4c8]">NDJSON · unix · fan-out</span>
-          <span className="text-[#f2c14e]">inspect</span>
+          <span className="text-[#f2c14e]">topology</span>
         </div>
-        <div className="relative min-h-[15.5rem] overflow-hidden px-4 py-3 font-mono text-[11px] leading-6 sm:text-[12px]">
-          <div
+
+        <div className="relative min-h-[16.5rem] overflow-hidden px-6 py-6">
+          <svg
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-px animate-engine-scan bg-gradient-to-r from-transparent via-[#ff5c33] to-transparent"
-          />
-          {shown.map((line) => (
-            <motion.p
-              key={line.event}
-              initial={reduce ? false : { opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.28 }}
-              className="flex flex-wrap gap-x-3"
-            >
-              <span className="w-3 text-[#8ab4c8]/70">{line.dir}</span>
-              <span className={line.kind === "cmd" ? "text-[#ff5c33]" : "text-[#f2c14e]"}>{line.event}</span>
-              {line.body ? <span className="text-[#ece8e1]/80">{line.body}</span> : null}
-            </motion.p>
-          ))}
-          <motion.p
-            className="mt-1 text-[#ff5c33]"
-            animate={reduce ? undefined : { opacity: [0.2, 1, 0.2] }}
-            transition={{ duration: 1.4, repeat: Infinity }}
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            className="pointer-events-none absolute inset-0 h-full w-full"
           >
-            ▍ waiting on .engine/engine.sock
-          </motion.p>
+            {clients.map((c) => (
+              <line
+                key={c.id}
+                x1={HUB.x}
+                y1={HUB.y}
+                x2={c.x}
+                y2={c.y}
+                stroke="#ff5c33"
+                strokeOpacity={0.22}
+                strokeWidth={1}
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+          </svg>
+
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            {!reduce ? (
+              <>
+                <motion.span
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#ff5c33]/50"
+                  animate={{ width: [24, 88], height: [24, 88], opacity: [0.5, 0] }}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
+                />
+                <motion.span
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#ff5c33]/50"
+                  animate={{ width: [24, 88], height: [24, 88], opacity: [0.5, 0] }}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut", delay: 1.2 }}
+                />
+              </>
+            ) : (
+              <span className="absolute top-1/2 left-1/2 size-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#ff5c33]/30" />
+            )}
+            <div className="relative flex size-16 flex-col items-center justify-center gap-0.5 rounded-full border border-[#ff5c33]/60 bg-[#0c1014] text-center shadow-[0_0_30px_-4px_rgba(255,92,51,0.5)]">
+              <span className="relative flex size-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ff5c33] opacity-60" />
+                <span className="relative inline-flex size-1.5 rounded-full bg-[#ff5c33]" />
+              </span>
+              <span className="font-mono text-[9px] tracking-wider text-[#ece8e1]">ENGINE</span>
+            </div>
+          </div>
+
+          {clients.map((c) => (
+            <a
+              key={c.id}
+              href={c.product?.href}
+              style={{ left: `${c.x}%`, top: `${c.y}%` }}
+              className="group absolute -translate-x-1/2 -translate-y-1/2"
+            >
+              <div className="w-[6.5rem] border border-[#ff5c33]/25 bg-[#0c1014]/90 px-2.5 py-2 text-center transition-colors duration-200 group-hover:border-[#ff5c33]/60 group-hover:bg-[#ff5c33]/5">
+                <p className="font-mono text-[11px] tracking-[0.15em] text-[#ece8e1] uppercase">
+                  {c.product?.shortName ?? c.id}
+                </p>
+                <p className="mt-1 truncate font-mono text-[9px] text-[#8ab4c8]">{c.hint}</p>
+              </div>
+            </a>
+          ))}
+
+          {!reduce
+            ? clients.map((c) => (
+                <motion.span
+                  key={`packet-${c.id}`}
+                  className="absolute size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                  animate={{
+                    left: [`${c.x}%`, `${HUB.x}%`, `${c.x}%`],
+                    top: [`${c.y}%`, `${HUB.y}%`, `${c.y}%`],
+                    backgroundColor: ["#ff5c33", "#f2c14e", "#ff5c33"],
+                  }}
+                  transition={{ duration: c.duration, delay: c.delay, repeat: Infinity, ease: "easeInOut" }}
+                />
+              ))
+            : null}
         </div>
+
         <div className="grid grid-cols-3 border-t border-[#ff5c33]/20 font-mono text-[10px] uppercase tracking-wider text-[#8ab4c8]">
           <span className="border-r border-[#ff5c33]/20 px-3 py-2">sqlite sessions</span>
           <span className="border-r border-[#ff5c33]/20 px-3 py-2">openrouter</span>
