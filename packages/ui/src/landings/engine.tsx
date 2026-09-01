@@ -12,18 +12,34 @@ import { GridPattern } from "../magic/grid-pattern";
 import { NumberTicker } from "../magic/number-ticker";
 import { EngineExtend } from "../mocks/engine-extend";
 import { EngineFold } from "../mocks/engine-fold";
+import { EngineLifecycle } from "../mocks/engine-lifecycle";
 import { EngineMock } from "../mocks/engine-mock";
+import { EngineWriteDiagram } from "../mocks/engine-write-diagram";
 
 const product = PRODUCTS.engine;
 const others = PRODUCT_LIST.filter((item) => item.id !== product.id);
 
 const commands = [
-  { name: "StartSession", meaning: "Bind a workspace. Pass session_id to resume from SQLite at .engine/session.db." },
+  {
+    name: "StartSession",
+    meaning: "Bind a workspace. Pass session_id to resume from SQLite at .engine/session.db; starts language servers and emits a snapshot.",
+  },
   { name: "SubmitUserMessage", meaning: "One user turn. AgentLoop may run @tool calls and call the model again, capped at 8 turns." },
   { name: "RequestSnapshot", meaning: "Reconnect payload: messages, open files, rebuilt file tree, live git. Tree and git are not stored." },
-  { name: "OpenFile / CloseFile", meaning: "Drive the file panel. Engine reads UTF-8 inside the workspace; the client never walks the repo." },
+  { name: "OpenFile / CloseFile", meaning: "Drive the file panel. Opening a file marks it read for the write funnel; the client never walks the repo." },
   { name: "RequestGit", meaning: "Branch, dirty, staged / unstaged / untracked, diffs. Rebuilt on request." },
+  { name: "UndoLastEdit", meaning: "Reverts the last edit batch — SHA-verified, all-or-nothing across a multi-file rename." },
   { name: "ListSessions", meaning: "Catalog of persisted sessions. Shutdown writes; the Unix server stays up." },
+  { name: "Shutdown", meaning: "Ends the session, persists it, stops language servers." },
+];
+
+const toolFamilies = [
+  { label: "Navigation", value: 3, hint: "list_files · read_file · search" },
+  { label: "Tree-sitter", value: 5, hint: "list_symbols · find_symbol · query_tree" },
+  { label: "Language server", value: 6, hint: "goto_definition · hover · rename_symbol" },
+  { label: "Text editing", value: 4, hint: "str_replace · replace_lines · create_file" },
+  { label: "Structural editing", value: 3, hint: "replace_symbol · apply_patch" },
+  { label: "History", value: 2, hint: "undo_edit · list_edits" },
 ];
 
 const loop = [
@@ -140,9 +156,9 @@ export function EngineLanding() {
               transition={{ delay: 0.24, duration: 0.5 }}
               className="mt-4 max-w-xl text-[15px] leading-7 text-[#8ab4c8]"
             >
-              Shipping today: SQLite sessions, OpenRouter, sandboxed reads, git status, drop-in{" "}
-              <span className="font-mono text-[13px] text-[#ece8e1]">@tool</span> files, and a cataloged command/event
-              wire. Designed, not built: orchestrator, named subagents, context folding. Still early.
+              Shipping today: 23 <span className="font-mono text-[13px] text-[#ece8e1]">@tool</span> functions, a
+              syntax-gated write funnel with full undo, tree-sitter and real language servers, SQLite sessions, and
+              OpenRouter. Designed, not built: orchestrator, named subagents, context folding. Still early.
             </motion.p>
             <motion.div
               initial={reduce ? false : { opacity: 0, y: 10 }}
@@ -253,6 +269,64 @@ export function EngineLanding() {
 
         <section className="mx-auto max-w-6xl px-4 py-16 md:px-8">
           <Reveal>
+            <p className="font-mono text-[11px] tracking-[0.25em] text-[#8ab4c8] uppercase">Tool catalogue</p>
+            <h2 className="mt-3 font-mono text-3xl text-[#ece8e1] md:text-4xl">
+              23 tools, six families, one funnel for every write.
+            </h2>
+          </Reveal>
+
+          <div className="mt-8 grid gap-px overflow-hidden border border-[#ff5c33]/25 bg-[#ff5c33]/15 sm:grid-cols-2 lg:grid-cols-3">
+            {toolFamilies.map((family) => (
+              <div
+                key={family.label}
+                className="bg-[#080b0e] px-6 py-7 transition-colors duration-300 hover:bg-[#10161c]"
+              >
+                <p className="font-mono text-4xl text-[#ff5c33]">
+                  <NumberTicker value={family.value} suffix="" />
+                </p>
+                <p className="mt-2 font-mono text-[12px] text-[#ece8e1]">{family.label}</p>
+                <p className="mt-1 text-[13px] text-[#8ab4c8]">{family.hint}</p>
+              </div>
+            ))}
+          </div>
+
+          <Reveal delay={0.06} className="mt-12">
+            <EngineWriteDiagram />
+          </Reveal>
+
+          <Reveal delay={0.1}>
+            <div className="mt-8 flex flex-wrap gap-2">
+              {["Python", "Go", "JavaScript", "TypeScript"].map((lang) => (
+                <span
+                  key={lang}
+                  className="border border-[#ff5c33]/25 bg-[#ff5c33]/5 px-3 py-1.5 font-mono text-[11px] text-[#ff5c33]"
+                >
+                  {lang} · tree-sitter + LSP
+                </span>
+              ))}
+              <span className="px-3 py-1.5 font-mono text-[11px] text-[#8ab4c8]/60">+14 more detected only</span>
+            </div>
+          </Reveal>
+        </section>
+
+        <section className="border-y border-[#ff5c33]/20 bg-[#080b0e]">
+          <div className="mx-auto max-w-6xl px-4 py-16 md:px-8">
+            <Reveal>
+              <p className="font-mono text-[11px] tracking-[0.25em] text-[#8ab4c8] uppercase">Lifecycle</p>
+              <h2 className="mt-3 font-mono text-3xl text-[#ece8e1] md:text-4xl">One pipeline, three endings.</h2>
+              <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#b7c9d4]">
+                Every write walks the same six checks. What happens at the end depends on what the edit — or the
+                agent — asks for.
+              </p>
+            </Reveal>
+            <Reveal delay={0.06} className="mt-8">
+              <EngineLifecycle />
+            </Reveal>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 py-16 md:px-8">
+          <Reveal>
             <p className="font-mono text-[11px] tracking-[0.25em] text-[#8ab4c8] uppercase">Extend</p>
             <h2 className="mt-3 font-mono text-3xl text-[#ece8e1] md:text-4xl">The same rule, in code.</h2>
             <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#b7c9d4]">
@@ -353,10 +427,11 @@ engine> git
             <div className="mt-8 border border-[#f2c14e]/30 bg-[#f2c14e]/8 p-5">
               <p className="font-mono text-[12px] tracking-[0.18em] text-[#f2c14e] uppercase">Status</p>
               <p className="mt-2 text-[15px] leading-7 text-[#ece8e1]">
-                Still in development. Missing a lot — orchestrator, named subagents, compressor, LSP, tree-sitter,
-                mutating git. What you can clone today: the socket, the two catalogs,{" "}
-                <span className="font-mono text-[13px]">@tool</span> discovery, SQLite sessions, reads, git status, and
-                an OpenRouter loop that will actually run the tools the model calls.
+                Still in development. Orchestrator, named subagents, and the compressor are still ahead — and git
+                stays read-only, there is no mutating git tool yet. What you can clone today: the socket, the two
+                catalogs, 23 <span className="font-mono text-[13px]">@tool</span> functions with a syntax-gated write
+                funnel and full undo, tree-sitter and LSP support for Python/Go/JS/TS, SQLite sessions, and an
+                OpenRouter loop that actually runs the tools the model calls.
               </p>
               <GithubButtons product={product} tone="engine" className="mt-5" />
             </div>

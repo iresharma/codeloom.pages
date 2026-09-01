@@ -144,122 +144,124 @@
   }
 }
 
-html,
-body {
-  background: var(--color-background);
-  color: var(--color-foreground);
-}
+@layer base {
+  html,
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+  }
 
-body {
-  font-family: var(--font-sans);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+  body {
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-::selection {
-  background: color-mix(in srgb, var(--color-accent) 40%, transparent);
-}
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  }
 
-.gradient-text {
-  background-image: linear-gradient(
-    90deg,
-    var(--product-from, #ffaa40),
-    var(--product-to, #9c40ff),
-    var(--product-from, #ffaa40)
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: gradient 6s linear infinite;
-}
+  .gradient-text {
+    background-image: linear-gradient(
+      90deg,
+      var(--product-from, #ffaa40),
+      var(--product-to, #9c40ff),
+      var(--product-from, #ffaa40)
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient 6s linear infinite;
+  }
 
-.theme-agent {
-  --color-background: #07060b;
-  --color-foreground: #f5f0e8;
-  --color-muted: #b3a99a;
-  --color-card: #100e16;
-  --color-border: rgba(255, 196, 120, 0.12);
-  background: #07060b;
-  color: #f5f0e8;
-  font-family: var(--font-sans);
-}
+  .theme-agent {
+    --color-background: #07060b;
+    --color-foreground: #f5f0e8;
+    --color-muted: #b3a99a;
+    --color-card: #100e16;
+    --color-border: rgba(255, 196, 120, 0.12);
+    background: #07060b;
+    color: #f5f0e8;
+    font-family: var(--font-sans);
+  }
 
-.theme-agent h1,
-.theme-agent h2,
-.theme-agent .font-display {
-  font-family: var(--font-display);
-}
+  .theme-agent h1,
+  .theme-agent h2,
+  .theme-agent .font-display {
+    font-family: var(--font-display);
+  }
 
-.theme-ide {
-  --color-background: #1e1e1e;
-  --color-foreground: #d4d4d4;
-  --color-muted: #9d9d9d;
-  --color-card: #252526;
-  --color-border: rgba(255, 255, 255, 0.08);
-  background: #1e1e1e;
-  color: #d4d4d4;
-  font-family: var(--font-sans);
-}
+  .theme-ide {
+    --color-background: #1e1e1e;
+    --color-foreground: #d4d4d4;
+    --color-muted: #9d9d9d;
+    --color-card: #252526;
+    --color-border: rgba(255, 255, 255, 0.08);
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: var(--font-sans);
+  }
 
-.theme-tui {
-  --font-sans: var(--font-ibm-plex-mono), ui-monospace, monospace;
-  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
-  --color-background: #03140c;
-  --color-foreground: #d8ffe8;
-  --color-muted: #6fbf90;
-  --color-card: #061c12;
-  --color-border: rgba(52, 211, 153, 0.22);
-  background: #03140c;
-  color: #d8ffe8;
-  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
-}
+  .theme-tui {
+    --font-sans: var(--font-ibm-plex-mono), ui-monospace, monospace;
+    --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+    --color-background: #03140c;
+    --color-foreground: #d8ffe8;
+    --color-muted: #6fbf90;
+    --color-card: #061c12;
+    --color-border: rgba(52, 211, 153, 0.22);
+    background: #03140c;
+    color: #d8ffe8;
+    font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  }
 
-.theme-cli {
-  --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
-  --color-background: #f4efe4;
-  --color-foreground: #1c1812;
-  --color-muted: #6b6358;
-  --color-card: #fffdf7;
-  --color-border: rgba(28, 24, 18, 0.12);
-  background: #f4efe4;
-  color: #1c1812;
-  font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
-}
+  .theme-cli {
+    --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+    --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+    --color-background: #f4efe4;
+    --color-foreground: #1c1812;
+    --color-muted: #6b6358;
+    --color-card: #fffdf7;
+    --color-border: rgba(28, 24, 18, 0.12);
+    background: #f4efe4;
+    color: #1c1812;
+    font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  }
 
-.theme-cli h1,
-.theme-cli h2,
-.theme-cli .font-serif {
-  font-family: var(--font-serif);
-}
+  .theme-cli h1,
+  .theme-cli h2,
+  .theme-cli .font-serif {
+    font-family: var(--font-serif);
+  }
 
-.theme-cli ::selection {
-  background: color-mix(in srgb, #0ea5e9 35%, transparent);
-}
+  .theme-cli ::selection {
+    background: color-mix(in srgb, #0ea5e9 35%, transparent);
+  }
 
-.theme-engine {
-  --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
-  --color-background: #0c1014;
-  --color-foreground: #ece8e1;
-  --color-muted: #8ab4c8;
-  --color-card: #141a20;
-  --color-border: rgba(255, 92, 51, 0.22);
-  background: #0c1014;
-  color: #ece8e1;
-  font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
-}
+  .theme-engine {
+    --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+    --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+    --color-background: #0c1014;
+    --color-foreground: #ece8e1;
+    --color-muted: #8ab4c8;
+    --color-card: #141a20;
+    --color-border: rgba(255, 92, 51, 0.22);
+    background: #0c1014;
+    color: #ece8e1;
+    font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  }
 
-.theme-engine h1,
-.theme-engine h2,
-.theme-engine h3,
-.theme-engine .font-display {
-  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
-}
+  .theme-engine h1,
+  .theme-engine h2,
+  .theme-engine h3,
+  .theme-engine .font-display {
+    font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  }
 
-.theme-engine ::selection {
-  background: color-mix(in srgb, #ff5c33 40%, transparent);
+  .theme-engine ::selection {
+    background: color-mix(in srgb, #ff5c33 40%, transparent);
+  }
 }
 
 @keyframes fold-compress {
