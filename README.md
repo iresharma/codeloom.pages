@@ -42,7 +42,32 @@ pnpm build
 
 ## Deploy
 
+### Railway
+
 Five Railway services in the `codeloom` project, one per app. Each service builds and starts with `pnpm --filter @codeloom/<app>`. Custom domains are attached in the Railway UI.
+
+### Docker
+
+Each app is a standalone Next.js server on port 3000. One Dockerfile, five images — pass `APP`:
+
+```bash
+for app in agent ide tui cli engine; do
+  docker build --platform linux/amd64 --build-arg APP=$app \
+    -t iresharma/codeloom-$app:0.1.0 .
+done
+```
+
+| App | Image |
+| --- | --- |
+| Agent | `iresharma/codeloom-agent` |
+| IDE | `iresharma/codeloom-ide` |
+| TUI | `iresharma/codeloom-tui` |
+| CLI | `iresharma/codeloom-cli` |
+| Engine | `iresharma/codeloom-engine` |
+
+```bash
+docker run --rm -p 3000:3000 iresharma/codeloom-agent:0.1.0
+```
 
 ## Links on every page
 
