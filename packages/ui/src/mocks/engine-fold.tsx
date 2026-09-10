@@ -34,9 +34,9 @@ const folded = [
 ];
 
 const kindColor: Record<string, string> = {
-  think: "text-[#8ab4c8]/70",
-  tool: "text-[#ff5c33]",
-  result: "text-[#f2c14e]",
+  think: "text-[#7a848c]/70",
+  tool: "text-[#d5dde3]",
+  result: "text-[#d5dde3]",
 };
 
 type Phase = "raw" | "folding" | "done";
@@ -63,17 +63,17 @@ export function EngineFold() {
   const showFolded = phase === "done" || Boolean(reduce);
 
   return (
-    <div ref={root} className="grid overflow-hidden border border-[#ff5c33]/25 lg:grid-cols-[1.1fr_auto_0.9fr]">
+    <div ref={root} className="grid border border-white/10 lg:grid-cols-[1.1fr_auto_0.9fr]">
       <div className="bg-[#080b0e] p-5 md:p-6">
         <div className="flex items-center justify-between gap-3">
-          <p className="font-mono text-[11px] tracking-[0.2em] text-[#8ab4c8] uppercase">
+          <p className="font-mono text-[11px] tracking-[0.2em] text-[#7a848c] uppercase">
             Worker trail · 34 messages
           </p>
           <motion.span
             key={phase}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="font-mono text-[11px] text-[#ff5c33]"
+            className="font-mono text-[11px] text-[#7a848c]"
           >
             {phase === "done" ? "folded" : phase === "folding" ? "compressing…" : "live"}
           </motion.span>
@@ -93,12 +93,12 @@ export function EngineFold() {
               className="origin-top border border-white/6 bg-[#10161c] px-3 py-2 font-mono text-[12px]"
             >
               <span className={`mr-3 uppercase ${kindColor[row.kind]}`}>{row.kind}</span>
-              <span className="text-[#ece8e1]/80">{row.text}</span>
+              <span className="text-[#d5dde3]/80">{row.text}</span>
             </motion.li>
           ))}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#080b0e] to-transparent" />
         </ol>
-        <p className="mt-3 font-mono text-[11px] text-[#8ab4c8]/70">
+        <p className="mt-3 font-mono text-[11px] text-[#7a848c]/70">
           +25 more · thinking · tool_call · tool_result
         </p>
       </div>
@@ -110,7 +110,7 @@ export function EngineFold() {
           setPhase("raw");
           setCycle((n) => n + 1);
         }}
-        className="flex items-center justify-center border-y border-[#ff5c33]/25 bg-[#10161c] px-4 py-5 font-mono text-[11px] tracking-[0.35em] text-[#f2c14e] uppercase transition-colors duration-200 hover:bg-[#ff5c33]/10 hover:text-[#ece8e1] lg:border-x lg:border-y-0 lg:px-3 lg:py-8 lg:[writing-mode:vertical-rl]"
+        className="flex items-center justify-center border-y border-white/10 bg-[#10161c] px-4 py-5 font-mono text-[11px] tracking-[0.35em] text-[#ff5c33] uppercase transition-colors duration-200 hover:bg-white/5 hover:text-[#d5dde3] lg:border-x lg:border-y-0 lg:px-3 lg:py-8 lg:[writing-mode:vertical-rl]"
       >
         <motion.span
           animate={phase === "folding" ? { opacity: [0.35, 1, 0.35] } : { opacity: 1 }}
@@ -121,7 +121,7 @@ export function EngineFold() {
       </button>
 
       <div className="bg-[#10161c] p-5 md:p-6">
-        <p className="font-mono text-[11px] tracking-[0.2em] text-[#f2c14e] uppercase">
+        <p className="font-mono text-[11px] tracking-[0.2em] text-[#7a848c] uppercase">
           Folded into orchestrator · 3 messages
         </p>
         <ol className="mt-4 space-y-3">
@@ -132,17 +132,17 @@ export function EngineFold() {
                 initial={{ opacity: 0, y: 14, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ delay: 0.12 * i, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="border border-[#f2c14e]/25 bg-[#0c1014] p-4"
+                className="border border-white/15 bg-[#0c1014] p-4"
               >
-                <p className="font-mono text-[11px] text-[#ff5c33]">{item.n}</p>
-                <h3 className="mt-1 text-[15px] text-[#ece8e1]">{item.title}</h3>
-                <p className="mt-2 text-[13px] leading-6 text-[#8ab4c8]">{item.body}</p>
+                <p className="font-mono text-[11px] text-[#7a848c]">{item.n}</p>
+                <h3 className="mt-1 text-[15px] text-[#d5dde3]">{item.title}</h3>
+                <p className="mt-2 text-[13px] leading-6 text-[#7a848c]">{item.body}</p>
               </motion.li>
             ))}
           </AnimatePresence>
         </ol>
         {phase !== "done" && !reduce ? (
-          <p className="mt-6 font-mono text-[11px] text-[#8ab4c8]/60">waiting for compressor…</p>
+          <p className="mt-6 font-mono text-[11px] text-[#7a848c]/60">waiting for compressor…</p>
         ) : null}
       </div>
     </div>

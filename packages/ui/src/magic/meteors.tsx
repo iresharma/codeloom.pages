@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 
 import { cn } from "../lib/utils";
 
@@ -9,9 +9,15 @@ interface MeteorsProps {
   className?: string;
 }
 
+type Meteor = { id: number; top: number; left: number; delay: number; duration: number };
+
 export function Meteors({ number = 20, className }: MeteorsProps) {
-  const meteors = useMemo(
-    () =>
+  // Randomized client-side only, after mount — computing this during render
+  // would make the SSR pass and the client hydration pass disagree.
+  const [meteors, setMeteors] = useState<Meteor[]>([]);
+
+  useEffect(() => {
+    setMeteors(
       Array.from({ length: number }).map((_, idx) => ({
         id: idx,
         top: Math.floor(Math.random() * 80),
@@ -19,8 +25,8 @@ export function Meteors({ number = 20, className }: MeteorsProps) {
         delay: Math.random() * 1.6,
         duration: Math.floor(Math.random() * 8) + 4,
       })),
-    [number],
-  );
+    );
+  }, [number]);
 
   return (
     <div className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)}>

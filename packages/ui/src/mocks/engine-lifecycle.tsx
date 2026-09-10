@@ -50,7 +50,7 @@ function Tile({ icon: Icon, label, status }: { icon: typeof FileSearch; label: s
       <span className="relative flex size-11 items-center justify-center">
         {status === "active" && !reduce ? (
           <motion.span
-            className="absolute rounded-full bg-[#ff5c33]/25"
+            className="absolute rounded-full bg-white/20"
             animate={{ width: [11, 30], height: [11, 30], opacity: [0.6, 0] }}
             transition={{ duration: 0.9, repeat: Infinity, ease: "easeOut" }}
           />
@@ -59,7 +59,7 @@ function Tile({ icon: Icon, label, status }: { icon: typeof FileSearch; label: s
           className={cn(
             "relative flex size-11 items-center justify-center border transition-colors duration-300",
             status === "failed" && "border-red-400 bg-red-500/10",
-            (status === "passed" || status === "active") && "border-[#ff5c33] bg-[#ff5c33]/10",
+            (status === "passed" || status === "active") && "border-[#d5dde3] bg-[#d5dde3]/10",
             (status === "pending" || status === "skip") && "border-white/15 bg-[#0c1014]",
           )}
         >
@@ -67,13 +67,13 @@ function Tile({ icon: Icon, label, status }: { icon: typeof FileSearch; label: s
             className={cn(
               "size-5",
               status === "failed" && "text-red-400",
-              (status === "passed" || status === "active") && "text-[#ff5c33]",
-              (status === "pending" || status === "skip") && "text-[#8ab4c8]/50",
+              (status === "passed" || status === "active") && "text-[#d5dde3]",
+              (status === "pending" || status === "skip") && "text-[#7a848c]/60",
             )}
           />
         </span>
       </span>
-      <span className={cn("font-mono text-[10px] uppercase tracking-wider", status === "pending" || status === "skip" ? "text-[#8ab4c8]/40" : "text-[#ece8e1]")}>
+      <span className={cn("font-mono text-[10px] uppercase tracking-wider", status === "pending" || status === "skip" ? "text-[#7a848c]/50" : "text-[#d5dde3]")}>
         {label}
       </span>
     </div>
@@ -87,7 +87,7 @@ function Connector({ status, showDot }: { status: Status; showDot: boolean }) {
         className={cn(
           "h-px w-full transition-colors duration-300",
           status === "failed" && "bg-red-400",
-          (status === "passed" || status === "active") && "bg-[#ff5c33]",
+          (status === "passed" || status === "active") && "bg-[#d5dde3]",
           (status === "pending" || status === "skip") && "bg-white/10",
         )}
       />
@@ -98,7 +98,7 @@ function Connector({ status, showDot }: { status: Status; showDot: boolean }) {
             animate={{ opacity: 1, left: "100%" }}
             exit={{ opacity: 0 }}
             transition={{ duration: STEP_MS / 1000, ease: "linear" }}
-            className="absolute top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ff5c33] shadow-[0_0_8px_-1px_rgba(255,92,51,0.9)]"
+            className="absolute top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#d5dde3]"
           />
         ) : null}
       </AnimatePresence>
@@ -205,11 +205,11 @@ export function EngineLifecycle() {
         "border bg-[#080b0e] transition-colors duration-500",
         verdict === "success" && "border-emerald-500/40",
         verdict === "failed" && "border-red-500/40",
-        (verdict === "reverting" || verdict === "reverted") && "border-[#f2c14e]/40",
-        verdict === "running" && "border-[#ff5c33]/25",
+        (verdict === "reverting" || verdict === "reverted") && "border-white/25",
+        verdict === "running" && "border-white/15",
       )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#ff5c33]/20 bg-[#0c1014] px-5 py-3 md:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-3 md:px-6">
         <div className="flex flex-wrap items-center gap-1 font-mono text-[11px]">
           {(
             [
@@ -234,8 +234,8 @@ export function EngineLifecycle() {
               className={cn(
                 "px-3 py-1.5 transition-colors duration-200",
                 tab.id === scenario
-                  ? "bg-[#ff5c33] text-[#0c1014]"
-                  : "border border-[#ff5c33]/25 text-[#8ab4c8] hover:border-[#ff5c33]/50 hover:text-[#ece8e1]",
+                  ? "text-[#ff5c33] underline underline-offset-4"
+                  : "text-[#7a848c] hover:text-[#d5dde3]",
               )}
             >
               {tab.label}
@@ -247,10 +247,10 @@ export function EngineLifecycle() {
           <div
             className={cn(
               "flex items-center gap-1.5 font-mono text-[11px] tracking-[0.05em] uppercase transition-colors duration-300",
-              verdict === "running" && "text-[#ff5c33]",
+              verdict === "running" && "text-[#7a848c]",
               verdict === "success" && "text-emerald-400",
               verdict === "failed" && "text-red-400",
-              (verdict === "reverting" || verdict === "reverted") && "text-[#f2c14e]",
+              (verdict === "reverting" || verdict === "reverted") && "text-[#d5dde3]",
             )}
           >
             <VerdictIcon verdict={verdict} className="size-3" />
@@ -259,7 +259,7 @@ export function EngineLifecycle() {
           <button
             type="button"
             onClick={() => setCycle((n) => n + 1)}
-            className="flex items-center gap-1.5 px-2 py-1.5 font-mono text-[11px] tracking-[0.1em] text-[#f2c14e] uppercase transition-colors duration-200 hover:text-[#ece8e1]"
+            className="flex items-center gap-1.5 px-2 py-1.5 font-mono text-[11px] tracking-[0.1em] text-[#7a848c] uppercase transition-colors duration-200 hover:text-[#d5dde3]"
           >
             <RotateCcw className="size-3" />
             replay
@@ -284,8 +284,8 @@ export function EngineLifecycle() {
 
         <div className="mt-5 flex min-h-[2.25rem] items-center justify-center">
           {verdict === "running" ? (
-            <div className="flex items-center gap-2 font-mono text-[12px] text-[#8ab4c8]">
-              <span className="size-1.5 animate-pulse rounded-full bg-[#ff5c33]" />
+            <div className="flex items-center gap-2 font-mono text-[12px] text-[#7a848c]">
+              <span className="size-1.5 animate-pulse rounded-full bg-[#7a848c]" />
               running…
             </div>
           ) : (
@@ -294,7 +294,7 @@ export function EngineLifecycle() {
                 "flex items-center gap-2 border px-4 py-1.5 font-mono text-[12px] tracking-[0.02em] transition-colors duration-300",
                 verdict === "success" && "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
                 verdict === "failed" && "border-red-500/40 bg-red-500/10 text-red-400",
-                (verdict === "reverting" || verdict === "reverted") && "border-[#f2c14e]/40 bg-[#f2c14e]/10 text-[#f2c14e]",
+                (verdict === "reverting" || verdict === "reverted") && "border-white/25 bg-white/5 text-[#d5dde3]",
               )}
             >
               <VerdictIcon verdict={verdict} className="size-3.5" />
@@ -304,7 +304,7 @@ export function EngineLifecycle() {
         </div>
       </div>
 
-      <p className="border-t border-[#ff5c33]/15 px-6 py-4 text-center text-[13px] leading-6 text-[#b7c9d4] md:px-10">
+      <p className="border-t border-white/10 px-6 py-4 text-center text-[13px] leading-6 text-[#7a848c] md:px-10">
         {captions[scenario]}
       </p>
     </div>

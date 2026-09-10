@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, IBM_Plex_Mono, IBM_Plex_Sans, Newsreader, Syne } from "next/font/google";
+import { Geist, Geist_Mono, IBM_Plex_Sans, JetBrains_Mono, Newsreader, Syne } from "next/font/google";
 import { AUTHOR, PRODUCTS } from "@codeloom/config";
 
 import { PRODUCT_ID } from "../product";
@@ -26,10 +26,10 @@ const plexSans = IBM_Plex_Sans({
   variable: "--font-ibm-plex-sans",
 });
 
-const plexMono = IBM_Plex_Mono({
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-ibm-plex-mono",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-jetbrains-mono",
 });
 
 const newsreader = Newsreader({
@@ -66,7 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${syne.variable} ${plexSans.variable} ${plexMono.variable} ${newsreader.variable}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${syne.variable} ${plexSans.variable} ${jetbrainsMono.variable} ${newsreader.variable}`}
     >
       <body className="antialiased">{children}</body>
     </html>

@@ -240,27 +240,29 @@
   }
 
   .theme-engine {
-    --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
-    --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+    --font-sans: var(--font-jetbrains-mono), ui-monospace, monospace;
+    --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
     --color-background: #0c1014;
-    --color-foreground: #ece8e1;
-    --color-muted: #8ab4c8;
-    --color-card: #141a20;
-    --color-border: rgba(255, 92, 51, 0.22);
+    --color-foreground: #d5dde3;
+    --color-muted: #7a848c;
+    --color-card: #101418;
+    --color-border: rgba(255, 255, 255, 0.1);
     background: #0c1014;
-    color: #ece8e1;
-    font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+    color: #d5dde3;
+    font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
   }
 
   .theme-engine h1,
   .theme-engine h2,
   .theme-engine h3,
   .theme-engine .font-display {
-    font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+    font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
 
   .theme-engine ::selection {
-    background: color-mix(in srgb, #ff5c33 40%, transparent);
+    background: rgba(255, 255, 255, 0.15);
   }
 }
 

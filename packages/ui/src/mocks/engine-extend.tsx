@@ -7,10 +7,10 @@ import { cn } from "../lib/utils";
 
 type Tok = [text: string, cls?: string];
 
-const KW = "text-[#f2c14e]";
+const KW = "text-[#9fb3bf]";
 const DEC = "text-[#ff5c33]";
-const STR = "text-[#8ab4c8]";
-const CMT = "text-[#8ab4c8]/50 italic";
+const STR = "text-[#7a848c]";
+const CMT = "text-[#7a848c]/50 italic";
 const DEFAULT = "text-[#d5dde3]";
 
 function CodeBlock({ lines }: { lines: Tok[][] }) {
@@ -51,7 +51,7 @@ const surfaces: Surface[] = [
     rule: "If the agent should read git, add a tool.",
     file: "tools/echo.py",
     blurb:
-      "Drop a module under tools/. Decorate the function. Restart the session — the engine imports the package tree and registers anything with @tool. No catalog list to edit, no client to rebuild. AgentLoop sends those schemas on each model call and, if the model returns tool_calls, runs them and calls again (capped at 8 turns).",
+      "Drop a module under tools/. Decorate the function. Restart the session — the engine imports the package tree and registers anything with @tool. No catalog list to edit, no client to rebuild. AgentLoop sends those schemas on each model call and, if the model returns tool_calls, runs them and calls again (capped at 16 turns).",
     codeLines: [
       [
         ["from ", KW],
@@ -108,9 +108,9 @@ export function EngineExtend() {
   const current = surfaces.find((item) => item.id === active) ?? surfaces[0];
 
   return (
-    <div className="border border-[#ff5c33]/25 bg-[#080b0e]">
-      <div className="flex flex-wrap items-center gap-2 border-b border-[#ff5c33]/20 bg-[#0c1014] px-5 py-3 md:px-6">
-        <span className="mr-1 font-mono text-[10px] tracking-[0.2em] text-[#8ab4c8]/70 uppercase">Surface</span>
+    <div className="border border-white/10">
+      <div className="flex flex-wrap items-center gap-2 border-b border-white/10 px-5 py-3 md:px-6">
+        <span className="mr-1 font-mono text-[10px] tracking-[0.2em] text-[#7a848c]/70 uppercase">Surface</span>
         {surfaces.map((item, i) => (
           <button
             key={item.id}
@@ -119,15 +119,15 @@ export function EngineExtend() {
             className={cn(
               "flex items-baseline gap-2 px-3.5 py-2 font-mono transition-colors duration-200",
               item.id === active
-                ? "bg-[#ff5c33] text-[#0c1014]"
-                : "border border-[#ff5c33]/25 text-[#8ab4c8] hover:border-[#ff5c33]/50 hover:text-[#ece8e1]",
+                ? "text-[#ff5c33] underline underline-offset-4"
+                : "text-[#7a848c] hover:text-[#d5dde3]",
             )}
           >
-            <span className={cn("text-[10px] tracking-[0.15em] uppercase", item.id === active ? "text-[#0c1014]/70" : "text-[#8ab4c8]/60")}>
+            <span className={cn("text-[10px] tracking-[0.15em] uppercase", item.id === active ? "text-[#ff5c33]/70" : "text-[#7a848c]/60")}>
               0{i + 1}
             </span>
             <span className="text-[13px]">{item.label}</span>
-            <span className={cn("text-[10px] tracking-[0.1em] uppercase", item.id === active ? "text-[#0c1014]/70" : "text-[#8ab4c8]/50")}>
+            <span className={cn("text-[10px] tracking-[0.1em] uppercase", item.id === active ? "text-[#ff5c33]/70" : "text-[#7a848c]/50")}>
               {item.lane}
             </span>
           </button>
@@ -135,12 +135,12 @@ export function EngineExtend() {
       </div>
 
       <div className="flex flex-col items-stretch lg:flex-row lg:items-start">
-        <div className="border-b border-[#ff5c33]/20 p-6 lg:w-[44%] lg:border-r lg:border-b-0 md:p-8">
-          <p className="font-mono text-[11px] tracking-[0.2em] text-[#f2c14e] uppercase">
+        <div className="border-b border-white/10 p-6 lg:w-[44%] lg:border-r lg:border-b-0 md:p-8">
+          <p className="font-mono text-[11px] tracking-[0.2em] text-[#7a848c] uppercase">
             {current.file} · for {current.for}
           </p>
-          <p className="mt-3 text-[15px] leading-7 text-[#b7c9d4]">{current.blurb}</p>
-          <p className="mt-4 border-l-2 border-[#ff5c33] pl-3 font-mono text-[13px] leading-6 text-[#ece8e1]">
+          <p className="mt-3 text-[15px] leading-7 text-[#7a848c]">{current.blurb}</p>
+          <p className="mt-4 border-l-2 border-[#ff5c33] pl-3 font-mono text-[13px] leading-6 text-[#d5dde3]">
             {current.rule}
           </p>
         </div>
@@ -155,23 +155,23 @@ export function EngineExtend() {
         </motion.pre>
       </div>
 
-      <div className="overflow-x-auto border-t border-[#ff5c33]/20 px-5 py-4 font-mono text-[11px] leading-6 text-[#8ab4c8] sm:text-[12px]">
+      <div className="overflow-x-auto border-t border-white/10 px-5 py-4 font-mono text-[11px] leading-6 text-[#7a848c] sm:text-[12px]">
         <p>
-          <span className="text-[#ff5c33]">model</span>
+          <span className="text-[#d5dde3]">model</span>
           {"  --tool calls-->  "}
-          <span className="text-[#ece8e1]">tools/*.py</span>
+          <span className="text-[#7a848c]">tools/*.py</span>
         </p>
         <p>
-          <span className="text-[#ff5c33]">client</span>
+          <span className="text-[#d5dde3]">client</span>
           {"  --JSON cmd---->  "}
-          <span className="text-[#ece8e1]">protocol/commands.py</span>
+          <span className="text-[#7a848c]">protocol/commands.py</span>
           {"  -->  "}
-          <span className="text-[#f2c14e]">@handles</span>
+          <span className="text-[#ff5c33]">@handles</span>
         </p>
         <p>
-          <span className="text-[#ff5c33]">engine</span>
+          <span className="text-[#d5dde3]">engine</span>
           {"  --JSON event-->  "}
-          <span className="text-[#ece8e1]">protocol/events.py</span>
+          <span className="text-[#7a848c]">protocol/events.py</span>
         </p>
       </div>
     </div>
