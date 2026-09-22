@@ -3,8 +3,8 @@
 import { PRODUCTS } from "@codeloom/config";
 import { motion, useReducedMotion } from "motion/react";
 
-import { EngineChapterNav, EngineFooter } from "../../chrome/engine-footer";
-import { EngineNav } from "../../chrome/engine-nav";
+import { EngineChapterNav, SiteFooter } from "../../chrome/footer";
+import { SiteNav } from "../../chrome/site-nav";
 import { EngineSubNav } from "../../chrome/engine-subnav";
 import { ProductShell } from "../../components/product-shell";
 import { Reveal } from "../../magic/reveal";
@@ -17,7 +17,7 @@ export function EngineReadFunnelLanding() {
 
   return (
     <ProductShell product={product} className="bg-[#0c1014]">
-      <EngineNav product={product} />
+      <SiteNav active="engine" />
       <EngineSubNav active="read-funnel" />
 
       <main className="mx-auto max-w-3xl px-5 md:px-8">
@@ -127,7 +127,7 @@ export function EngineReadFunnelLanding() {
       </main>
 
       <EngineChapterNav active="read-funnel" />
-      <EngineFooter product={product} />
+      <SiteFooter product={product} />
     </ProductShell>
   );
 }

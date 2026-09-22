@@ -3,8 +3,8 @@
 import { PRODUCTS } from "@codeloom/config";
 import { motion, useReducedMotion } from "motion/react";
 
-import { EngineChapterNav, EngineFooter } from "../../chrome/engine-footer";
-import { EngineNav } from "../../chrome/engine-nav";
+import { EngineChapterNav, SiteFooter } from "../../chrome/footer";
+import { SiteNav } from "../../chrome/site-nav";
 import { EngineSubNav } from "../../chrome/engine-subnav";
 import { ProductShell } from "../../components/product-shell";
 import { Reveal } from "../../magic/reveal";
@@ -19,7 +19,7 @@ export function EngineExtendLanding() {
 
   return (
     <ProductShell product={product} className="bg-[#0c1014]">
-      <EngineNav product={product} />
+      <SiteNav active="engine" />
       <EngineSubNav active="extend" />
 
       <main className="mx-auto max-w-3xl px-5 md:px-8">
@@ -129,7 +129,7 @@ export function EngineExtendLanding() {
           </div>
           <p className="mt-6 text-[13px] text-[#7a848c]">
             The personas themselves — what each one can and can&apos;t touch — are on{" "}
-            <a href="/agents" className="text-[#ff5c33] underline underline-offset-4">
+            <a href="/engine/agents" className="text-[#ff5c33] underline underline-offset-4">
               agents
             </a>
             .
@@ -138,7 +138,7 @@ export function EngineExtendLanding() {
       </main>
 
       <EngineChapterNav active="extend" />
-      <EngineFooter product={product} />
+      <SiteFooter product={product} />
     </ProductShell>
   );
 }

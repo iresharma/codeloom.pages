@@ -4,8 +4,8 @@ import { PRODUCT_LIST, PRODUCTS } from "@codeloom/config";
 import { ArrowRight } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 
-import { EngineChapterNav, EngineFooter } from "../../chrome/engine-footer";
-import { EngineNav } from "../../chrome/engine-nav";
+import { EngineChapterNav, SiteFooter } from "../../chrome/footer";
+import { SiteNav } from "../../chrome/site-nav";
 import { EngineSubNav } from "../../chrome/engine-subnav";
 import { ProductShell } from "../../components/product-shell";
 import { Reveal } from "../../magic/reveal";
@@ -14,10 +14,11 @@ const product = PRODUCTS.engine;
 const others = PRODUCT_LIST.filter((item) => item.id !== product.id);
 
 const chapters = [
-  { n: "01", label: "read funnel", href: "/read-funnel", body: "The cheapest tool that answers, every time." },
-  { n: "02", label: "write funnel", href: "/write-funnel", body: "Six checks before any write lands." },
-  { n: "03", label: "agents", href: "/agents", body: "An orchestrator that spawns, isolates, and folds." },
-  { n: "04", label: "extend", href: "/extend", body: "Every surface is a file and a restart." },
+  { n: "01", label: "read funnel", href: "/engine/read-funnel", body: "The cheapest tool that answers, every time." },
+  { n: "02", label: "write funnel", href: "/engine/write-funnel", body: "Six checks before any write lands." },
+  { n: "03", label: "agents", href: "/engine/agents", body: "An orchestrator that spawns, isolates, and folds." },
+  { n: "04", label: "extend", href: "/engine/extend", body: "Every surface is a file and a restart." },
+  { n: "05", label: "results", href: "/engine/results", body: "Three real PRs, reviewed end to end." },
 ];
 
 const faqs = [
@@ -31,7 +32,11 @@ const faqs = [
   },
   {
     q: "What can it actually do today?",
-    a: "32 tools across ten families, a syntax-gated write funnel with full undo, an orchestrator that spawns six subagent personas into isolated git worktrees, tree-sitter and real language servers for four languages, SQLite sessions, and an OpenRouter loop. None of that is the ceiling — see the next question.",
+    a: "32 tools across ten families, a syntax-gated write funnel with full undo, an orchestrator that spawns six subagent personas into isolated git worktrees, tree-sitter and real language servers for four languages, a TypeSafe judge layer at existing choke points, SQLite sessions, and an OpenRouter loop. None of that is the ceiling — see the next question.",
+  },
+  {
+    q: "What is the TypeSafe judge?",
+    a: "A calibrated classifier (model jev-latest), not an agent — one state blob plus N typed questions in, a probability and a confidence per question back, ~100ms. The LLM generates, TypeSafe judges, code decides: judgments can only add restriction or information, never relax a deterministic guard, and the engine fully functions with it absent.",
   },
   {
     q: "Is 32 tools and 6 agents all I get?",
@@ -51,7 +56,7 @@ export function EngineOverviewLanding() {
 
   return (
     <ProductShell product={product} className="bg-[#0c1014]">
-      <EngineNav product={product} />
+      <SiteNav active="engine" />
       <EngineSubNav active="overview" />
 
       <main className="mx-auto max-w-3xl px-5 md:px-8">
@@ -70,7 +75,7 @@ export function EngineOverviewLanding() {
             transition={{ delay: 0.08, duration: 0.4 }}
             className="mt-4 max-w-xl text-[14px] leading-6 text-[#7a848c]"
           >
-            A Python core that owns the workspace. A TUI, an IDE, a REPL — every client speaks the same
+            A Python core that owns the workspace. A TUI, a web client, a REPL — every client speaks the same
             newline-delimited protocol over one socket.
           </motion.p>
 
@@ -96,6 +101,17 @@ engine> fix the flaky auth test`}
             [*] Ships with <strong className="text-[#d5dde3]">32 tools</strong> and{" "}
             <strong className="text-[#d5dde3]">6 subagent personas</strong> — not a ceiling. Every one is a single
             file. Add your own the same way.
+          </motion.p>
+
+          <motion.p
+            initial={reduce ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.24, duration: 0.4 }}
+            className="mt-2 text-[13px] leading-6 text-[#7a848c]"
+          >
+            [*] Now judged by <strong className="text-[#d5dde3]">TypeSafe</strong> (
+            <span className="font-mono text-[#d5dde3]">jev-latest</span>) — a ~100ms calibrated classifier at the
+            write funnel and the shell gate. The LLM generates, TypeSafe judges, code still decides.
           </motion.p>
         </section>
 
@@ -137,7 +153,7 @@ engine> fix the flaky auth test`}
         <section className="flex flex-wrap items-center gap-x-6 gap-y-2 py-8 font-mono text-[12px] text-[#7a848c]">
           <span className="uppercase tracking-[0.1em] text-[#7a848c]/70">also from codeloom</span>
           {others.map((item) => (
-            <a key={item.id} href={item.href} className="transition-colors hover:text-[#ff5c33]">
+            <a key={item.id} href={item.path} className="transition-colors hover:text-[#ff5c33]">
               {item.shortName.toLowerCase()}
             </a>
           ))}
@@ -145,7 +161,7 @@ engine> fix the flaky auth test`}
       </main>
 
       <EngineChapterNav active="overview" />
-      <EngineFooter product={product} />
+      <SiteFooter product={product} />
     </ProductShell>
   );
 }

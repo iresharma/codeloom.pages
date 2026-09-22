@@ -1,8 +1,4 @@
-import { PRODUCTS } from "@codeloom/config";
-
 import { BorderBeam } from "../magic/border-beam";
-
-const product = PRODUCTS.tui;
 
 const tree = [
   { label: "codeloom-tui/", dim: true },
@@ -18,7 +14,7 @@ export function TuiMock() {
     <div className="relative mx-auto max-w-4xl">
       <div className="absolute -inset-8 rounded-[32px] bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.18),transparent_70%)] blur-2xl" />
       <div className="relative overflow-hidden rounded-sm border border-emerald-500/35 bg-[#07110c] font-mono shadow-[0_0_80px_-20px_rgba(16,185,129,0.45)]">
-        <BorderBeam colorFrom={product.accent.from} colorTo={product.accent.to} size={140} />
+        <BorderBeam colorFrom="#34d399" colorTo="#22d3ee" size={140} />
         <div className="flex items-center justify-between border-b border-emerald-500/20 px-4 py-2 text-[11px] text-emerald-200/70">
           <span>NVIM  ·  codeloom-tui</span>
           <span>NORMAL  ·  explorer.rs  ·  utf-8</span>

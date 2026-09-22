@@ -1,0 +1,16 @@
+node_modules
+**/node_modules
+.next
+**/.next
+.turbo
+**/.turbo
+dist
+.git
+.DS_Store
+*.log
+.env
+.env*.local
+.vercel
+.railway
+tsconfig.tsbuildinfo
+**/tsconfig.tsbuildinfo

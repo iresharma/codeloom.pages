@@ -3,8 +3,8 @@
 import { PRODUCTS } from "@codeloom/config";
 import { motion, useReducedMotion } from "motion/react";
 
-import { EngineChapterNav, EngineFooter } from "../../chrome/engine-footer";
-import { EngineNav } from "../../chrome/engine-nav";
+import { EngineChapterNav, SiteFooter } from "../../chrome/footer";
+import { SiteNav } from "../../chrome/site-nav";
 import { EngineSubNav } from "../../chrome/engine-subnav";
 import { ProductShell } from "../../components/product-shell";
 import { Reveal } from "../../magic/reveal";
@@ -18,7 +18,7 @@ export function EngineAgentsLanding() {
 
   return (
     <ProductShell product={product} className="bg-[#0c1014]">
-      <EngineNav product={product} />
+      <SiteNav active="engine" />
       <EngineSubNav active="agents" />
 
       <main className="mx-auto max-w-3xl px-5 md:px-8">
@@ -122,7 +122,7 @@ export function EngineAgentsLanding() {
           </ul>
           <p className="mt-4 text-[13px] text-[#7a848c]">
             None of the six is a ceiling, either — a new persona is one file. See{" "}
-            <a href="/extend" className="text-[#ff5c33] underline underline-offset-4">
+            <a href="/engine/extend" className="text-[#ff5c33] underline underline-offset-4">
               extend
             </a>
             .
@@ -143,7 +143,7 @@ export function EngineAgentsLanding() {
       </main>
 
       <EngineChapterNav active="agents" />
-      <EngineFooter product={product} />
+      <SiteFooter product={product} />
     </ProductShell>
   );
 }

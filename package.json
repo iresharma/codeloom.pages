@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "start": "pnpm --filter @codeloom/$RAILWAY_SERVICE_NAME start",
+    "start": "pnpm --filter @codeloom/web start",
     "lint": "turbo lint",
     "clean": "turbo clean"
   },

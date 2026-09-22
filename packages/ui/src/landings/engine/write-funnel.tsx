@@ -3,8 +3,8 @@
 import { PRODUCTS } from "@codeloom/config";
 import { motion, useReducedMotion } from "motion/react";
 
-import { EngineChapterNav, EngineFooter } from "../../chrome/engine-footer";
-import { EngineNav } from "../../chrome/engine-nav";
+import { EngineChapterNav, SiteFooter } from "../../chrome/footer";
+import { SiteNav } from "../../chrome/site-nav";
 import { EngineSubNav } from "../../chrome/engine-subnav";
 import { ProductShell } from "../../components/product-shell";
 import { Reveal } from "../../magic/reveal";
@@ -19,7 +19,7 @@ export function EngineWriteFunnelLanding() {
 
   return (
     <ProductShell product={product} className="bg-[#0c1014]">
-      <EngineNav product={product} />
+      <SiteNav active="engine" />
       <EngineSubNav active="write-funnel" />
 
       <main className="mx-auto max-w-3xl px-5 md:px-8">
@@ -82,7 +82,7 @@ export function EngineWriteFunnelLanding() {
           <p className="mt-3 max-w-2xl text-[13px] leading-6 text-[#7a848c]">
             The gate covers Python, Go, JavaScript, TypeScript. The model&apos;s own git tools are read-only — it
             can&apos;t script a commit. The one thing that mutates git is the{" "}
-            <a href="/agents" className="text-[#ff5c33] underline underline-offset-4">
+            <a href="/engine/agents" className="text-[#ff5c33] underline underline-offset-4">
               worktree settle step
             </a>
             , and that always waits on you first.
@@ -94,7 +94,7 @@ export function EngineWriteFunnelLanding() {
       </main>
 
       <EngineChapterNav active="write-funnel" />
-      <EngineFooter product={product} />
+      <SiteFooter product={product} />
     </ProductShell>
   );
 }

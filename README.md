@@ -1,25 +1,21 @@
 # CodeLoom pages
 
-Coming-soon landing pages for the CodeLoom family — an educational / resume project by [Iresh Sharma](https://iresharma.com).
+A single site for the CodeLoom family — an educational / resume project by [Iresh Sharma](https://iresharma.com).
 
-Each product is its own Next.js app. Shared copy and UI live in `packages/` so the sites stay visually consistent without sharing a server.
+One Next.js app, routed by section. Shared copy and UI live in `packages/` so the sections stay visually consistent.
 
-| Product | App | Host |
+| Section | Route | Status |
 | --- | --- | --- |
-| CodeLoom agent | `apps/agent` | [codeloom.iresharma.com](https://codeloom.iresharma.com) |
-| CodeLoom IDE | `apps/ide` | [ide.codeloom.iresharma.com](https://ide.codeloom.iresharma.com) |
-| CodeLoom TUI | `apps/tui` | [tui.codeloom.iresharma.com](https://tui.codeloom.iresharma.com) |
-| CodeLoom CLI | `apps/cli` | [cli.codeloom.iresharma.com](https://cli.codeloom.iresharma.com) |
-| CodeLoom Engine | `apps/engine` | [engine.codeloom.iresharma.com](https://engine.codeloom.iresharma.com) |
-
-Cross-product links use those hosts in production, and `localhost:3000`–`3004` during `pnpm dev`.
+| Engine | `/engine` | Shipping — the JSON-IPC Unix server |
+| Cloud Controller | `/cloud-controller` | Concept — fleet control for cloud agents |
+| Clients | `/clients` | In development — TUI + a Devin-style web agent |
 
 ## Stack
 
 - pnpm workspaces + Turborepo
-- Next.js 15 (App Router) in `apps/*`
+- Next.js 15 (App Router) in `apps/web`
 - Shared UI in `packages/ui`
-- Product metadata, hosts, and GitHub URLs in `packages/config`
+- Section metadata and GitHub URLs in `packages/config`
 
 ## Develop
 
@@ -28,13 +24,7 @@ pnpm install
 pnpm dev
 ```
 
-| App | Local URL |
-| --- | --- |
-| Agent | [http://localhost:3000](http://localhost:3000) |
-| IDE | [http://localhost:3001](http://localhost:3001) |
-| TUI | [http://localhost:3002](http://localhost:3002) |
-| CLI | [http://localhost:3003](http://localhost:3003) |
-| Engine | [http://localhost:3004](http://localhost:3004) |
+The app runs at [http://localhost:3000](http://localhost:3000).
 
 ```bash
 pnpm build
@@ -42,7 +32,7 @@ pnpm build
 
 ## Deploy
 
-Five Railway services in the `codeloom` project, one per app. Each service builds and starts with `pnpm --filter @codeloom/<app>`. Custom domains are attached in the Railway UI.
+One Railway service in the `codeloom` project, building and starting with `pnpm --filter @codeloom/web`. Custom domain is attached in the Railway UI.
 
 ## Links on every page
 

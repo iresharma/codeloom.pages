@@ -1,9 +1,6 @@
 "use client";
 
-import { PRODUCTS } from "@codeloom/config";
 import { motion } from "motion/react";
-
-const product = PRODUCTS.agent;
 
 const steps = [
   { status: "done", label: "explore", meta: "214 files indexed", time: "12s" },
@@ -66,7 +63,7 @@ export function AgentMock() {
           >
             writing tests…
           </motion.span>
-          <span style={{ color: product.accent.solid }}>you keep merge</span>
+          <span className="text-emerald-300">you keep merge</span>
         </div>
       </div>
     </div>
