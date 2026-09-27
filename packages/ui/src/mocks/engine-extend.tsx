@@ -1,9 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 
+import { FlowCanvas, lane, link, step, type FlowNode, type FlowTone } from "../components/flow";
 import { cn } from "../lib/utils";
+
+const X = [0, 165, 330];
+const NW = 135;
+
+function useSurfaceFlow(active: "tools" | "wire") {
+  return useMemo(() => {
+    const tools = active === "tools";
+    const on = (lit: boolean): FlowTone => (lit ? "default" : "muted");
+    const nodes: FlowNode[] = [
+      lane("l-tools", X[0], -30, "fast lane · the model", NW * 2 + 50),
+      step("model", X[0], 0, { label: "model", sub: "returns tool_calls", tone: on(tools), width: NW }, { selectable: false }),
+      step("toolpy", X[2], 0, { label: "tools/*.py", sub: "@tool, on restart", tone: tools ? "accent" : "muted", width: NW }, { selectable: false }),
+      lane("l-wire", X[0], 96, "slow lane · the client", NW * 2 + 50),
+      step("client", X[0], 126, { label: "client", sub: "TUI, web, REPL", tone: on(!tools), width: NW }, { selectable: false }),
+      step("cmds", X[1], 126, { label: "commands.py", sub: "@command", tone: tools ? "muted" : "accent", width: NW }, { selectable: false }),
+      step("session", X[2], 126, { label: "EngineSession", sub: "@handles", tone: on(!tools), width: NW }, { selectable: false }),
+      step("events", X[1], 236, { label: "events.py", sub: "@event", tone: tools ? "muted" : "accent", width: NW }, { selectable: false }),
+    ];
+    const edges = [
+      link("model", "toolpy", { from: "r", to: "l", label: "tool calls", tone: tools ? "accent" : "muted", animated: tools }),
+      link("client", "cmds", { from: "r", to: "l", label: "JSON cmd", tone: tools ? "muted" : "default", animated: !tools }),
+      link("cmds", "session", { from: "r", to: "l", tone: tools ? "muted" : "default", animated: !tools }),
+      link("session", "events", { from: "b", to: "r", label: "JSON event", tone: tools ? "muted" : "default", animated: !tools }),
+      link("events", "client", { from: "l", to: "b", tone: tools ? "muted" : "default", animated: !tools }),
+    ];
+    return { nodes, edges };
+  }, [active]);
+}
 
 type Tok = [text: string, cls?: string];
 
@@ -106,6 +135,7 @@ export function EngineExtend() {
   const reduce = useReducedMotion();
   const [active, setActive] = useState<Surface["id"]>("tools");
   const current = surfaces.find((item) => item.id === active) ?? surfaces[0];
+  const flow = useSurfaceFlow(active);
 
   return (
     <div className="border border-white/10">
@@ -155,24 +185,15 @@ export function EngineExtend() {
         </motion.pre>
       </div>
 
-      <div className="overflow-x-auto border-t border-white/10 px-5 py-4 font-mono text-[11px] leading-6 text-[#7a848c] sm:text-[12px]">
-        <p>
-          <span className="text-[#d5dde3]">model</span>
-          {"  --tool calls-->  "}
-          <span className="text-[#7a848c]">tools/*.py</span>
-        </p>
-        <p>
-          <span className="text-[#d5dde3]">client</span>
-          {"  --JSON cmd---->  "}
-          <span className="text-[#7a848c]">protocol/commands.py</span>
-          {"  -->  "}
-          <span className="text-[#ff5c33]">@handles</span>
-        </p>
-        <p>
-          <span className="text-[#d5dde3]">engine</span>
-          {"  --JSON event-->  "}
-          <span className="text-[#7a848c]">protocol/events.py</span>
-        </p>
+      <div className="border-t border-white/10">
+        <FlowCanvas
+          nodes={flow.nodes}
+          edges={flow.edges}
+          heightClass="h-[300px] md:h-[360px]"
+          layoutKey={active}
+          minWidth={480}
+          ariaLabel="Two ways in: the model calls tools in tools/*.py; a client sends a JSON command through commands.py to an @handles method on EngineSession, which answers with a JSON event from events.py."
+        />
       </div>
     </div>
   );

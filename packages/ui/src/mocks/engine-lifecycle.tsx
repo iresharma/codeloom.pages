@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Braces, CheckCircle2, Circle, FileSearch, Fingerprint, Lock, RotateCcw, Save, XCircle } from "lucide-react";
-import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Braces, CheckCircle2, Circle, FileSearch, Fingerprint, HardDrive, Lock, RotateCcw, Save, XCircle } from "lucide-react";
+import { useInView, useReducedMotion } from "motion/react";
 
+import { FlowCanvas, link, step, type EdgeTone, type FlowNode, type FlowTone } from "../components/flow";
 import { cn } from "../lib/utils";
 
 type Scenario = "happy" | "rejected" | "rollback";
@@ -11,13 +12,32 @@ type Status = "pending" | "active" | "passed" | "failed" | "skip";
 type Verdict = "running" | "success" | "failed" | "reverting" | "reverted";
 
 const stages = [
-  { id: "read", label: "read", icon: FileSearch },
-  { id: "guard", label: "guard", icon: Lock },
-  { id: "identity", label: "id", icon: Fingerprint },
-  { id: "syntax", label: "syntax", icon: Braces },
-  { id: "atomic", label: "write", icon: Save },
-  { id: "undo", label: "undo", icon: RotateCcw },
+  { id: "read", label: "read", sub: "read before edit", icon: FileSearch },
+  { id: "guard", label: "guard", sub: "no escapes, no secrets", icon: Lock },
+  { id: "identity", label: "id", sub: "SHA matches last read", icon: Fingerprint },
+  { id: "syntax", label: "syntax", sub: "tree-sitter re-parse", icon: Braces },
+  { id: "atomic", label: "write", sub: "atomic, whole batch", icon: Save },
+  { id: "undo", label: "undo", sub: "before/after journaled", icon: RotateCcw },
 ] as const;
+
+const NODE_W = 190;
+const ROW = 74;
+
+const STAGE_TONE: Record<Status, FlowTone> = {
+  pending: "ghost",
+  skip: "muted",
+  active: "active",
+  passed: "default",
+  failed: "danger",
+};
+
+const DISK: Record<Verdict, { tone: FlowTone; sub: string }> = {
+  running: { tone: "ghost", sub: "waiting" },
+  success: { tone: "success", sub: "committed" },
+  failed: { tone: "danger", sub: "untouched — nothing written" },
+  reverting: { tone: "warn", sub: "restoring before bytes" },
+  reverted: { tone: "default", sub: "restored, SHAs re-verified" },
+};
 
 const FAIL_AT = 3; // syntax
 const STEP_MS = 500;
@@ -41,69 +61,6 @@ function VerdictIcon({ verdict, className }: { verdict: Verdict; className?: str
   if (verdict === "failed") return <XCircle className={className} />;
   if (verdict === "reverting" || verdict === "reverted") return <RotateCcw className={cn(className, verdict === "reverting" && "animate-spin")} />;
   return <Circle className={cn(className, "animate-pulse")} />;
-}
-
-function Tile({ icon: Icon, label, status }: { icon: typeof FileSearch; label: string; status: Status }) {
-  const reduce = useReducedMotion();
-  return (
-    <div className={cn("flex flex-col items-center gap-1.5 transition-opacity duration-300", status === "skip" && "opacity-30")}>
-      <span className="relative flex size-11 items-center justify-center">
-        {status === "active" && !reduce ? (
-          <motion.span
-            className="absolute rounded-full bg-white/20"
-            animate={{ width: [11, 30], height: [11, 30], opacity: [0.6, 0] }}
-            transition={{ duration: 0.9, repeat: Infinity, ease: "easeOut" }}
-          />
-        ) : null}
-        <span
-          className={cn(
-            "relative flex size-11 items-center justify-center border transition-colors duration-300",
-            status === "failed" && "border-red-400 bg-red-500/10",
-            (status === "passed" || status === "active") && "border-[#d5dde3] bg-[#d5dde3]/10",
-            (status === "pending" || status === "skip") && "border-white/15 bg-[#0c1014]",
-          )}
-        >
-          <Icon
-            className={cn(
-              "size-5",
-              status === "failed" && "text-red-400",
-              (status === "passed" || status === "active") && "text-[#d5dde3]",
-              (status === "pending" || status === "skip") && "text-[#7a848c]/60",
-            )}
-          />
-        </span>
-      </span>
-      <span className={cn("font-mono text-[10px] uppercase tracking-wider", status === "pending" || status === "skip" ? "text-[#7a848c]/50" : "text-[#d5dde3]")}>
-        {label}
-      </span>
-    </div>
-  );
-}
-
-function Connector({ status, showDot }: { status: Status; showDot: boolean }) {
-  return (
-    <div className="relative mt-[1.375rem] flex h-px flex-1 items-center">
-      <span
-        className={cn(
-          "h-px w-full transition-colors duration-300",
-          status === "failed" && "bg-red-400",
-          (status === "passed" || status === "active") && "bg-[#d5dde3]",
-          (status === "pending" || status === "skip") && "bg-white/10",
-        )}
-      />
-      <AnimatePresence>
-        {showDot ? (
-          <motion.span
-            initial={{ opacity: 0, left: "0%" }}
-            animate={{ opacity: 1, left: "100%" }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: STEP_MS / 1000, ease: "linear" }}
-            className="absolute top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#d5dde3]"
-          />
-        ) : null}
-      </AnimatePresence>
-    </div>
-  );
 }
 
 export function EngineLifecycle() {
@@ -148,9 +105,9 @@ export function EngineLifecycle() {
     timeouts.current.push(window.setTimeout(() => setPhase("reverting"), reverseStart));
     // reverseIndex sweeps 5 → -1: stages with index > reverseIndex read as "pending" (undone).
     // Starting at 5 keeps everything "passed" at the first tick, so the sweep is progressive, not an instant reset.
-    for (let step = 0; step <= 6; step++) {
-      const i = 5 - step;
-      timeouts.current.push(window.setTimeout(() => setReverseIndex(i), reverseStart + step * STEP_MS));
+    for (let tick = 0; tick <= 6; tick++) {
+      const i = 5 - tick;
+      timeouts.current.push(window.setTimeout(() => setReverseIndex(i), reverseStart + tick * STEP_MS));
     }
     timeouts.current.push(window.setTimeout(() => setPhase("settled"), reverseStart + 7 * STEP_MS + 300));
   };
@@ -169,7 +126,7 @@ export function EngineLifecycle() {
     if (scenario === "rejected" && i > FAIL_AT) return "skip";
     if (scenario === "rejected" && i === FAIL_AT && index >= FAIL_AT) return "failed";
     if (i < index) return "passed";
-    if (i === index) return "active";
+    if (i === index) return phase === "forward" ? "active" : "passed";
     return "pending";
   };
 
@@ -197,6 +154,59 @@ export function EngineLifecycle() {
             : phase === "reverting"
               ? "reverting"
               : "reverted";
+
+  const { nodes, edges } = useMemo(() => {
+    const disk = DISK[verdict];
+    const nodes: FlowNode[] = stages.map((stage, i) =>
+      step(stage.id, -NODE_W / 2, i * ROW, {
+        label: stage.label,
+        sub: stage.sub,
+        icon: stage.icon,
+        tone: STAGE_TONE[status(i)],
+        width: NODE_W,
+        align: "left",
+      }, { selectable: false }),
+    );
+    nodes.push(
+      step("disk", -NODE_W / 2, stages.length * ROW + 24, {
+        label: "auth.py on disk",
+        sub: disk.sub,
+        icon: HardDrive,
+        tone: disk.tone,
+        width: NODE_W,
+        align: "left",
+      }, { selectable: false }),
+    );
+    const connectorTone = (st: Status): EdgeTone => (st === "passed" || st === "active" ? "default" : "muted");
+    const edges = stages.slice(1).map((stage, i) =>
+      link(stages[i].id, stage.id, {
+        tone: connectorTone(connectorStatus(i)),
+        animated: !reverting && phase === "forward" && index === i && !(scenario === "rejected" && i === FAIL_AT),
+      }),
+    );
+    if (scenario === "rejected") {
+      const failed = status(FAIL_AT) === "failed";
+      edges.push(
+        link(stages[FAIL_AT].id, "disk", {
+          from: "r",
+          to: "r",
+          tone: failed ? "danger" : "muted",
+          dashed: true,
+          label: failed ? "rejected" : undefined,
+          id: "reject",
+        }),
+      );
+    }
+    edges.push(
+      link(stages[stages.length - 1].id, "disk", {
+        tone: verdict === "success" ? "success" : reverting ? "warn" : "muted",
+        animated: verdict === "success" || phase === "reverting",
+        label: verdict === "success" ? "committed" : reverting ? "undo_edit" : undefined,
+      }),
+    );
+    return { nodes, edges };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, reverseIndex, phase, scenario, verdict]);
 
   return (
     <div
@@ -267,42 +277,12 @@ export function EngineLifecycle() {
         </div>
       </div>
 
-      <div className="px-6 pt-10 pb-6 md:px-10">
-        <div className="flex items-start">
-          {stages.map((stage, i) => (
-            <div key={stage.id} className="flex flex-1 items-start last:flex-none">
-              <Tile icon={stage.icon} label={stage.label} status={status(i)} />
-              {i < stages.length - 1 ? (
-                <Connector
-                  status={connectorStatus(i)}
-                  showDot={!reverting && phase === "forward" && index === i && !(scenario === "rejected" && i === FAIL_AT)}
-                />
-              ) : null}
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-5 flex min-h-[2.25rem] items-center justify-center">
-          {verdict === "running" ? (
-            <div className="flex items-center gap-2 font-mono text-[12px] text-[#7a848c]">
-              <span className="size-1.5 animate-pulse rounded-full bg-[#7a848c]" />
-              running…
-            </div>
-          ) : (
-            <div
-              className={cn(
-                "flex items-center gap-2 border px-4 py-1.5 font-mono text-[12px] tracking-[0.02em] transition-colors duration-300",
-                verdict === "success" && "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
-                verdict === "failed" && "border-red-500/40 bg-red-500/10 text-red-400",
-                (verdict === "reverting" || verdict === "reverted") && "border-white/25 bg-white/5 text-[#d5dde3]",
-              )}
-            >
-              <VerdictIcon verdict={verdict} className="size-3.5" />
-              {VERDICT_LABEL[verdict]}
-            </div>
-          )}
-        </div>
-      </div>
+      <FlowCanvas
+        nodes={nodes}
+        edges={edges}
+        heightClass="h-[560px] md:h-[640px]"
+        ariaLabel={`Write funnel, ${scenario} scenario: read, guard, id, syntax, write, undo, then disk. Verdict: ${VERDICT_LABEL[verdict]}.`}
+      />
 
       <p className="border-t border-white/10 px-6 py-4 text-center text-[13px] leading-6 text-[#7a848c] md:px-10">
         {captions[scenario]}

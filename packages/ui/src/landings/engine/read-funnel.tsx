@@ -8,6 +8,7 @@ import { SiteNav } from "../../chrome/site-nav";
 import { EngineSubNav } from "../../chrome/engine-subnav";
 import { ProductShell } from "../../components/product-shell";
 import { Reveal } from "../../magic/reveal";
+import { EngineReadLadder } from "../../mocks/engine-read-ladder";
 import { readTiers } from "./data";
 
 const product = PRODUCTS.engine;
@@ -20,7 +21,7 @@ export function EngineReadFunnelLanding() {
       <SiteNav active="engine" />
       <EngineSubNav active="read-funnel" />
 
-      <main className="mx-auto max-w-3xl px-5 md:px-8">
+      <main className="mx-auto max-w-5xl px-5 md:px-8 xl:max-w-6xl">
         <section className="border-b border-white/10 py-14 md:py-20">
           <motion.p
             initial={reduce ? false : { opacity: 0 }}
@@ -79,24 +80,9 @@ export function EngineReadFunnelLanding() {
             <span className="text-[#d5dde3]">ask</span> and <span className="text-[#d5dde3]">coder</span> both
             follow the same cost hierarchy on every question:
           </p>
-          <div className="mt-5 space-y-2.5">
-            {[
-              ["search / list_files", "locate the file"],
-              ["list_symbols", "see what's in it"],
-              ["find_symbol", "one definition's source, plus its 1-based coordinate"],
-              ["goto_definition / find_references / hover", "the cross-file, cross-type question"],
-              ["get_diagnostics", "what the type checker already knows"],
-              ["read_file", "windows for whatever context is still missing"],
-            ].map(([step, why], i) => (
-              <Reveal key={step} delay={i * 0.03}>
-                <div className="flex gap-3 text-[13px]">
-                  <span className="w-4 shrink-0 font-mono text-[#7a848c]">{i + 1}</span>
-                  <span className="w-72 shrink-0 font-mono text-[#d5dde3]">{step}</span>
-                  <span className="leading-6 text-[#7a848c]">{why}</span>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          <Reveal className="mt-5">
+            <EngineReadLadder />
+          </Reveal>
           <p className="mt-4 max-w-xl text-[13px] leading-6 text-[#7a848c]">
             find_symbol&apos;s coordinate is the handoff — it feeds the LSP tools directly, so the model is never
             asked to count characters itself.

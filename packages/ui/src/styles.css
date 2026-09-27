@@ -1,3 +1,5 @@
+@import "@xyflow/react/dist/base.css";
+
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
@@ -296,4 +298,47 @@
     transform: translateY(15rem);
     opacity: 0;
   }
+}
+
+/* React Flow diagrams on the engine pages. */
+.engine-flow .react-flow__node {
+  cursor: default;
+}
+.engine-flow .react-flow__node.selectable {
+  cursor: pointer;
+}
+.engine-flow .react-flow__edge-text {
+  font-family: var(--font-mono);
+}
+.engine-flow .react-flow__controls {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+.engine-flow .react-flow__controls-button {
+  background: #0c1014;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #7a848c;
+  fill: #7a848c;
+  width: 22px;
+  height: 22px;
+}
+.engine-flow .react-flow__controls-button:hover {
+  background: #10161c;
+  color: #d5dde3;
+  fill: #d5dde3;
+}
+.engine-flow .react-flow__controls-button svg {
+  max-width: 10px;
+  max-height: 10px;
+}
+.engine-flow .react-flow__attribution {
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+.engine-flow .react-flow__attribution a {
+  color: rgba(122, 132, 140, 0.5);
+}
+.engine-flow .react-flow__edge-path {
+  transition: stroke 300ms, opacity 300ms;
 }

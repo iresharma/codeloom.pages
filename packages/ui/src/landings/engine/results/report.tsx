@@ -8,6 +8,7 @@ import { SiteNav } from "../../../chrome/site-nav";
 import { EngineSubNav } from "../../../chrome/engine-subnav";
 import { ProductShell } from "../../../components/product-shell";
 import { Reveal } from "../../../magic/reveal";
+import { DecisionFlowGraph } from "./decision-flow";
 import { codeQualityTone, recommendationTone } from "./severity";
 import type { EngineResultReport, FlowPhase, ReportFinding, Severity } from "./types";
 
@@ -68,7 +69,7 @@ function FlowCard({ phase }: { phase: FlowPhase }) {
         </span>
         <span className="ml-auto flex gap-2 text-[11px] text-[#7a848c]">
           <span>${phase.costUsd.toFixed(4)}</span>
-          <span>{phase.tokens.toLocaleString()} tok</span>
+          <span>{phase.tokens.toLocaleString("en-US")} tok</span>
           <span>{phase.toolCalls} tools</span>
         </span>
       </div>
@@ -169,7 +170,7 @@ export function EngineResultReport({ report }: { report: EngineResultReport }) {
       <SiteNav active="engine" />
       <EngineSubNav active="results" />
 
-      <main className="mx-auto max-w-3xl px-5 md:px-8">
+      <main className="mx-auto max-w-5xl px-5 md:px-8 xl:max-w-6xl">
         <section className="border-b border-white/10 py-10 md:py-14">
           <a href="/engine/results" className="font-mono text-[12px] text-[#7a848c] hover:text-[#d5dde3]">
             ← results
@@ -212,7 +213,7 @@ export function EngineResultReport({ report }: { report: EngineResultReport }) {
         <section className="border-b border-white/10 py-8">
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
             <StatTile label="cost" value={`$${report.stats.costUsd.toFixed(2)}`} />
-            <StatTile label="tokens" value={report.stats.totalTokens.toLocaleString()} />
+            <StatTile label="tokens" value={report.stats.totalTokens.toLocaleString("en-US")} />
             <StatTile label="turns" value={String(report.stats.turns)} />
             <StatTile label="tool calls" value={String(report.stats.toolCalls)} />
           </div>
@@ -229,31 +230,9 @@ export function EngineResultReport({ report }: { report: EngineResultReport }) {
           <p className="font-mono text-[13px] font-bold text-[#d5dde3]">
             How it got here <span className="text-[#7a848c]">— decision flow, spawn-by-spawn</span>
           </p>
-          <div className="mt-5 space-y-3">
-            {report.decisionFlow.phases.map((phase, i) => (
-              <Reveal key={`${phase.profile}-${phase.agentId}`} delay={i * 0.03}>
-                <FlowCard phase={phase} />
-              </Reveal>
-            ))}
-          </div>
-          {report.decisionFlow.settle ? (
-            <div className="mt-3 border border-white/10 border-l-2 border-l-[#34d399] p-4">
-              <p className="font-mono text-[12px] text-[#d5dde3]">
-                <span className="font-bold uppercase">worktree settled</span>{" "}
-                <span className="text-[#34d399]">{report.decisionFlow.settle.action}</span>
-              </p>
-              {report.decisionFlow.settle.prUrl ? (
-                <a
-                  href={report.decisionFlow.settle.prUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-1 inline-block font-mono text-[12px] text-[#ff5c33] underline underline-offset-4"
-                >
-                  {report.decisionFlow.settle.prUrl}
-                </a>
-              ) : null}
-            </div>
-          ) : null}
+          <Reveal className="mt-5">
+            <DecisionFlowGraph report={report} renderPhase={(phase) => <FlowCard phase={phase} />} />
+          </Reveal>
         </section>
 
         <section className="border-b border-white/10 py-10">

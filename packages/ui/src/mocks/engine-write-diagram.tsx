@@ -1,70 +1,54 @@
 "use client";
 
-import { useState } from "react";
-import { Bot, Check, FileCode2, ShieldCheck, X } from "lucide-react";
-import { motion } from "motion/react";
+import { useMemo, useState } from "react";
+import { Bot, FileCode2, ShieldCheck } from "lucide-react";
 
+import { FlowCanvas, lane, link, step, type FlowNode } from "../components/flow";
 import { cn } from "../lib/utils";
 
 type Scenario = "clean" | "bad";
-type Tone = "normal" | "accent" | "dim" | "danger";
-
-function Tile({ icon: Icon, label, tone = "normal" }: { icon: typeof Bot; label: string; tone?: Tone }) {
-  return (
-    <div className={cn("flex flex-col items-center gap-2 transition-opacity duration-300", tone === "dim" && "opacity-30")}>
-      <div
-        className={cn(
-          "flex size-14 items-center justify-center border transition-colors duration-300",
-          tone === "accent" && "border-[#d5dde3] bg-[#d5dde3]",
-          tone === "danger" && "border-red-500/40 bg-red-500/10",
-          (tone === "normal" || tone === "dim") && "border-white/20",
-        )}
-      >
-        <Icon
-          className={cn(
-            "size-6",
-            tone === "accent" && "text-[#0c1014]",
-            tone === "danger" && "text-red-400",
-            (tone === "normal" || tone === "dim") && "text-[#7a848c]",
-          )}
-        />
-      </div>
-      <p className="font-mono text-[11px] text-[#d5dde3]">{label}</p>
-    </div>
-  );
-}
-
-function Connector({ tone = "dim", label }: { tone?: "dim" | "accent" | "danger"; label?: string }) {
-  return (
-    <div className="flex flex-col items-center gap-1 py-1">
-      <span
-        className={cn(
-          "h-6 w-px",
-          tone === "accent" && "bg-[#d5dde3]",
-          tone === "danger" && "bg-red-400",
-          tone === "dim" && "bg-white/15",
-        )}
-      />
-      {label ? (
-        <motion.p
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={cn(
-            "flex items-center gap-1 font-mono text-[11px]",
-            tone === "accent" && "text-[#d5dde3]",
-            tone === "danger" && "text-red-400",
-          )}
-        >
-          {tone === "accent" ? <Check className="size-3" /> : <X className="size-3" />}
-          {label}
-        </motion.p>
-      ) : null}
-    </div>
-  );
-}
+const W = 150;
+const LEFT = -W - 20;
+const RIGHT = 20;
 
 export function EngineWriteDiagram() {
   const [scenario, setScenario] = useState<Scenario>("clean");
+  const bad = scenario === "bad";
+
+  const { nodes, edges } = useMemo(() => {
+    const nodes: FlowNode[] = [
+      lane("l-without", LEFT, -34, "without a funnel", W),
+      lane("l-with", RIGHT, -34, "with the funnel", W),
+      step("a1", LEFT, 0, { label: "agent", icon: Bot, width: W }, { selectable: false }),
+      step("f1", LEFT, 250, {
+        label: "auth.py",
+        sub: bad ? "broken edit saved" : "saved",
+        icon: FileCode2,
+        tone: bad ? "danger" : "default",
+        width: W,
+      }, { selectable: false }),
+      step("a2", RIGHT, 0, { label: "agent", icon: Bot, width: W }, { selectable: false }),
+      step("gate", RIGHT, 125, { label: "write funnel", sub: "six checks", icon: ShieldCheck, tone: "active", width: W }, { selectable: false }),
+      step("f2", RIGHT, 250, {
+        label: "auth.py",
+        sub: bad ? "untouched" : "committed, undo-ready",
+        icon: FileCode2,
+        tone: bad ? "muted" : "success",
+        width: W,
+      }, { selectable: false }),
+    ];
+    const edges = [
+      link("a1", "f1", { tone: bad ? "danger" : "default", animated: true, label: "straight to disk" }),
+      link("a2", "gate", { animated: true }),
+      link("gate", "f2", {
+        tone: bad ? "danger" : "success",
+        animated: !bad,
+        dashed: bad,
+        label: bad ? "rejected" : "committed",
+      }),
+    ];
+    return { nodes, edges };
+  }, [bad]);
 
   return (
     <div className="border border-white/10">
@@ -92,42 +76,19 @@ export function EngineWriteDiagram() {
         </div>
       </div>
 
-      <div className="grid divide-y divide-white/10 md:grid-cols-2 md:divide-x md:divide-y-0">
-        <div className="flex flex-col items-center px-8 py-10">
-          <p className="mb-6 font-mono text-[11px] tracking-[0.2em] text-[#7a848c] uppercase">
-            without a write funnel
-          </p>
-          <Tile icon={Bot} label="agent" />
-          <Connector tone="dim" />
-          <Tile icon={FileCode2} label="auth.py" tone="accent" />
-          <p className="mt-6 max-w-[16rem] text-center text-[13px] leading-6 text-[#7a848c]">
-            Writes go straight to disk. A broken edit saves just as easily as a good one.
-          </p>
-        </div>
-
-        <div className="flex flex-col items-center bg-white/[0.02] px-8 py-10">
-          <p className="mb-6 font-mono text-[11px] tracking-[0.2em] text-[#7a848c] uppercase">with the write funnel</p>
-          <Tile icon={Bot} label="agent" />
-          <Connector tone="dim" />
-          <Tile icon={ShieldCheck} label="write funnel" tone="accent" />
-          {scenario === "clean" ? (
-            <>
-              <Connector tone="accent" label="committed" />
-              <Tile icon={FileCode2} label="auth.py" tone="accent" />
-            </>
-          ) : (
-            <>
-              <Connector tone="danger" label="rejected" />
-              <Tile icon={FileCode2} label="auth.py" tone="dim" />
-            </>
-          )}
-          <p className="mt-6 max-w-[16rem] text-center text-[13px] leading-6 text-[#7a848c]">
-            {scenario === "clean"
-              ? "Six checks pass. The edit lands, journaled and undo-ready."
-              : "The syntax gate catches a new ERROR node. Nothing is written."}
-          </p>
-        </div>
-      </div>
+      <FlowCanvas
+        nodes={nodes}
+        edges={edges}
+        heightClass="h-[380px] md:h-[420px]"
+        layoutKey={scenario}
+        minWidth={340}
+        ariaLabel={`Write path, ${scenario} edit: without a funnel the agent writes straight to disk; with the funnel, the edit is ${bad ? "rejected and nothing is written" : "committed"}.`}
+      />
+      <p className="border-t border-white/10 px-6 py-4 text-center text-[13px] leading-6 text-[#7a848c]">
+        {bad
+          ? "Without a funnel, the broken edit saves like any other. With it, the syntax gate catches a new ERROR node and nothing is written."
+          : "Six checks pass. The edit lands, journaled and undo-ready."}
+      </p>
     </div>
   );
 }

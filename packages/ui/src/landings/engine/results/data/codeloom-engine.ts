@@ -1,246 +1,481 @@
 import type { EngineResultReport } from "../types";
 
 export const codeloomEngineReport: EngineResultReport = {
-  slug: "codeloom-engine",
-  repo: "iresharma/codeloom.engine",
-  prUrl: "https://github.com/iresharma/codeloom.engine/pull/41",
-  prNumber: 41,
-  runStatus: "ok",
-  taskTitle: "HTTP hardening + binary packaging investigation",
-  taskSummary:
-    "Two-part task, one PR: (A) harden the http_request tool against timeouts, TLS/DNS failures, redirect loops, and connection resets, with retry-with-backoff for idempotent methods only; (B) investigate packaging the engine as a single deployable binary — pick a tool, produce a working prototype build, and document what does not survive naive bundling (tree-sitter grammars, npx-spawned language servers, gopls, Playwright browsers).",
-  taskPrompt:
-    "This repo is the engine you are currently running as — you are being asked to improve your own codebase. This is a two-part task; land it as a single PR.\n\nPart A — robust HTTP/HTTPS error handling. Harden the http_request tool against connection/read timeouts, TLS/certificate errors, redirect loops, connection resets/DNS failures, and retry with backoff for transient failures — never retrying non-idempotent methods or 4xx responses. Every failure mode should degrade to a clear `error: ...` string. Add or extend tests, mocking the transport rather than hitting the real network.\n\nPart B — investigate packaging the engine as a deployable binary (PyInstaller, Nuitka, or shiv/zipapp). Scope realistically: produce a working build for the core server + client path, checked in as a re-runnable build script, plus a short doc on what does not survive naive bundling and why (tree-sitter grammars, npx-spawned language servers, gopls, Playwright browsers) and what a full solution would require.\n\nClose with a single paragraph summarizing exactly what changed in both parts — that summary becomes the PR title and body verbatim.",
-  stats: {
-    costUsd: 3.2479,
-    totalTokens: 5021181,
-    turns: 138,
-    toolCalls: 188,
-    elapsedSeconds: 151.6,
-    agentProfiles: ["researcher", "ask", "coder", "coder", "reviewer"],
+  "slug": "codeloom-engine",
+  "repo": "iresharma/codeloom.engine",
+  "prUrl": "https://github.com/iresharma/codeloom.engine/pull/44",
+  "prNumber": 44,
+  "runStatus": "ok",
+  "taskTitle": "HTTP hardening + binary packaging investigation",
+  "taskSummary": "Two-part task, one PR: (A) harden the http_request tool against timeouts, TLS/DNS failures, redirect loops, and connection resets, with retry-with-backoff for idempotent methods only; (B) investigate packaging the engine as a single deployable binary — pick a tool, produce a working prototype build, and document what does not survive naive bundling (tree-sitter grammars, npx-spawned language servers, gopls, Playwright browsers).",
+  "taskPrompt": "This repo is the engine you are currently running as — you are being asked to\nimprove your own codebase. This is a two-part task; land it as a single PR.\n\n## Part A — robust HTTP/HTTPS error handling\n\nFind the `http_request` tool (under `tools/`). Harden it against real-world\nfailure modes that a naive implementation misses:\n\n- Connection timeouts and read timeouts, with sane, configurable defaults.\n- TLS/certificate errors surfaced as a clear, actionable error string rather\n  than a raw stack trace.\n- Redirect handling (including redirect loops).\n- Connection resets / DNS failures.\n- Retry with backoff for transient failures (timeouts, 5xx) — but do not retry\n  non-idempotent methods or 4xx responses.\n\nEvery failure mode should degrade to a clear `error: ...` string the calling\nmodel can read and react to, matching the existing convention in this\ncodebase where tool exceptions become readable error strings instead of\naborting the turn. Add or extend tests under `tests/` covering these failure\npaths (mock the transport, don't hit the real network in tests).\n\n## Part B — investigate packaging the engine as a deployable binary\n\nRight now this is a Python project run via `python app.py` / `python\ndummy_client.py` inside a venv. Investigate turning it into a single\ndeployable binary (PyInstaller, Nuitka, and shiv/zipapp are the obvious\ncandidates — pick one and justify the choice).\n\nScope this realistically: you do not need to solve full packaging in one PR.\nProduce:\n\n1. A working build for the core server + client path (`app.py`, headless\n   client) using your chosen tool, checked into the repo as a build script\n   (e.g. `scripts/build_binary.sh` or similar) that someone else can re-run.\n2. A short written doc (e.g. `docs/packaging.md`) explaining what does *not*\n   survive naive bundling and why: tree-sitter grammar packages, `npx`-spawned\n   language servers (pyright, typescript-language-server), `gopls`, and\n   Playwright's browser binaries are the known trouble spots — investigate\n   each rather than assuming, and write down what you actually found. State\n   clearly what a *full* solution would require, as a scoped follow-up plan,\n   rather than trying to solve all of it here.\n\nWhen you are done, close with a single clear paragraph summarizing exactly\nwhat you changed (both parts) — that summary becomes the pull request's title\nand body verbatim, so make it read like a real PR description. Be explicit in\nthat summary about what Part B's prototype does and does not cover.",
+  "stats": {
+    "costUsd": 3.6662,
+    "totalTokens": 7944517,
+    "turns": 181,
+    "toolCalls": 248,
+    "elapsedSeconds": 196.6,
+    "agentProfiles": [
+      "ask",
+      "researcher",
+      "coder",
+      "reviewer",
+      "tester"
+    ]
   },
-  verification: {
-    language: "python",
-    builds: true,
-    hasTests: true,
-    testsPass: true,
+  "verification": {
+    "language": "unknown",
+    "builds": false,
+    "hasTests": false,
+    "testsPass": false
   },
-  decisionFlow: {
-    phases: [
-        {
-          profile: "ask",
-          agentId: "604e6843",
-          status: "ok",
-          costUsd: 0.327,
-          tokens: 503294,
-          toolCalls: 95,
-          judgeCalls: 7,
-          judgeFlags: 0,
-          why: "Survey this repo (the engine codebase) to prepare for two changes.",
-          topTools: [{ name: "search", count: 44 }, { name: "read_file", count: 32 }, { name: "remember", count: 18 }, { name: "list_files", count: 1 }],
-          outcome: "what: Survey of engine repo for http_request tool conventions, tests, entry points, deps, and subprocess/native-binary risk points (tree-sitter, npx/pyright/tsserver, gopls, playwright), ahead of packaging/refactor work.",
-          leftover: "None from source inspection — all requested files/behaviors were found and read directly. If the coder needs to know how `npx -y` behaves in a fully offline/no-network single-binary deployment (whether it fails loudly or hangs), that's a runtime/environment characteristic of `npx` itself, not something visible in this codebase; would need an actual sandboxed run to observe (out of scope for static read-only survey).",
-        },
-        {
-          profile: "researcher",
-          agentId: "faaf8290",
-          status: "ok",
-          costUsd: 0.345,
-          tokens: 474676,
-          toolCalls: 44,
-          judgeCalls: 0,
-          judgeFlags: 0,
-          why: "We need to package a Python 3 project (a CLI/server engine run via `python app.p",
-          topTools: [{ name: "web_fetch", count: 22 }, { name: "pkg_info", count: 6 }, { name: "github_repo", count: 6 }, { name: "web_search", count: 4 }, { name: "github_search_code", count: 4 }, { name: "remember", count: 2 }],
-          outcome: "what: Compare PyInstaller, Nuitka, and shiv/zipapp for packaging a Python 3 CLI/server (`app.py`) + headless client (`dummy_client.py`) into a deployable binary, given deps (requests/httpx, maybe Flask, tree-sitter bindings, subprocess calls to `npx`/`node`/Playwright browser), and recommend one for a first prototype covering just the core server+client path.",
-          leftover: "Did not test actual builds (no execution tooling available in this role) — a coder should validate: (a) whether Flask (if used) needs its own PyInstaller hook (it's well-supported but confirm version), (b) exact hidden-import list once tree-sitter's Python bindings + specific grammar packages are chosen (tree-sitter grammars are typically prebuilt `.so`/`.dll` per-language packages — will likely need `--collect-all` or explicit `binaries=` entries per grammar), (c) Playwright's browser binaries are downloaded separately via `playwright install` to a cache dir, not part of pip wheels — packagin",
-        },
-        {
-          profile: "coder",
-          agentId: "05c7ac0e",
-          status: "ok",
-          costUsd: 1.244,
-          tokens: 1565033,
-          toolCalls: 84,
-          judgeCalls: 25,
-          judgeFlags: 10,
-          why: "Both investigations are in. Now spawning a single coder to do Part A first (hardening `http_request`); Part B will continue in the same worktree afterward so everything lands as one branch/PR.",
-          topTools: [{ name: "read_file", count: 28 }, { name: "run_command", count: 18 }, { name: "str_replace", count: 12 }, { name: "search", count: 10 }, { name: "get_diagnostics", count: 8 }, { name: "insert_at_line", count: 2 }],
-          outcome: "what: Hardened `runtime/tools/httpx.py`'s HTTP primitive against timeouts, TLS/cert errors, DNS failures, connection resets, and redirect loops, and added idempotent-only retry-with-backoff for transient failures; extended `tools/http.py`'s public `http_request` with an optional `max_retries` passthrough; extended `tests/test_httpx_coverage.py` with a new `TestHardening` class plus fixed two existing tests whose exact error strings changed.",
-          leftover: "None outstanding for this task. Did not touch `runtime/tools/lsp.py`, `sitter.py`, `browser.py`, or packaging files per instructions. Did not add a `connect_timeout` param distinct from `timeout` to `tools/http.py`'s tool wrapper — stdlib urllib has no true connect/read split, so the single `timeout` knob is documented in `raw_request`'s docstring as covering both; if a later task wants per-phase timeouts it would require switching off stdlib `urllib` (out of scope, module intentionally stays pure-stdlib per the briefing).",
-        },
-        {
-          profile: "coder",
-          agentId: "683094d6",
-          status: "ok",
-          costUsd: 0.463,
-          tokens: 1137531,
-          toolCalls: 76,
-          judgeCalls: 19,
-          judgeFlags: 11,
-          why: "Part A complete and tests pass (92/92). Now continuing in the same worktree for Part B — the packaging investigation/build script/doc.",
-          topTools: [{ name: "run_command", count: 32 }, { name: "read_file", count: 16 }, { name: "search", count: 6 }, { name: "get_diagnostics", count: 6 }, { name: "create_file", count: 4 }, { name: "str_replace", count: 4 }],
-          outcome: "what: Implemented Part B — a PyInstaller-based single-binary packaging prototype for the engine, plus a doc investigating four native-process bundling trouble spots.",
-          leftover: "The four trouble spots (tree-sitter grammar bundling via --collect-all + empirical per-language parse test against the frozen binary; LD_LIBRARY_PATH sanitization before Popen in LSPClient.__init__ for npx/gopls; Playwright bundle-vs-document decision for the Chromium cache dir) are documented in docs/packaging.md but deliberately not implemented — explicitly scoped as follow-up work per the task. --onefile mode also deferred per the task's instruction.",
-        },
-        {
-          profile: "reviewer",
-          agentId: "43fded62",
-          status: "ok",
-          costUsd: 0.461,
-          tokens: 1072634,
-          toolCalls: 68,
-          judgeCalls: 5,
-          judgeFlags: 0,
-          why: "Both parts are done in the same worktree, and the packaging build was actually executed and smoke-tested (not just claimed). Let me get a reviewer verdict on the combined diff before asking you to merge/PR.",
-          topTools: [{ name: "read_file", count: 28 }, { name: "search", count: 28 }, { name: "todo_scan", count: 8 }, { name: "git_status", count: 2 }, { name: "git_diff", count: 2 }],
-          outcome: "Review complete. Verdict: approve.",
-          leftover: "none blocking. Optional follow-up (non-blocking): remove the dead `err == \"error: fetch timed out\"` fallback in httpx.py:209, and/or add one test that actually drives `_SafeRedirect.redirect_request` through >MAX_REDIRECTS hops rather than only mocking the resulting URLError string.",
-        }
+  "decisionFlow": {
+    "phases": [
+      {
+        "profile": "ask",
+        "agentId": "95d74988",
+        "status": "ok",
+        "costUsd": 0.414,
+        "tokens": 728121,
+        "toolCalls": 113,
+        "judgeCalls": 11,
+        "judgeFlags": 0,
+        "why": "Survey this repo to prepare a hardening + packaging PR. I need concrete facts, n",
+        "topTools": [
+          {
+            "name": "read_file",
+            "count": 46
+          },
+          {
+            "name": "search",
+            "count": 44
+          },
+          {
+            "name": "remember",
+            "count": 22
+          },
+          {
+            "name": "list_files",
+            "count": 1
+          }
+        ],
+        "outcome": "what: Survey for a hardening + packaging PR on the `http_request` tool, tool-error conventions, HTTP mocking tests, root",
+        "leftover": "- No pyproject.toml/setup.py exists, so \"packaging\" for this PR has no existing entry point to extend (e.g. no `[project.scripts]`, no `entry_points`); a coder must decide whether to add one or write a plain `scripts/build.sh`/PyInstaller spec — this is a design decision, not something I can resolve by reading further.\n- Confirmed no live PyInstaller config/script currently exists anywhere in the repo tree (only fixture strings in tests referencing a hypothetical `scripts/build.sh` with `pyinstaller==6.6.0`); if the PR is meant to implement rather than just plan packaging, that's new work with no prior art to match style against.\n- README's Requirements table and install docs never mention playwright at all (not even as optional) — worth explicitly deciding whether the hardening PR should add it, since browser tools currently fail silently/gracefully without it and there's no `playwright install chromium` step documented anywhere in the repo.\n- Did not check whether `docs/impl-plans/interpreter-dependency-floor.md`'s pinning recommendations (exact-pin every dependency) have since been applied elsewhere (e.g., a lockfile) — requirements.txt as read is still floor-only/unpinned, so if that plan already landed in some other branch, this repo state predates it."
+      },
+      {
+        "profile": "researcher",
+        "agentId": "5d82a72d",
+        "status": "ok",
+        "costUsd": 0.611,
+        "tokens": 1420101,
+        "toolCalls": 138,
+        "judgeCalls": 0,
+        "judgeFlags": 0,
+        "why": "I'm evaluating how to package a Python 3 application (an agentic coding engine w",
+        "topTools": [
+          {
+            "name": "github_search_code",
+            "count": 38
+          },
+          {
+            "name": "web_fetch",
+            "count": 36
+          },
+          {
+            "name": "github_file",
+            "count": 18
+          },
+          {
+            "name": "github_tree",
+            "count": 16
+          },
+          {
+            "name": "pkg_info",
+            "count": 10
+          },
+          {
+            "name": "web_search",
+            "count": 8
+          }
+        ],
+        "outcome": "what: Researched PyInstaller vs Nuitka vs shiv/zipapp for packaging a Python agentic coding engine (HTTP server + CLI cl",
+        "leftover": "Could not run web_search (BRAVE_API_KEY not configured in this environment — an environment limitation, not a code issue), so GitHub issue-tracker discussions for pyinstaller/pyinstaller repo itself (e.g. specific numbered issues about tree-sitter or playwright) could not be directly enumerated via github_search_code (returned no hits, possibly due to code-search indexing limits on hooks-contrib repo or issue-vs-code distinction) or via web search; findings instead rely on official docs, PyPI metadata, and real-world example repos (code-memory, event_scraper, prism_gui, istinye-bb-sync) that demonstrate the same patterns third-party maintainers use, which is strong but not identical to citing an official pyinstaller/pyinstaller GitHub issue number. If a coder needs exact issue numbers for internal citation, they should retry web_search once BRAVE_API_KEY is set, or browse github.com/pyinstaller/pyinstaller/issues directly (not fetchable by this agent's web_fetch tool, which refuses github.com HTML)."
+      },
+      {
+        "profile": "coder",
+        "agentId": "986bba23",
+        "status": "ok",
+        "costUsd": 1.496,
+        "tokens": 2997292,
+        "toolCalls": 108,
+        "judgeCalls": 24,
+        "judgeFlags": 16,
+        "why": "Both investigations are in. I now have concrete facts on the current `http_request` implementation, the codebase's error-string convention, the test-mocking pattern, and a researched PyInstaller verdi",
+        "topTools": [
+          {
+            "name": "run_command",
+            "count": 38
+          },
+          {
+            "name": "read_file",
+            "count": 26
+          },
+          {
+            "name": "str_replace",
+            "count": 16
+          },
+          {
+            "name": "get_diagnostics",
+            "count": 8
+          },
+          {
+            "name": "create_file",
+            "count": 6
+          },
+          {
+            "name": "search",
+            "count": 4
+          }
+        ],
+        "outcome": "what: Hardened runtime/tools/httpx.py raw_request with retry/backoff and TLS/DNS/connection-reset/redirect-loop handling",
+        "leftover": "none required for this task's scope. Optional future items already captured in docs/packaging.md's \"what a full solution would require\" section: real hand-rolled tree-sitter PyInstaller hook (replacing the coarse `--collect-all`), vendoring Node+node_modules for npx-based LSPs, cross-compiled `gopls` binaries, and a documented/vendored Playwright browser install step — explicitly out of scope per the task (\"Do not attempt to solve Node/gopls/Playwright bundling in code\").\nverify: the engine started tester f7c724c0 and reviewer f5279b4a on this worktree. Do not spawn tester or reviewer yourself and do not settle; wait for their reports. On request changes or a failing test, spawn coder with continue_from=986bba23de6a4b25b49a059fa4543d46."
+      },
+      {
+        "profile": "tester",
+        "agentId": "f7c724c0",
+        "status": "ok",
+        "costUsd": 0.38,
+        "tokens": 2288872,
+        "toolCalls": 104,
+        "judgeCalls": 27,
+        "judgeFlags": 14,
+        "why": "Test the coder's change in this worktree. It is the change on this branch, not a",
+        "topTools": [
+          {
+            "name": "run_command",
+            "count": 54
+          },
+          {
+            "name": "read_file",
+            "count": 38
+          },
+          {
+            "name": "search",
+            "count": 4
+          },
+          {
+            "name": "remember",
+            "count": 4
+          },
+          {
+            "name": "list_files",
+            "count": 2
+          },
+          {
+            "name": "create_file",
+            "count": 2
+          }
+        ],
+        "outcome": "what",
+        "leftover": ""
+      },
+      {
+        "profile": "reviewer",
+        "agentId": "f5279b4a",
+        "status": "ok",
+        "costUsd": 0.363,
+        "tokens": 248854,
+        "toolCalls": 28,
+        "judgeCalls": 2,
+        "judgeFlags": 2,
+        "why": "Review the coder's diff in this worktree against the user's task. Call git_diff ",
+        "topTools": [
+          {
+            "name": "read_file",
+            "count": 18
+          },
+          {
+            "name": "git_diff",
+            "count": 4
+          },
+          {
+            "name": "git_status",
+            "count": 2
+          },
+          {
+            "name": "find_references",
+            "count": 2
+          },
+          {
+            "name": "get_diagnostics",
+            "count": 2
+          }
+        ],
+        "outcome": "what: Reviewed hardening of runtime/tools/httpx.py (timeouts, TLS errors, DNS failures, connection resets, redirect-loop",
+        "leftover": "none blocking. Optional follow-ups (not required by task): the `_is_redirect_loop` substring heuristic could theoretically misfire on a legitimate reason string containing \"too many\"/\"infinite loop\" plus \"redirect\" — low risk, coder already flagged this. Pre-existing pyright attribute-access errors on ipaddress `_BaseAddress` (lines 83-85) predate this change and are out of scope."
+      }
     ],
-    settle: { profile: "coder", action: "pr", prUrl: "https://github.com/iresharma/codeloom.engine/pull/41" },
+    "settle": {
+      "profile": "coder",
+      "action": "pr",
+      "prUrl": "https://github.com/iresharma/codeloom.engine/pull/44"
+    }
   },
-  codeReview: {
-    verdict: "needs-changes",
-    summary:
-      "The HTTP-hardening change in runtime/tools/httpx.py is well-designed: the retry loop correctly gates on IDEMPOTENT_METHODS, the redirect-depth cap in _SafeRedirect.redirect_request() correctly fires before urllib's own built-in max_repeats/max_redirections check (verified by reading CPython's HTTPRedirectHandler.http_error_302 source), and every exception path still degrades to a plain 'error: ...' string. 13 new tests were added and the suite was actually run (exit code 0). The packaging prototype is honestly scoped and the investigation doc is well-cited against real file:line references. The two real gaps are a medium-severity test-coverage hole and a small piece of dead code the run's own reviewer already flagged but that was never cleaned up before merge.",
-    findings: [
+  "codeReview": {
+    "verdict": "needs-changes",
+    "summary": "Part A is careful work. The except-clause ordering respects the OSError subclass hierarchy. POST/PATCH are correctly excluded from retries. 4xx responses and exhausted 5xx responses still come back as real status/body, so the existing 'HTTP errors aren't tool failures' contract holds. The tests follow the repo's existing monkeypatch-`urlopen` pattern and never hit the network. Three things should be fixed before merge. (1) The retry loop runs inside a synchronous function that the async tool wrapper calls directly, and it uses `time.sleep`. One unresponsive host can now block the engine's event loop for about 61.5s instead of 20s. (2) The Part B 'working build' was only checked with `--help`. It very likely ships without the `tools/` package, because `discover_tools()` loads those modules through `pkgutil.walk_packages` + `importlib`, which PyInstaller cannot see. docs/packaging.md doesn't mention this, even though it is the most important thing that fails under naive bundling in this repo. (3) The task asked for separate connect and read timeouts. The diff leaves the single existing `timeout` untouched, yet the PR body says 'Added configurable connect/read timeouts'. The PR body also wrongly hedges that the test files were 'not confirmed'. The rest are low-severity notes: non-transient errors get retried through the generic URLError branch, a redundant except tuple, a leaked 5xx response on retry, the made-up 310 status code, and two overlapping new test files with unused imports.",
+    "findings": [
       {
-        id: "code-1",
-        category: "test-coverage",
-        severity: "medium",
-        file: "tests/test_httpx_coverage.py",
-        line: 826,
-        summary:
-          "The new redirect-loop-cap logic (_SafeRedirect.redirect_request()'s depth counter and MAX_REDIRECTS comparison) is never actually exercised by any test.",
-        detail:
-          "test_redirect_loop_detected monkeypatches http_impl.urlopen to directly raise urllib.error.URLError('too many redirects') rather than driving a real (or fake) chain of 302 responses through _SafeRedirect.redirect_request(). If the depth-counting logic itself has a bug (off-by-one, attribute not propagating across hops, wrong comparison operator), no test in this suite would catch it — the suite only proves that if that string is produced, it gets classified correctly by _classify_url_error. All 3 new redirect-related tests in TestHardening have this same gap.",
-        suggestedFix:
-          "Add a test that calls _SafeRedirect().redirect_request() directly in a loop (or builds a minimal fake urllib opener chain) to prove the cap actually fires at hop 6 and not at hop 4 or 10, exercising the real interaction with urllib's own max_repeats/max_redirections rather than only the downstream error-string mapping.",
+        "id": "code-1",
+        "category": "correctness",
+        "severity": "medium",
+        "file": "runtime/tools/httpx.py",
+        "line": 144,
+        "summary": "Retries use blocking `time.sleep` inside a synchronous `raw_request` that the async `tools/http.py` wrapper calls directly, so one hung GET can block the engine's event loop for about 61.5s instead of 20s.",
+        "detail": "The model calls `http_request GET http://homelab-box:8080/` against a service that accepts TCP but never answers, using the default timeout of 20. `tools/http.py:47` calls `http_request_impl(...)` synchronously from `async def http_request`. Before this PR that blocked the asyncio loop for 20s. Now it is 3 attempts × 20s + 0.5s + 1.0s of `time.sleep` backoff ≈ 61.5s. The engine runs the orchestrator and parallel subagents (this run had ask + researcher running at once) and the client socket server on that same loop, so every agent and the client connection freeze for a minute. The `timeout` parameter the model passes also no longer bounds the call. The same applies to internal callers of `raw_request` (docs_lookup/osv via get_json/fetch_text).",
+        "suggestedFix": "Enforce an overall deadline inside `raw_request`: compute `deadline = time.monotonic() + timeout`, pass the remaining time to each attempt, and stop retrying once it's spent. Also have the `tools/http.py` wrapper call the impl through `await asyncio.to_thread(...)` so a slow request can't block the event loop."
       },
       {
-        id: "code-2",
-        category: "simplification",
-        severity: "low",
-        file: "runtime/tools/httpx.py",
-        line: 206,
-        summary:
-          "raw_request()'s retry-decision line contains a dead disjunct comparing against an error string that can no longer be produced.",
-        detail:
-          'is_timeout = err.startswith("error: request timed out") or err == "error: fetch timed out" — the second clause matches the pre-PR timeout message, which _do_request no longer emits (it always returns f"error: request timed out after {timeout:g}s" now). The clause is unreachable and was already called out as a non-blocking nit by this run\'s own reviewer agent, but was never removed before the PR was opened.',
-        suggestedFix: 'Delete the `or err == "error: fetch timed out"` clause.',
+        "id": "code-2",
+        "category": "correctness",
+        "severity": "medium",
+        "file": "scripts/build_binary.sh",
+        "line": 47,
+        "summary": "The PyInstaller build doesn't collect the `tools/` package. Its modules are only reached through `pkgutil.walk_packages` + `importlib.import_module` in `tools/registry.py:discover_tools`, so the frozen server very likely starts with an empty or partial tool registry. The only smoke test ran `--help`, which exits before `EngineSession` is built.",
+        "detail": "Someone follows docs/packaging.md, runs `scripts/build_binary.sh`, then starts `dist/app/app ~/proj` and connects `dist/dummy_client/dummy_client --message ...`. PyInstaller's static analysis bundles only the modules it can see imported, and `tools.shell`, `tools.lsp`, `tools.remember` and so on are only imported by name at runtime. `discover_tools()` finds nothing to register, so the agent has no read_file/search/str_replace tools. The task's 'working build for the core server + client path' is therefore not shown to work. The run's evidence (`dist/app/app --help`, trace lines 424/477) only proves argparse runs. docs/packaging.md's 'What does NOT survive naive bundling' section doesn't mention this dynamic-discovery problem, the biggest one in this repo.",
+        "suggestedFix": "Add `--collect-submodules tools` (and the same for any other package loaded through pkgutil/importlib, plus `--add-data` for non-.py assets such as agent profiles, prompts or skills if they are read from disk). Extend verification to start `dist/app/app <tmpdir>` and run one headless `dummy_client --message` round-trip, or at least assert that `discover_tools().names()` is non-empty inside the frozen binary. Record the finding in docs/packaging.md."
       },
       {
-        id: "code-3",
-        category: "style",
-        severity: "low",
-        file: "scripts/build_binary.sh",
-        line: 25,
-        summary:
-          "The build script installs an unpinned pyinstaller version, undermining the script's stated re-runnability/reproducibility goal.",
-        detail:
-          "Running scripts/build_binary.sh six months from now silently picks up a newer PyInstaller major version with potentially different bundling/hook behavior than the 6.22.3 that was actually verified and documented in docs/packaging.md, so a 'known good' build script can quietly stop matching its own documentation.",
-        suggestedFix:
-          "Pin pyinstaller==6.22.3 (or the version range actually tested) in the pip install line, or add a one-line comment explaining that it's intentionally left floating and why.",
+        "id": "code-3",
+        "category": "correctness",
+        "severity": "medium",
+        "file": "runtime/tools/httpx.py",
+        "line": 110,
+        "summary": "The task asks for separate connect and read timeouts with configurable defaults. The diff leaves the single pre-existing `timeout: float = 20.0` unchanged, while the PR body says 'Added configurable connect/read timeouts'.",
+        "detail": "A maintainer reading PR #44 believes connect and read timeouts are now separate and tunable, but no such knob exists: `urlopen(request, timeout=timeout)` is exactly what the code did before. The task also said the closing summary would be used verbatim as the PR description and had to say exactly what changed. The body instead contains a false claim and wrongly hedges that 'exact new/extended test files under tests/ ... were not confirmed' and that 'final tester confirmation ... was still in progress' (the tester had already passed). The published PR record is therefore wrong.",
+        "suggestedFix": "Either add a real split, e.g. a `connect_timeout` (default ~10s) applied to the socket connect and a `read_timeout` applied per read, exposed as tool parameters with defaults. Or explicitly document that the one `timeout` bounds both connect and each read, and rewrite the PR body so it describes only what the diff does and drops the stale 'not confirmed / in progress' hedges."
       },
+      {
+        "id": "code-4",
+        "category": "correctness",
+        "severity": "low",
+        "file": "runtime/tools/httpx.py",
+        "line": 199,
+        "summary": "The catch-all URLError branch retries non-transient failures for idempotent methods, including `_SafeRedirect`'s own `URLError(\"blocked host\")` and `URLError(\"redirect must be http or https\")`, plus connection-refused.",
+        "detail": "A GET whose response redirects to 169.254.169.254 or to a `file:` URL is rejected by `_SafeRedirect`. That raises a plain URLError whose string reason matches none of the isinstance checks, so the request is re-sent twice more with 1.5s of backoff before returning 'error: request failed after 3 attempts: blocked host'. That's harmless but slow and confusing, and it means the SSRF guard gets hit three times.",
+        "suggestedFix": "Retry only when `exc.reason` is a transient OSError (TimeoutError, ConnectionResetError, ConnectionAbortedError). Have `_SafeRedirect` raise a dedicated subclass that is returned immediately."
+      },
+      {
+        "id": "code-5",
+        "category": "correctness",
+        "severity": "low",
+        "file": "runtime/tools/httpx.py",
+        "line": 193,
+        "summary": "DNS failures (`socket.gaierror`, bare or wrapped) are retried, although the task limited retries to timeouts and 5xx and a failed name lookup is usually permanent (a typo or an unknown host).",
+        "detail": "The model mistypes a hostname. Every idempotent request then spends 3 lookups plus 1.5s of backoff before returning the DNS error. It's a minor delay, but it is behavior the task didn't ask for.",
+        "suggestedFix": "Return the DNS error on the first failure, or retry only on `EAI_AGAIN` (temporary failure) and fail immediately on `EAI_NONAME`."
+      },
+      {
+        "id": "code-6",
+        "category": "correctness",
+        "severity": "low",
+        "file": "runtime/tools/httpx.py",
+        "line": 158,
+        "summary": "When a 5xx HTTPError is retried, the error response (`exc`, which holds the open socket/fp) is never closed before the next attempt.",
+        "detail": "Against a flapping 503 endpoint, each retried attempt leaves an open response object until GC collects it, producing ResourceWarnings or socket buildup in a long-running engine process.",
+        "suggestedFix": "Call `exc.close()` before `_backoff(attempt); continue` in the retriable-status branch."
+      },
+      {
+        "id": "code-7",
+        "category": "simplification",
+        "severity": "low",
+        "file": "runtime/tools/httpx.py",
+        "line": 176,
+        "summary": "`except (ConnectionResetError, ConnectionError)` is redundant because ConnectionResetError is a subclass of ConnectionError. The retry/backoff/attempt-count block is also copy-pasted into five branches.",
+        "detail": "No runtime bug. The duplication makes future changes to the retry policy easy to apply inconsistently across branches.",
+        "suggestedFix": "Use `except ConnectionError`. Factor out a small helper, e.g. `if _more_attempts(attempt): _backoff(attempt); attempt += 1; continue`, or classify each exception into (retryable, message) first and have a single retry site."
+      },
+      {
+        "id": "code-8",
+        "category": "style",
+        "severity": "low",
+        "file": "runtime/tools/httpx.py",
+        "line": 98,
+        "summary": "`_is_redirect_loop` special-cases status 310, which isn't a real HTTP status that urllib ever produces. It exists only so a test mock can use it, and the real detection relies on substring-matching urllib's `inf_msg` text.",
+        "detail": "A server returning a nonstandard 310 with a body gets reported as 'too many redirects'. If a future CPython rewords `inf_msg`, the real loop case silently falls through to returning the raw 30x status instead of an error string.",
+        "suggestedFix": "Drop the 310 branch. Detect loops structurally instead, e.g. by overriding `http_error_302` in `_SafeRedirect` to raise a dedicated exception when urllib's `max_redirections`/`max_repeats` check fires, and catch that exception type."
+      },
+      {
+        "id": "code-9",
+        "category": "test-coverage",
+        "severity": "low",
+        "file": "tests/test_httpx_hardening.py",
+        "line": 230,
+        "summary": "The redirect-loop tests mock `urlopen` to raise a hand-built HTTPError, so the actual `_SafeRedirect` handler with `max_redirections = MAX_REDIRECTS` is never exercised.",
+        "detail": "If urllib's loop detection or the handler wiring changes, the tests still pass while real redirect loops return a 30x status instead of an `error:` string.",
+        "suggestedFix": "Add one test that builds the opener with `_SafeRedirect` and a fake `HTTPHandler` subclass whose `http_open` always returns a 302 to the same URL, then assert that `raw_request` returns the 'too many redirects' error."
+      },
+      {
+        "id": "code-10",
+        "category": "test-coverage",
+        "severity": "low",
+        "file": "tests/test_httpx_edge_cases.py",
+        "line": 8,
+        "summary": "tests/test_httpx_edge_cases.py (added by the tester) largely duplicates tests/test_httpx_hardening.py: POST/PATCH not retried, TLS not retried, 4xx not retried and generic URLError retried are all asserted twice. Both files import unused `SimpleNamespace`/`contextmanager`, and `_ok_response` in the hardening file is never used.",
+        "detail": "Nothing breaks, but there are two places to update for every policy change, plus lint noise.",
+        "suggestedFix": "Merge the non-duplicate cases (PUT/DELETE retry, backoff growth, attempt-count messages) into test_httpx_hardening.py, delete the rest, and remove the unused imports and helper."
+      },
+      {
+        "id": "code-11",
+        "category": "style",
+        "severity": "low",
+        "file": "tests/test_httpx_edge_cases.py",
+        "line": 218,
+        "summary": "`TestFirstAttemptNoDelay.test_timeout_first_attempt_immediate` has a docstring saying the first timeout 'should fail immediately without sleep', but it asserts that MAX_RETRIES-1 sleeps happened. The name and docstring contradict what it checks.",
+        "detail": "Misleads future readers about the intended backoff behavior.",
+        "suggestedFix": "Rename it (e.g. `test_no_sleep_before_first_attempt`) and assert that `urlopen` was called before the first sleep, or drop it since `TestBackoffExponential` already covers the sleep schedule."
+      },
+      {
+        "id": "code-12",
+        "category": "style",
+        "severity": "low",
+        "file": "scripts/build_binary.sh",
+        "line": 26,
+        "summary": "The script silently runs a bare `pip install pyinstaller` into whatever `pip` is first on PATH, which may not be the project venv's interpreter. PyInstaller also isn't pinned or listed anywhere.",
+        "detail": "Someone runs the script outside the venv. PyInstaller then goes into the system or user Python and freezes that interpreter's site-packages, which lack tree-sitter and similar, and the build fails later with a confusing error.",
+        "suggestedFix": "Use `python -m pip` and `python -m PyInstaller` with the venv interpreter, or fail with an instruction instead of auto-installing. Pin the version in a `requirements-build.txt`."
+      }
+    ]
+  },
+  "processReview": {
+    "verdict": "acceptable",
+    "summary": "The run was well structured. The orchestrator ran an ask survey and a researcher in parallel, then gave the coder one well-grounded brief. Before relying on urllib's redirect/exception behavior, the coder checked it empirically (`inspect.getsource(HTTPRedirectHandler.http_error_302)`, `__mro__` dumps). It read every file before editing it (0 violations). It ran the targeted HTTP suites with ok:true (lines 272, 299, 324) and the full suite (line 327). It showed the 2 full-suite failures were pre-existing by re-running with its changes stashed (line 331). It actually ran the PyInstaller build. Most of the waste was in the verification and research phases. The researcher called web_search four times after the first call said it was unavailable, and called pkg_info five times despite the same JSON-parse failure. The reviewer made two `find_references` calls at guessed coordinates, both blocked by call_verify, without first locating the symbol with find_symbol. The tester re-read the same files repeatedly, re-ran the same 5-file suite five times, rebuilt binaries the coder had already built, added a mostly duplicate test file, and made real POST/PUT/DELETE requests to example.com in an ad-hoc check. Nobody verified the frozen server beyond `--help`. The final PR body was also stale: it hedged that tests were 'not confirmed' and that the tester was 'in progress' after the tester had passed, and it claimed connect/read timeouts that don't exist. About $3.67, 248 tool calls and ~33 minutes is proportionate for a two-part task with external research and a real build, but a fair share was redundant.",
+    "followedNavigationHierarchy": false,
+    "readBeforeEditViolations": 0,
+    "findings": [
+      {
+        "id": "process-1",
+        "category": "judge-flag",
+        "severity": "low",
+        "agentId": "f5279b4a",
+        "profile": "reviewer",
+        "summary": "The reviewer called `find_references` at guessed coordinates without getting a position from find_symbol first. call_verify blocked it, the reviewer repeated the same mistake at line 426, and loop_control then scored repeating_itself at 0.72 (line 428).",
+        "detail": "Line 408: call `find_references {path: runtime/tools/httpx.py, line: 15, character: 1}`, coordinates_from_prior noul 0.12. Line 426: `find_references {..., line: 14, character: 1}`, coordinates_from_prior noul 0.06. Line 428 recent_turns: 'error: the position does not match one returned by an earlier tool call (e.g. find_symbol); re-check the line/character' twice. The reviewer then stopped and issued its verdict. It recovered, but the documented order (find_symbol, then LSP) was skipped."
+      },
+      {
+        "id": "process-2",
+        "category": "wasted-search",
+        "severity": "low",
+        "agentId": "5d82a72d",
+        "profile": "researcher",
+        "summary": "The researcher kept calling web_search after the first call reported it was unconfigured.",
+        "detail": "Lines 5 and 6 returned 'error: web_search unavailable (set BRAVE_API_KEY); pass a URL to web_fetch instead'. It called web_search again at line 120 ('gopls install without go toolchain binary download') and line 144 ('pyright python package pip install node requirement') and got the same error. It then fell back to scraping duckduckgo and bing (lines 156, 157, 170, 172)."
+      },
+      {
+        "id": "process-3",
+        "category": "redundant-tool-call",
+        "severity": "low",
+        "agentId": "5d82a72d",
+        "profile": "researcher",
+        "summary": "The researcher called pkg_info five times although each call failed with the same JSON-parse/truncation error.",
+        "detail": "Line 12 (tree-sitter-languages): 'Expecting property name enclosed in double quotes'. Lines 82, 147, 148 and 149 (tree-sitter-language-pack, pypi pyright, npm pyright, npm typescript-language-server) all returned 'Invalid control character at: line 1 column 50001 (char 50000)'. Line 154 later got the same data from `web_fetch https://pypi.org/pypi/pyright/json`."
+      },
+      {
+        "id": "process-4",
+        "category": "redundant-tool-call",
+        "severity": "medium",
+        "agentId": "f7c724c0",
+        "profile": "tester",
+        "summary": "The tester spent ~476s repeating work: it rebuilt binaries the coder had already built and verified, re-ran the same 5-file pytest invocation five times, and re-read the same files several times.",
+        "detail": "Line 404 runs `bash scripts/build_binary.sh` again (38s) after the coder's build at lines 305/308/312. The same `python -m pytest tests/test_httpx_coverage.py tests/test_http.py tests/test_httpx_hardening.py tests/test_simple_httpx.py tests/test_web.py` ran at lines 381, 422, 448, 455 and 474 with no code changes between the last several runs. runtime/tools/httpx.py was read at 339, 353, 394 and 432, and tests/test_httpx_hardening.py at 343, 351, 399, 401 and 413. `dist/app/app --help` ran twice (424, 477)."
+      },
+      {
+        "id": "process-5",
+        "category": "scope-creep",
+        "severity": "medium",
+        "agentId": "f7c724c0",
+        "profile": "tester",
+        "summary": "The tester's 'return contract' check called the real `http_request` impl against example.com with POST, PUT and DELETE. That is real network traffic, including non-idempotent methods, and it skipped the approval gate in tools/http.py, despite the task's 'don't hit the real network' instruction.",
+        "detail": "Line 461: `from runtime.tools.httpx import http_request` ... `test_cases = [(\"GET\", \"https://example.com\"), (\"POST\", ...), (\"PUT\", ...), (\"DELETE\", ...)]` ... `http_request(method, url, timeout=0.001)`. It took 5.1s because of real retries and backoff."
+      },
+      {
+        "id": "process-6",
+        "category": "scope-creep",
+        "severity": "low",
+        "agentId": "f7c724c0",
+        "profile": "tester",
+        "summary": "The tester created a new 291-line test file whose cases mostly duplicate the coder's test_httpx_hardening.py, and it ships in the PR.",
+        "detail": "Line 416: `create_file tests/test_httpx_edge_cases.py`. Its classes TestNonIdempotentNoRetry, TestTLSErrorNoRetry, TestFourxxNoRetry and TestURLErrorGenericRetry repeat assertions already in TestRetryTransient, TestTLSErrors, TestRetryStatusCodes and test_httpx_coverage.py's new GET-retry test."
+      },
+      {
+        "id": "process-7",
+        "category": "missed-tests",
+        "severity": "medium",
+        "agentId": "f7c724c0",
+        "profile": "tester",
+        "summary": "The coder and tester both declared the frozen binaries 'functional', but the only runtime check was `--help`. Neither started the server or did a client round-trip, so the likely missing dynamically discovered `tools/` package (code-2) went unnoticed.",
+        "detail": "Line 312 (coder): `file dist/app/app` → 'Mach-O 64-bit executable arm64'. Lines 424/477 (tester): `dist/app/app --help` → argparse usage text. Line 430: `dist/dummy_client/dummy_client --help`. The tester's verdict nonetheless says 'both binaries functional'."
+      },
+      {
+        "id": "process-8",
+        "category": "reasoning-gap",
+        "severity": "low",
+        "agentId": "986bba23",
+        "profile": "coder",
+        "summary": "The coder guessed sandbox paths and tools that don't exist on this host (macOS), wasting a build attempt.",
+        "detail": "Line 272: `cd /home/user/repo 2>/dev/null; pytest ...`. Line 302: `cd /root/repo 2>/dev/null || true; ... timeout 100 bash scripts/build_binary.sh` → '/bin/sh: timeout: command not found'. It then worked around this with a background job and `sleep 90` (lines 305, 308)."
+      },
+      {
+        "id": "process-9",
+        "category": "reasoning-gap",
+        "severity": "low",
+        "agentId": "f7c724c0",
+        "profile": "tester",
+        "summary": "The tester's final report claims checks it didn't do. It says it 'confirmed same failures with coder's changes stashed', but it never ran git stash; the coder did that at line 331. It also calls pre-existing tests/test_simple_httpx.py 'coder's basic tests'.",
+        "detail": "Line 391: the tester's full-suite run exited with code 2 (the same 2 failures) and was not followed by any stash or isolation run from the tester. The only `git stash && pytest tests/test_session_trace.py...` is at line 331 under the coder's agent_id 986bba23. Tester report: 'Full test suite: ... confirmed same failures with coder's changes stashed ✓'."
+      },
+      {
+        "id": "process-10",
+        "category": "reasoning-gap",
+        "severity": "medium",
+        "agentId": "",
+        "profile": "orchestrator",
+        "summary": "The PR was opened with a body that contradicts the run's own evidence. It says the test files were 'not confirmed', says tester confirmation was 'still in progress', and claims connect/read timeouts that the code doesn't have.",
+        "detail": "Line 492: `settle_worktree {action: pr}` at 00:25:51, after the tester's PASS report at 00:25:15 (transcript). pr.md body: 'exact new/extended test files under tests/ ... were not confirmed in the available reports' and 'final tester confirmation of the httpx.py changes was still in progress at time of writing'. It also says 'Added configurable connect/read timeouts', while the diff keeps the single `timeout` param. The orchestrator's own closing summary (transcript 00:26:03), written after the PR was opened, differs from the PR body."
+      },
+      {
+        "id": "process-11",
+        "category": "redundant-tool-call",
+        "severity": "low",
+        "agentId": "95d74988",
+        "profile": "ask",
+        "summary": "The ask agent ran `search` with pattern '.' just to learn dummy_client.py's size, then read the file anyway, and later searched it again for imports.",
+        "detail": "Line 79: `search {pattern: \".\", path: dummy_client.py, max_matches: 1}` → '... (512 more matches)'. Line 84 then did `read_file dummy_client.py` (lines 1-200), line 90 searched '^import|^from|__main__', and line 92 read lines 500-564."
+      }
+    ]
+  },
+  "overallAssessment": {
+    "recommendation": "request-changes",
+    "narrative": "The engine produced a careful, well-tested Part A and a well-researched packaging doc. Its process was mostly disciplined: grounded briefs, read-before-edit throughout, empirical checks of urllib behavior, and a genuine pre-existing-failure check. The weak spots are ones that a shallow verification loop tends to miss. Nobody asked how the synchronous retry loop interacts with the asyncio server, nobody ran the frozen server past `--help`, and the reviewer approved without noticing that connect/read timeouts were never added. The tester added volume (duplicate tests, repeated runs, real-network probes) rather than depth, and the PR body shipped stale and partly false. Add an overall deadline plus `to_thread`, collect `tools/` in the build and smoke-test a real round-trip, and fix the timeout wording in the PR body. After that this is a solid merge.",
+    "strengths": [
+      "The retry policy is gated correctly: POST/PATCH are never retried, 4xx is never retried, and exhausted 5xx still returns the real status/body instead of an error string.",
+      "Exception ordering was worked out from real urllib behavior (MRO dumps, the http_error_302 source, the inf_msg text) rather than assumed.",
+      "The tests follow the repo's existing `monkeypatch.setattr(http_impl, \"urlopen\", ...)` pattern, patch out `time.sleep`, and never touch the network.",
+      "The two existing tests that the new retry behavior broke were deliberately switched to POST, and a GET-retry counterpart was added.",
+      "docs/packaging.md's findings on tree-sitter, npx LSPs, gopls and Playwright are backed by actual research: hooks-contrib tree listings, Playwright's in-package hook, pyright's PyPI metadata.",
+      "Pre-existing full-suite failures were shown to be unrelated by re-running with changes stashed."
     ],
+    "concerns": [
+      "Retries plus a blocking `time.sleep` in a sync function that the async wrapper calls directly can freeze the whole engine event loop for about 61.5s on one hung host.",
+      "The 'working build' very likely lacks the dynamically discovered `tools/` package, and it was only smoke-tested with `--help`.",
+      "The connect/read timeout requirement wasn't implemented, and the PR body falsely claims it was, alongside stale 'not confirmed / in progress' hedges.",
+      "Non-transient errors (the SSRF-guard redirect block, DNS NXDOMAIN) are retried.",
+      "Verification was expensive but shallow: repeated suite runs and rebuilds, real-network calls from the tester, and a duplicate test file."
+    ]
   },
-  processReview: {
-    verdict: "acceptable",
-    summary:
-      "Navigation was efficient throughout: sub-agents used targeted search + read_file rather than reaching for expensive LSP tools the task never needed, prior research was captured via remember and handed to the coder agents instead of being re-derived, and the one read-before-edit violation was caught by the tool and recovered in the very next call. Sandbox guardrails blocked three run_command attempts and the agent adapted each time without thrashing. The two real process problems are: the final PR's title/body that actually landed on GitHub does not match the two-part summary the orchestrator drafted and showed the user, and a specific '92 passed' test count was asserted and propagated without ever appearing in the truncated tool output the agent actually received.",
-    followedNavigationHierarchy: true,
-    readBeforeEditViolations: 1,
-    findings: [
-      {
-        id: "process-1",
-        category: "reasoning-gap",
-        severity: "high",
-        agentId: "683094d6",
-        profile: "orchestrator",
-        summary:
-          "The PR actually opened on GitHub does not contain the two-part summary paragraph task.md explicitly required, and instead uses a truncated, Part-B-only auto-generated report as the title and body.",
-        detail:
-          "task.md required the closing paragraph to become the PR title/body verbatim. The orchestrator's chat reply showed a well-formed two-part paragraph and said 'here's the PR description ready to use verbatim' — but the merged PR title is cut off mid-word and the body is the raw Part-B coder's self-report, never mentioning Part A. No gh pr create-style record appears in the tool trace, so the substitution happened at an orchestration layer outside the visible trace.",
-      },
-      {
-        id: "process-2",
-        category: "reasoning-gap",
-        severity: "medium",
-        agentId: "05c7ac0e",
-        profile: "coder",
-        summary:
-          "The coder's claim of '92 passed, 0 failed' is not backed by any visible tool output — the only pytest run's captured result was truncated before reaching the summary line.",
-        detail:
-          "The pytest run's result field (4018 chars) cuts off mid-list well before any 'X passed in Ys' summary line, yet the agent's finish report states '92 passed, 0 failed'. Exit code 0 does support 'no failures', but the specific count of 92 was never observed in this trace.",
-      },
-      {
-        id: "process-3",
-        category: "missed-tests",
-        severity: "low",
-        agentId: "43fded62",
-        profile: "reviewer",
-        summary:
-          "The reviewer agent approved the PR using only static reading and never independently re-ran the test suite.",
-        detail:
-          "The reviewer's tool calls were limited to git_status, git_diff, read_file (x14), search (x14), and todo_scan (x4) — no run_command entry anywhere in its trace. The approval implicitly trusted the coder's self-reported '92 passed, 0 failed' rather than re-executing pytest, which would have been cheap and would have caught the unverified count.",
-      },
-      {
-        id: "process-4",
-        category: "judge-flag",
-        severity: "low",
-        agentId: "05c7ac0e",
-        profile: "coder",
-        summary:
-          "write_gate judge flagged several genuinely correct, small test/source edits as 'may not accomplish what was asked'; all were unenforced and the run correctly ignored them without any corrective thrashing.",
-        detail:
-          "All 7 write_gate decisions in this run were enforced=false (advisory only). The flags landed on trivial, correct diffs — e.g. adding a monkeypatch to an existing test, or adding an import. The agent did not react to these flags, which was the right call since they were false positives.",
-      },
-      {
-        id: "process-5",
-        category: "redundant-tool-call",
-        severity: "low",
-        agentId: "683094d6",
-        profile: "coder",
-        summary:
-          "Three consecutive get_diagnostics calls on a .sh, .md, and .gitignore file all failed with 'No LSP server configured for extension X', a guaranteed-to-fail check given none of those file types can have LSP diagnostics.",
-        detail:
-          "Low-cost (3-4ms each) but three calls that could not possibly have returned a result — scripts/build_binary.sh, docs/packaging.md, and .gitignore each returned the same 'no LSP server configured' error.",
-      },
-      {
-        id: "process-6",
-        category: "reasoning-gap",
-        severity: "low",
-        agentId: "683094d6",
-        profile: "coder",
-        summary:
-          "A str_replace on .gitignore was attempted before the file had been read in this agent's own context, was rejected by the read-before-edit guard, and was correctly recovered one call later.",
-        detail:
-          "str_replace on .gitignore returned 'error: read .gitignore before editing it'. The very next call was read_file on .gitignore, followed immediately by the same str_replace succeeding — a recovered violation, not a stalled one.",
-      },
-    ],
-  },
-  overallAssessment: {
-    recommendation: "request-changes",
-    narrative:
-      "The engineering substance of this run is solid: the HTTP-hardening diff is correct on careful inspection, including a subtle urllib interaction that could easily have been gotten wrong. The packaging investigation is genuinely researched rather than assumed, and the multi-agent process navigated the repo efficiently with sensible guardrail handling throughout. What drags this down is the tail end of the pipeline: the actual PR title and body delivered to the user does not match what the task asked for or what the orchestrator told the user it would use, and the chain of trust from 'truncated tool output' to 'coder's specific pass count' to 'reviewer's approval without re-running tests' has no independent verification step. None of this affects the shipped code's correctness, but the PR as opened would need a manual title/body fix and one more test before a human reviewer should merge it as-is.",
-    strengths: [
-      "The core hardening logic — timeout classification, TLS/DNS/reset-specific error strings, retry-with-backoff gated on idempotent methods and non-5xx-only, and the redirect-depth cap — is correct, including a non-obvious interaction with urllib's own loop detection that was verified to work as intended.",
-      "Efficient multi-agent navigation: research and repo-survey facts were captured once via `remember` and handed forward to coder agents instead of being re-derived; tool usage favored cheap search/read_file over expensive LSP tools the task never required.",
-      "Sandbox guardrail rejections (three run_command blocks) were handled gracefully with no thrashing or forced retries.",
-      "Part B's packaging investigation doc is honestly scoped, with every file:line claim spot-checked by both the coder and a separate reviewer agent against live source.",
-      "Actual pytest run happened (not just claimed) with exit code 0, and a real PyInstaller build was executed and smoke-tested end-to-end, not merely described.",
-    ],
-    concerns: [
-      "The PR that actually landed on GitHub does not satisfy the task's explicit instruction to close with a two-part paragraph that becomes the PR title/body verbatim — the real title is truncated mid-word and the real body only describes Part B.",
-      "The specific '92 passed' test count reported by the coder and repeated in the unused drafted PR description is not backed by any visible tool output in the trace.",
-      "The reviewer agent approved the PR without independently re-running the test suite, relying entirely on static diff/file reading.",
-      "The new redirect-loop cap — the specific mechanism requested for 'redirect handling (including redirect loops)' — has no test that exercises its actual depth-counting logic end-to-end, only its downstream error-string formatting.",
-    ],
-  },
-  links: {
-    prUrl: "https://github.com/iresharma/codeloom.engine/pull/41",
-    repoUrl: "https://github.com/iresharma/codeloom.engine",
-    diffUrl: "https://github.com/iresharma/codeloom.engine/pull/41.diff",
-  },
+  "links": {
+    "prUrl": "https://github.com/iresharma/codeloom.engine/pull/44",
+    "repoUrl": "https://github.com/iresharma/codeloom.engine",
+    "diffUrl": "https://github.com/iresharma/codeloom.engine/pull/44.diff"
+  }
 };

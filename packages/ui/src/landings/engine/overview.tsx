@@ -9,6 +9,7 @@ import { SiteNav } from "../../chrome/site-nav";
 import { EngineSubNav } from "../../chrome/engine-subnav";
 import { ProductShell } from "../../components/product-shell";
 import { Reveal } from "../../magic/reveal";
+import { EngineArchitectureFlow } from "../../mocks/engine-architecture-flow";
 
 const product = PRODUCTS.engine;
 const others = PRODUCT_LIST.filter((item) => item.id !== product.id);
@@ -59,7 +60,7 @@ export function EngineOverviewLanding() {
       <SiteNav active="engine" />
       <EngineSubNav active="overview" />
 
-      <main className="mx-auto max-w-3xl px-5 md:px-8">
+      <main className="mx-auto max-w-5xl px-5 md:px-8 xl:max-w-6xl">
         <section className="border-b border-white/10 py-14 md:py-20">
           <motion.h1
             initial={reduce ? false : { opacity: 0, y: 10 }}
@@ -113,6 +114,16 @@ engine> fix the flaky auth test`}
             <span className="font-mono text-[#d5dde3]">jev-latest</span>) — a ~100ms calibrated classifier at the
             write funnel and the shell gate. The LLM generates, TypeSafe judges, code still decides.
           </motion.p>
+        </section>
+
+        <section className="border-b border-white/10 py-10">
+          <p className="font-mono text-[13px] font-bold text-[#d5dde3]">How it fits together.</p>
+          <p className="mt-2 max-w-lg text-[13px] leading-6 text-[#7a848c]">
+            Clients only render. Everything else happens in one process, and every write goes through the funnel.
+          </p>
+          <Reveal className="mt-6">
+            <EngineArchitectureFlow />
+          </Reveal>
         </section>
 
         <section className="divide-y divide-white/10 border-b border-white/10">

@@ -25,7 +25,7 @@ export function CloudControllerLanding() {
     <ProductShell product={product} className="bg-[#0c1014]">
       <SiteNav active="cloud-controller" />
 
-      <main className="mx-auto max-w-3xl px-5 md:px-8">
+      <main className="mx-auto max-w-5xl px-5 md:px-8 xl:max-w-6xl">
         <section className="border-b border-white/10 py-14 md:py-20">
           <motion.p
             initial={reduce ? false : { opacity: 0 }}

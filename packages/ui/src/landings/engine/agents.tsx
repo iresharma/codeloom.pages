@@ -8,6 +8,7 @@ import { SiteNav } from "../../chrome/site-nav";
 import { EngineSubNav } from "../../chrome/engine-subnav";
 import { ProductShell } from "../../components/product-shell";
 import { Reveal } from "../../magic/reveal";
+import { EngineAgentsFlow } from "../../mocks/engine-agents-flow";
 import { EngineFold } from "../../mocks/engine-fold";
 import { knownLimits, personas, settleChoices, shipped } from "./data";
 
@@ -21,7 +22,7 @@ export function EngineAgentsLanding() {
       <SiteNav active="engine" />
       <EngineSubNav active="agents" />
 
-      <main className="mx-auto max-w-3xl px-5 md:px-8">
+      <main className="mx-auto max-w-5xl px-5 md:px-8 xl:max-w-6xl">
         <section className="border-b border-white/10 py-14 md:py-20">
           <motion.p
             initial={reduce ? false : { opacity: 0 }}
@@ -73,6 +74,17 @@ export function EngineAgentsLanding() {
               </Reveal>
             ))}
           </div>
+        </section>
+
+        <section className="border-b border-white/10 py-10">
+          <p className="font-mono text-[13px] font-bold text-[#d5dde3]">How a request moves.</p>
+          <p className="mt-2 max-w-lg text-[13px] leading-6 text-[#7a848c]">
+            Readers stay on your checkout. A writer gets its own branch, and a tester and reviewer join it before
+            anything is offered back to you.
+          </p>
+          <Reveal className="mt-6">
+            <EngineAgentsFlow />
+          </Reveal>
         </section>
 
         <section className="border-b border-white/10 py-10">
