@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { SiteFooter } from "../chrome/footer";
 import { SiteNav } from "../chrome/site-nav";
 import { Reveal } from "../magic/reveal";
+import { WebClientMock } from "../mocks/web-client-mock";
 
 const statusLabel: Record<string, string> = {
   live: "shipping",
@@ -24,7 +25,7 @@ const preview: Record<Product["id"], { label: string; lines: string[] }> = {
     lines: ["3 sandboxes running · 1 queued", "budget: $12.40 / $50.00", "", "provision → schedule → supervise → settle"],
   },
   clients: {
-    label: "same protocol, two renderers",
+    label: "web workspace · sidebar / transcript / inspect",
     lines: ["tui   :CodeLoom ask ▍", "web   RUN #1084 · live", "", "NDJSON commands + events, nothing else"],
   },
 };
@@ -114,9 +115,15 @@ export function HomeLanding() {
                     <p className="font-mono text-[10px] tracking-[0.08em] text-[#7a848c]/70 uppercase">
                       {preview[item.id].label}
                     </p>
-                    <pre className="mt-2 font-mono text-[11px] leading-5 whitespace-pre-wrap text-[#d5dde3]">
-                      {preview[item.id].lines.join("\n")}
-                    </pre>
+                    {item.id === "clients" ? (
+                      <div className="mt-2">
+                        <WebClientMock />
+                      </div>
+                    ) : (
+                      <pre className="mt-2 font-mono text-[11px] leading-5 whitespace-pre-wrap text-[#d5dde3]">
+                        {preview[item.id].lines.join("\n")}
+                      </pre>
+                    )}
                   </div>
 
                   <span
