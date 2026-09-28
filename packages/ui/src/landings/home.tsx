@@ -24,8 +24,8 @@ const preview: Record<Product["id"], { label: string; lines: string[] }> = {
     lines: ["3 sandboxes running · 1 queued", "budget: $12.40 / $50.00", "", "provision → schedule → supervise → settle"],
   },
   clients: {
-    label: "same protocol, two renderers",
-    lines: ["tui   :CodeLoom ask ▍", "web   RUN #1084 · live", "", "NDJSON commands + events, nothing else"],
+    label: "web first, same events",
+    lines: ["web   session · live ▍", "      diff · agents · changes", "tui   :CodeLoom ask", "JSON events, nothing else"],
   },
 };
 
@@ -41,9 +41,9 @@ const detail: Record<Product["id"], string[]> = {
     "Settle is still routed back to you — merge, PR, keep, or discard.",
   ],
   clients: [
-    "A terminal workspace (TUI): explorer, viewer, agent pane, modal by default.",
-    "A Devin-style web interface: hand off a ticket, come back to a pull request.",
-    "Neither talks to a model directly — both just render the engine's events.",
+    "A web client: sign in with GitHub, start a sandboxed session, watch a live transcript with inline diffs.",
+    "A multi-agent graph, git changes and per-agent tokens, cost and duration as it works.",
+    "Also: a terminal TUI. No client talks to a model directly.",
   ],
 };
 

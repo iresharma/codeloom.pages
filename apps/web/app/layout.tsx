@@ -43,9 +43,9 @@ export const metadata: Metadata = {
     template: "%s · CodeLoom",
   },
   description:
-    "A coding-agent stack split at its natural seam: an engine that owns the workspace, a cloud controller for running it unattended, and thin clients — a TUI and a web agent — that just render what it says.",
+    "A coding-agent stack split at its natural seam: an engine that owns the workspace, a cloud controller for running it unattended, and thin clients — a web client and a TUI — that just render what it says.",
   authors: [{ name: AUTHOR.name, url: "https://iresharma.com" }],
-  keywords: ["coding agent", "engine", "cloud controller", "tui", "codeloom"],
+  keywords: ["coding agent", "engine", "cloud controller", "web coding agent", "tui", "codeloom"],
   openGraph: {
     title: "CodeLoom",
     description: "One engine. One protocol. As many clients as you want.",

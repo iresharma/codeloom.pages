@@ -8,7 +8,7 @@ One Next.js app, routed by section. Shared copy and UI live in `packages/` so th
 | --- | --- | --- |
 | Engine | `/engine` | Shipping — the JSON-IPC Unix server |
 | Cloud Controller | `/cloud-controller` | Concept — fleet control for cloud agents |
-| Clients | `/clients` | In development — TUI + a Devin-style web agent |
+| Clients | `/clients` | In development — web client (featured) + TUI |
 
 ## Stack
 
