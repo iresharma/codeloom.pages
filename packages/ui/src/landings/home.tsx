@@ -41,7 +41,7 @@ const detail: Record<Product["id"], string[]> = {
     "Settle is still routed back to you — merge, PR, keep, or discard.",
   ],
   clients: [
-    "A terminal workspace (TUI): explorer, viewer, agent pane, modal by default.",
+    "A terminal workspace (TUI) and a web client: explorer, viewer, agent pane, modal by default.",
     "A Devin-style web interface: hand off a ticket, come back to a pull request.",
     "Neither talks to a model directly — both just render the engine's events.",
   ],
