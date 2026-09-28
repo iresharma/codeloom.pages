@@ -8,7 +8,7 @@ import { FlowCanvas, FlowDetail, lane, link, step, type FlowNode } from "../comp
 const W = 150;
 
 const details: Record<string, { title: string; body: string }> = {
-  tui: { title: "TUI", body: "One client of many. It renders what the engine says and sends commands back." },
+  tui: { title: "TUI", body: "The TUI client, along with other clients including a web client, renders what the engine says and sends commands back." },
   web: { title: "web client", body: "Same protocol, same events. No engine logic lives in a client." },
   repl: { title: "REPL · dummy_client.py", body: "A plain REPL over the socket — the smallest possible client." },
   sock: {
