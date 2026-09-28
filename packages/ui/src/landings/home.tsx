@@ -8,6 +8,138 @@ import { SiteFooter } from "../chrome/footer";
 import { SiteNav } from "../chrome/site-nav";
 import { Reveal } from "../magic/reveal";
 
+const MockWorkspace = () => (
+  <div className="w-full h-96 bg-[#1e2226] rounded-md flex">
+    <div className="w-1/4 border-r border-[#7a848c] p-2">
+      <h3 className="text-[#d5dde3] font-bold">Sessions</h3>
+      <ul>
+        <li className="text-[#7a848c]">Session 1</li>
+        <li className="text-[#7a848c]">Session 2</li>
+        <li className="text-[#7a848c]">Session 3</li>
+      </ul>
+    </div>
+    <div className="w-2/4 p-2">
+      <h3 className="text-[#d5dde3] font-bold">Chat Transcript</h3>
+      <div className="h-40 overflow-y-auto text-[#d5dde3]">
+        <p>User: How do I reset my password?</p>
+        <p>Agent: You can reset it by clicking on the "Forgot Password" link.</p>
+      </div>
+    </div>
+    <div className="w-1/4 border-l border-[#7a848c] p-2">
+      <h3 className="text-[#d5dde3] font-bold">Agents</h3>
+      <p className="text-[#7a848c]">Agent 1</p>
+      <p className="text-[#7a848c]">Agent 2</p>
+      <h3 className="text-[#d5dde3] font-bold">Changes</h3>
+      <p className="text-[#7a848c]">Change 1</p>
+      <p className="text-[#7a848c]">Change 2</p>
+      <h3 className="text-[#d5dde3] font-bold">Files</h3>
+      <p className="text-[#7a848c]">File 1</p>
+      <p className="text-[#7a848c]">File 2</p>
+    </div>
+  </div>
+);
+
+const LargeMockWorkspace = () => (
+  <div className="w-full h-96 bg-[#1e2226] rounded-md flex">
+    <div className="w-1/2 border-r border-[#7a848c] p-2">
+      <h3 className="text-[#d5dde3] font-bold">TUI Workspace</h3>
+      <p className="text-[#7a848c]">Terminal User Interface</p>
+    </div>
+    <div className="w-1/2 p-2">
+      <h3 className="text-[#d5dde3] font-bold">Web Workspace</h3>
+      <p className="text-[#7a848c]">Web-based Interface</p>
+    </div>
+  </div>
+);
+
+const MockWorkspace = () => (
+  <div className="w-full h-32 bg-[#1e2226] rounded-md flex">
+    <div className="w-1/4 border-r border-[#7a848c] p-2">
+      <h3 className="text-[#d5dde3] font-bold">Sessions</h3>
+      <ul>
+        <li className="text-[#7a848c]">Session 1</li>
+        <li className="text-[#7a848c]">Session 2</li>
+        <li className="text-[#7a848c]">Session 3</li>
+      </ul>
+    </div>
+    <div className="w-2/4 p-2">
+      <h3 className="text-[#d5dde3] font-bold">Chat Transcript</h3>
+      <div className="h-40 overflow-y-auto text-[#d5dde3]">
+        <p>User: How do I reset my password?</p>
+        <p>Agent: You can reset it by clicking on the "Forgot Password" link.</p>
+      </div>
+    </div>
+    <div className="w-1/4 border-l border-[#7a848c] p-2">
+      <h3 className="text-[#d5dde3] font-bold">Agents</h3>
+      <p className="text-[#7a848c]">Agent 1</p>
+      <p className="text-[#7a848c]">Agent 2</p>
+      <h3 className="text-[#d5dde3] font-bold">Changes</h3>
+      <p className="text-[#7a848c]">Change 1</p>
+      <p className="text-[#7a848c]">Change 2</p>
+      <h3 className="text-[#d5dde3] font-bold">Files</h3>
+      <p className="text-[#7a848c]">File 1</p>
+      <p className="text-[#7a848c]">File 2</p>
+    </div>
+  </div>
+);  
+
+const LargeMockWorkspace = () => (
+  <div className="w-full h-96 bg-[#1e2226] rounded-md flex">
+    <div className="w-1/2 border-r border-[#7a848c] p-2">
+      <h3 className="text-[#d5dde3] font-bold">TUI Workspace</h3>
+      <p className="text-[#7a848c]">Terminal User Interface</p>
+    </div>
+    <div className="w-1/2 p-2">
+      <h3 className="text-[#d5dde3] font-bold">Web Workspace</h3>
+      <p className="text-[#7a848c]">Web-based Interface</p>
+    </div>
+  </div>
+);
+const MockWorkspace = () => (
+  <div className="w-full h-96 bg-[#1e2226] rounded-md flex">
+    <div className="w-1/4 border-r border-[#7a848c] p-2">
+      <h3 className="text-[#d5dde3] font-bold">Sessions</h3>
+      <ul>
+        <li className="text-[#7a848c]">Session 1</li>
+        <li className="text-[#7a848c]">Session 2</li>
+        <li className="text-[#7a848c]">Session 3</li>
+      </ul>
+    </div>
+    <div className="w-2/4 p-2">
+      <h3 className="text-[#d5dde3] font-bold">Chat Transcript</h3>
+      <div className="h-40 overflow-y-auto text-[#d5dde3]">
+        <p>User: How do I reset my password?</p>
+        <p>Agent: You can reset it by clicking on the "Forgot Password" link.</p>
+      </div>
+    </div>
+    <div className="w-1/4 border-l border-[#7a848c] p-2">
+      <h3 className="text-[#d5dde3] font-bold">Agents</h3>
+      <p className="text-[#7a848c]">Agent 1</p>
+      <p className="text-[#7a848c]">Agent 2</p>
+      <h3 className="text-[#d5dde3] font-bold">Changes</h3>
+      <p className="text-[#7a848c]">Change 1</p>
+      <p className="text-[#7a848c]">Change 2</p>
+      <h3 className="text-[#d5dde3] font-bold">Files</h3>
+      <p className="text-[#7a848c]">File 1</p>
+      <p className="text-[#7a848c]">File 2</p>
+    </div>
+  </div>
+);
+
+const LargeMockWorkspace = () => (
+  <div className="w-full h-96 bg-[#1e2226] rounded-md flex">
+    <div className="w-1/2 border-r border-[#7a848c] p-2">
+      <h3 className="text-[#d5dde3] font-bold">TUI Workspace</h3>
+      <p className="text-[#7a848c]">Terminal User Interface</p>
+    </div>
+    <div className="w-1/2 p-2">
+      <h3 className="text-[#d5dde3] font-bold">Web Workspace</h3>
+      <p className="text-[#7a848c]">Web-based Interface</p>
+    </div>
+  </div>
+);
+
+
 const statusLabel: Record<string, string> = {
   live: "shipping",
   "in-development": "in development",
@@ -114,7 +246,7 @@ export function HomeLanding() {
                     <p className="font-mono text-[10px] tracking-[0.08em] text-[#7a848c]/70 uppercase">
                       {preview[item.id].label}
                     </p>
-                    <pre className="mt-2 font-mono text-[11px] leading-5 whitespace-pre-wrap text-[#d5dde3]">
+                    <div className="mt-2 font-mono text-[11px] leading-5 whitespace-pre-wrap text-[#d5dde3]">
                       {preview[item.id].lines.join("\n")}
                     </pre>
                   </div>

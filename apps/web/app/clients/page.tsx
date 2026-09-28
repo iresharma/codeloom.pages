@@ -1,6 +1,8 @@
 import { PRODUCTS, siteUrl } from "@codeloom/config";
 import { ClientsLanding } from "@codeloom/ui";
-import type { Metadata } from "next";
+import type { Metadata } from "next";import { TuiMock } from '@codeloom/ui/src/mocks/tui-mock';
+import { AgentMock } from '@codeloom/ui/src/mocks/agent-mock';
+
 
 const product = PRODUCTS.clients;
 
