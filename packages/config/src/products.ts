@@ -98,9 +98,8 @@ export const PRODUCTS: Record<ProductId, Product> = {
     id: "clients",
     name: "CodeLoom Clients",
     shortName: "Clients",
-    tagline: "Every surface that talks to the engine over one socket.",
-    description:
-      "Thin clients over the same NDJSON protocol: a terminal workspace (TUI) with a Neovim-like explorer and viewer, and a Devin-style web interface for handing off a ticket and getting a pull request back. Neither client owns the workspace — the engine does.",
+    tagline: "Every surface that communicates with the engine over one socket.",
+    description: "Thin clients over the same NDJSON protocol, including a terminal workspace and a web interface for handing off a ticket and getting a pull request back. Neither client owns the workspace — the engine does.",
     path: "/clients",
     github: "https://github.com/iresharma/codeloom.TUI",
     motherRepo: MOTHER_REPO,
