@@ -20,8 +20,8 @@ const preview: Record<Product["id"], { label: string; lines: string[] }> = {
     lines: ["$ python app.py .", "listening on .engine/engine.sock", "", "6 subagents · 32 tools · TypeSafe judge"],
   },
   "cloud-controller": {
-    label: "fleet status",
-    lines: ["3 sandboxes running · 1 queued", "budget: $12.40 / $50.00", "", "provision → schedule → supervise → settle"],
+    label: "session lifecycle",
+    lines: ["POST /projects/{id}/sessions", "→ sandbox · clone · engine ready", "ws /sessions/{id}/stream", "memory restored for this repo"],
   },
   clients: {
     label: "web first, same events",
@@ -36,9 +36,9 @@ const detail: Record<Product["id"], string[]> = {
     "Orchestrator spawns 6 subagent personas into isolated git worktrees.",
   ],
   "cloud-controller": [
-    "Provisions a sandbox per run, clones the target repo, hands it a session.",
-    "Schedules and staggers runs across a fleet under a budget ceiling.",
-    "Settle is still routed back to you — merge, PR, keep, or discard.",
+    "Starts a Docker sandbox per chat, clones the repo, and boots an engine session on the image that matches its language.",
+    "Bridges the engine's NDJSON socket to a WebSocket — events out, commands back — and reattaches after a restart.",
+    "Keeps each repo's agent memory between runs; settle is still yours — merge, PR, keep, or discard.",
   ],
   clients: [
     "A web client: sign in with GitHub, start a sandboxed session, watch a live transcript with inline diffs.",
@@ -81,6 +81,28 @@ export function HomeLanding() {
             running it unattended, and thin clients that just render what the server says. Three parts, one
             protocol between all of them.
           </motion.p>
+        </section>
+
+        <section className="pt-10 md:pt-12">
+          <a
+            href="/try"
+            className="group block border border-[#ff5c33]/30 bg-[#ff5c33]/[0.04] p-6 transition-colors duration-150 hover:border-[#ff5c33]/60 md:flex md:items-center md:justify-between md:gap-8"
+          >
+            <div>
+              <p className="font-mono text-[11px] tracking-[0.15em] text-[#ff5c33] uppercase">Try it yourself</p>
+              <p className="mt-2 font-mono text-[18px] font-bold text-[#d5dde3]">
+                From clone to a pull request on your repo.
+              </p>
+              <p className="mt-2 max-w-xl text-[13px] leading-6 text-[#7a848c]">
+                Run the cloud controller and web client on your own machine, sign in with GitHub, pick a repo, and let
+                an agent open a PR — watched live in the browser.
+              </p>
+            </div>
+            <span className="mt-5 inline-flex shrink-0 items-center gap-1.5 border border-[#ff5c33]/40 px-4 py-2 font-mono text-[13px] text-[#ff5c33] transition-colors duration-150 group-hover:bg-[#ff5c33] group-hover:text-[#0c1014] md:mt-0">
+              Start the guide
+              <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </span>
+          </a>
         </section>
 
         <section className="grid gap-5 py-12 md:grid-cols-3 md:py-16">

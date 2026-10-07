@@ -8,13 +8,14 @@ import { SiteNav } from "../chrome/site-nav";
 import { ProductShell } from "../components/product-shell";
 import { Reveal } from "../magic/reveal";
 import { ScreenshotPlaceholder } from "../mocks/screenshot-placeholder";
+import { TuiMock } from "../mocks/tui-mock";
 
 const product = PRODUCTS.clients;
 const otherProducts = PRODUCT_LIST.filter((item) => item.id !== product.id);
 
 const webClient = {
   label: "Web client",
-  status: "in development",
+  status: "working",
   body: "A browser client for the CodeLoom cloud controller. Sign in with GitHub, register or pick a repository, start a session in an isolated sandbox, then watch the agent work live. It talks REST plus a WebSocket at /sessions/{id}/stream that carries the engine's JSON events and commands, relayed by the controller.",
   repo: "github.com/iresharma/codeloom.web",
   stack: "Next.js 15 · React 19 · Tailwind v4 · TypeScript",
@@ -25,6 +26,9 @@ const webClient = {
     "Status board with Working / Attention / Finished columns across all repos.",
     "Composer with Stop and a per-message model picker; permission cards (Allow / Deny / Always allow) and an Auto toggle.",
     "Live footer with branch, tokens, cached tokens, calls and cost; ended sessions keep a replayable transcript.",
+    "Repo glance before a run — open issues, pull requests and contributors for the repository.",
+    "Pull-request preview with per-file diffs, surfaced alongside the live session.",
+    "Come back to a repo and the agent resumes with the memory earlier runs built — kept by the controller, not the browser.",
   ],
   run: ["cp .env.example .env.local", "npm install", "npm run dev"],
 };
@@ -32,12 +36,9 @@ const webClient = {
 // Screenshot slots for the web client. To use a real image, save it as
 // apps/web/public/screenshots/<file> and set src: "/screenshots/<file>".
 const webShots: { file: string; label: string; caption: string; src?: string }[] = [
-  // web-board.png
-  { file: "web-board.png", label: "status board", caption: "Status board — Working / Attention / Finished" },
-  // web-agents.png
-  { file: "web-agents.png", label: "agent graph", caption: "Agent graph — orchestrator and sub-agents" },
-  // web-changes.png
-  { file: "web-changes.png", label: "changes & files", caption: "Changes & files — git state and file tree" },
+  { file: "web-board.jpg", label: "status board", caption: "Status board — Working / Attention / Finished", src: "/screenshots/web-board.jpg" },
+  { file: "web-agents.jpg", label: "agent graph", caption: "Agent graph — orchestrator and sub-agents", src: "/screenshots/web-agents.jpg" },
+  { file: "web-changes.jpg", label: "files & changes", caption: "Inspect — file tree, git changes, agents", src: "/screenshots/web-changes.jpg" },
 ];
 
 const otherClients = [
@@ -129,10 +130,10 @@ export function ClientsLanding() {
           </div>
 
           <Reveal delay={0.05} className="mt-8">
-            {/* web-session.png → src="/screenshots/web-session.png" */}
             <ScreenshotPlaceholder
               label="live session"
-              caption="Live session — transcript, inline diffs, inspect panel"
+              src="/screenshots/web-session.jpg"
+              caption="Live session — transcript, the agents panel, and a per-message model picker"
             />
             <div className="mt-5 grid gap-5 sm:grid-cols-3">
               {webShots.map((shot) => (
@@ -145,7 +146,7 @@ export function ClientsLanding() {
         <section className="border-b border-white/10 py-10">
           <p className="font-mono text-[12px] tracking-[0.15em] text-[#34d399] uppercase">More clients</p>
           <p className="mt-2 font-mono text-[15px] font-bold text-[#d5dde3]">Same events, other surfaces.</p>
-          <div className="mt-6 grid gap-5 md:grid-cols-2">
+          <div className="mt-6">
             {otherClients.map((client, i) => (
               <Reveal key={client.id} delay={0.05 + i * 0.05}>
                 <div className="flex h-full flex-col overflow-hidden border border-white/10 bg-white/[0.015] transition-colors duration-150 hover:border-white/20">
@@ -167,12 +168,9 @@ export function ClientsLanding() {
                     >
                       {client.repo}
                     </a>
-                    {/* tui.png → src="/screenshots/tui.png" */}
-                    <ScreenshotPlaceholder
-                      label={client.screenshot.label}
-                      src={client.screenshot.src}
-                      className="mt-6"
-                    />
+                    <div className="mt-8">
+                      <TuiMock />
+                    </div>
                   </div>
                 </div>
               </Reveal>

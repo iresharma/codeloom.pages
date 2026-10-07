@@ -4,7 +4,7 @@ import { PERSONAL_LINKS, PRODUCT_LIST, type Product } from "@codeloom/config";
 
 import { cn } from "../lib/utils";
 
-export function SiteNav({ active }: { active: Product["id"] | "home" }) {
+export function SiteNav({ active }: { active: Product["id"] | "home" | "try" }) {
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between gap-4 border-b border-white/10 bg-[#0c1014] px-5 py-3 font-mono text-[13px] md:px-8">
       <a href="/" className="flex items-center gap-2">
@@ -28,6 +28,15 @@ export function SiteNav({ active }: { active: Product["id"] | "home" }) {
             {item.shortName.toLowerCase()}
           </a>
         ))}
+        <a
+          href="/try"
+          className={cn(
+            "transition-colors duration-150",
+            active === "try" ? "text-[#ff5c33]" : "text-[#ff5c33]/80 hover:text-[#ff5c33]",
+          )}
+        >
+          try it
+        </a>
         <a href={PERSONAL_LINKS.blog} className="transition-colors duration-150 hover:text-[#d5dde3]">
           journal
         </a>

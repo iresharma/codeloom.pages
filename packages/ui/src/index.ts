@@ -1,6 +1,7 @@
 export { HomeLanding } from "./landings/home";
 export { CloudControllerLanding } from "./landings/cloud-controller";
 export { ClientsLanding } from "./landings/clients";
+export { TryYourselfLanding } from "./landings/try";
 export { EngineOverviewLanding, EngineOverviewLanding as EngineLanding } from "./landings/engine/overview";
 export { EngineReadFunnelLanding } from "./landings/engine/read-funnel";
 export { EngineWriteFunnelLanding } from "./landings/engine/write-funnel";
