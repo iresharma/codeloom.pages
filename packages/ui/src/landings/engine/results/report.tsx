@@ -6,14 +6,7 @@ import { SiteNav } from "../../../chrome/site-nav";
 import { EngineSubNav } from "../../../chrome/engine-subnav";
 import { ProductShell } from "../../../components/product-shell";
 import { DecisionFlowGraph } from "./decision-flow";
-import {
-  BarChart,
-  RingChart,
-  Stat,
-  chartColors,
-  panelClass,
-  titleClass,
-} from "./charts";
+import { Stat, chartColors, panelClass, titleClass } from "./charts";
 import { reportSummaries } from "./report-summary";
 import type {
   EngineResultReport as Report,
@@ -117,15 +110,6 @@ function Phase({ phase }: { phase: FlowPhase }) {
 
 export function EngineResultReport({ report }: { report: Report }) {
   const summary = reportSummaries[report.slug];
-  const findings = [
-    ...report.codeReview.findings,
-    ...report.processReview.findings,
-  ];
-  const severities: Severity[] = ["critical", "high", "medium", "low"];
-  const tools: Record<string, number> = {};
-  report.decisionFlow.phases.forEach((p) =>
-    p.topTools.forEach((t) => (tools[t.name] = (tools[t.name] ?? 0) + t.count)),
-  );
   const phaseTools = report.decisionFlow.phases.reduce(
     (n, p) => n + p.toolCalls,
     0,
@@ -144,7 +128,7 @@ export function EngineResultReport({ report }: { report: Report }) {
           </a>
           <div className="mt-4 flex flex-wrap gap-2 font-mono text-xs">
             <span className="border border-white/15 px-3 py-2 text-[#9ba6af]">
-              Historical case study · qualitative review
+              Old harness · archived case study
             </span>
             <span className="border border-white/15 px-3 py-2 text-[#e2bd6b]">
               {report.overallAssessment.recommendation.replaceAll("-", " ")}
@@ -202,84 +186,6 @@ export function EngineResultReport({ report }: { report: Report }) {
           />
         </section>
         <section
-          className="grid gap-4 border-b border-white/10 pb-8 md:grid-cols-3"
-          aria-label="Run charts"
-        >
-          <div className={panelClass}>
-            <h2 className={titleClass}>Cost by agent phase</h2>
-            <div className="mt-5">
-              <BarChart
-                items={report.decisionFlow.phases.map((p, i) => ({
-                  label: `${i + 1} · ${p.profile}`,
-                  value: p.costUsd,
-                }))}
-                format={(n) => `$${n.toFixed(3)}`}
-                caption="Recorded phase costs; not an elapsed-time chart."
-              />
-            </div>
-          </div>
-          <div className={panelClass}>
-            <h2 className={titleClass}>Most-used tools</h2>
-            <div className="mt-5">
-              <BarChart
-                items={Object.entries(tools)
-                  .sort((a, b) => b[1] - a[1])
-                  .slice(0, 6)
-                  .map(([label, value]) => ({ label, value }))}
-                caption="Sum of published top-tool counts. Tools outside those lists are omitted."
-              />
-            </div>
-          </div>
-          <div className={panelClass}>
-            <h2 className={titleClass}>Review findings</h2>
-            <div className="mt-5">
-              <RingChart
-                items={severities.map((s) => ({
-                  label: s,
-                  value: findings.filter((f) => f.severity === s).length,
-                  color: severityColor[s],
-                }))}
-                value={String(findings.length)}
-                label="findings"
-              />
-            </div>
-            <p className="mt-4 text-xs leading-6 text-[#9ba6af]">
-              Recorded review severity; not a hidden-test score.
-            </p>
-          </div>
-        </section>
-        <section className="grid gap-4 border-b border-white/10 py-8 sm:grid-cols-2">
-          {[
-            {
-              label: "What worked",
-              items: summary?.strengths ?? [],
-              color: chartColors[2],
-            },
-            {
-              label: "What needs attention",
-              items: summary?.concerns ?? [],
-              color: chartColors[3],
-            },
-          ].map((group) => (
-            <div className={panelClass} key={group.label}>
-              <h2 className={titleClass} style={{ color: group.color }}>
-                {group.label}
-              </h2>
-              <ul className="mt-4 space-y-3">
-                {group.items.map((item) => (
-                  <li
-                    className="border-l-2 pl-3 text-sm leading-6 text-[#c3cbd1]"
-                    style={{ borderColor: group.color }}
-                    key={item}
-                  >
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </section>
-        <section
           id="run-map"
           className="scroll-mt-24 border-b border-white/10 py-8"
         >
@@ -309,6 +215,37 @@ export function EngineResultReport({ report }: { report: Report }) {
               </p>
             </details>
           )}
+        </section>
+        <section className="grid gap-6 border-b border-white/10 py-6 sm:grid-cols-2">
+          {[
+            {
+              label: "What worked",
+              items: summary?.strengths ?? [],
+              color: chartColors[2],
+            },
+            {
+              label: "What needs attention",
+              items: summary?.concerns ?? [],
+              color: chartColors[3],
+            },
+          ].map((group) => (
+            <div key={group.label}>
+              <h2 className={titleClass} style={{ color: group.color }}>
+                {group.label}
+              </h2>
+              <ul className="mt-4 space-y-3">
+                {group.items.map((item) => (
+                  <li
+                    className="border-l-2 pl-3 text-sm leading-6 text-[#c3cbd1]"
+                    style={{ borderColor: group.color }}
+                    key={item}
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </section>
         <section
           id="review"

@@ -42,6 +42,7 @@ export type StepData = {
   tone?: FlowTone;
   width?: number;
   align?: "center" | "left";
+  onChoose?: () => void;
 };
 
 export type StepNode = Node<StepData, "step">;
@@ -91,10 +92,21 @@ function StepNodeView({ data, selected }: NodeProps<StepNode>) {
   return (
     <div
       style={{ width: data.width ?? 168 }}
+      role={data.onChoose ? "button" : undefined}
+      tabIndex={data.onChoose ? 0 : undefined}
+      aria-label={data.onChoose ? `Inspect ${data.label}` : undefined}
+      aria-pressed={data.onChoose ? selected : undefined}
+      onClick={data.onChoose ? (event) => { event.stopPropagation(); data.onChoose?.(); } : undefined}
+      onKeyDown={data.onChoose ? (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault(); event.stopPropagation(); data.onChoose?.();
+        }
+      } : undefined}
       className={cn(
         "relative border px-3 py-2.5 font-mono transition-[border-color,background-color,opacity] duration-300",
         toneBox[tone],
         selected && "ring-1 ring-[#ff5c33] ring-offset-2 ring-offset-[#0c1014]",
+        data.onChoose && "cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff5c33]",
       )}
     >
       {tone === "active" && !reduce ? (

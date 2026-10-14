@@ -4,249 +4,178 @@ import { useState } from "react";
 import setup from "./data/setup.json";
 import data from "./data/benchmark.json";
 import runs from "./data/run-index.json";
-import { RingChart, panelClass, titleClass } from "./charts";
+import { panelClass, titleClass } from "./charts";
 
-const categoryNames: Record<string, string> = {
-  bug: "Bug fix",
-  "cross-file": "Cross-file",
-  navigation: "Navigation",
-  "test-generation": "Tests",
-};
 const control =
   "min-h-11 border border-white/15 px-4 py-2 text-xs text-[#d5dde3] hover:border-[#ff5c33] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff5c33]";
+const systems: Record<string, string> = {
+  "mini-swe-agent": "mini-SWE-agent",
+  "engine-core": "Engine core",
+};
+const outcomes = [
+  { key: "passed", label: "Passed", color: "#8ccf9f" },
+  { key: "failed", label: "Failed", color: "#f28c79" },
+  { key: "unresolved", label: "Unresolved", color: "#e2bd6b" },
+  { key: "unrun", label: "Not run", color: "#ffffff18" },
+];
 
-export function BenchmarkInsights({
-  select,
-}: {
-  select: (repo: string, category: string) => void;
-}) {
-  const repos = [...new Set(data.tasks.map((t) => t.repo))];
-  const certified = setup.tasks.filter((t) => t.status === "certified").length;
-  const measuredPoints = data.tasks.flatMap((t) =>
-    Object.entries(t.systems).flatMap(([system, a]) =>
-      a.cost_usd !== null && a.elapsed_s !== null
-        ? [
-            {
-              task: t.id,
-              system,
-              cost: Number(a.cost_usd),
-              elapsed: Number(a.elapsed_s) / 60,
-              attempt: a.attempt_id,
-            },
-          ]
-        : [],
-    ),
+export function BenchmarkInsights() {
+  const measured = data.status !== "not_run";
+  const knownCost =
+    !measured ||
+    data.systems.every(
+      (s) => s.cost_usd !== null || s.evaluated + s.unresolved === 0,
+    );
+  const spent = data.systems.reduce((n, s) => n + (s.cost_usd ?? 0), 0);
+  const complete = data.systems.reduce(
+    (n, s) => n + s.evaluated + s.unresolved,
+    0,
   );
-  const maxTime = Math.max(...measuredPoints.map((p) => p.elapsed), 1),
-    maxCost = Math.max(...measuredPoints.map((p) => p.cost), 0.01);
   return (
     <section
-      className="border-b border-white/10 py-8"
-      aria-label="Suite and budget infographics"
+      className="grid gap-6 border-b border-white/10 py-8 md:grid-cols-2"
+      aria-label="Benchmark progress and actual cost"
     >
-      <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-        <div className={panelClass}>
-          <div className="flex flex-wrap justify-between gap-3">
-            <h2 className={titleClass}>Task coverage</h2>
-            <span className="text-xs text-[#8ccf9f]">
-              {certified}/{data.task_count} fixtures certified
-            </span>
-          </div>
-          <p className="mt-2 text-xs text-[#9ba6af]">
-            Select a cell to filter the task list.
-          </p>
-          <div className="mt-5 grid grid-cols-[72px_repeat(4,minmax(0,1fr))] gap-2 text-center text-[11px] sm:grid-cols-[90px_repeat(4,minmax(0,1fr))]">
-            <span />
-            {Object.values(categoryNames).map((name) => (
-              <span
-                key={name}
-                className="self-end break-words pb-2 text-[#9ba6af]"
-              >
-                {name}
-              </span>
-            ))}
-            {repos.map((repo) => (
-              <div className="contents" key={repo}>
-                <span className="self-center break-words text-left font-mono text-[#c3cbd1]">
-                  {repo}
-                </span>
-                {Object.entries(categoryNames).map(([category, name]) => {
-                  const task = data.tasks.find(
-                    (t) => t.repo === repo && t.category === category,
-                  );
-                  const cert = setup.tasks.find((t) => t.id === task?.id);
-                  return (
-                    <button
-                      key={category}
-                      type="button"
-                      aria-label={`${repo}, ${name}: ${task ? 1 : 0} task; fixture ${cert?.status ?? "not checked"}`}
-                      onClick={() => {
-                        select(repo, category);
-                        document
-                          .getElementById("task-explorer")
-                          ?.scrollIntoView({ block: "start" });
+      <div>
+        <h2 className={titleClass}>Attempt outcomes</h2>
+        <p className="mt-2 text-xs text-[#9ba6af]">
+          {complete} of {data.task_count * 2} scheduled outcomes recorded
+        </p>
+        <div className="mt-6 space-y-5">
+          {data.systems.map((s) => {
+            const values: Record<string, number> = {
+              passed: s.passed,
+              failed: s.evaluated - s.passed,
+              unresolved: s.unresolved,
+              unrun: s.unrun,
+            };
+            return (
+              <div key={s.id}>
+                <div className="mb-2 flex justify-between text-xs text-[#c3cbd1]">
+                  <span>{systems[s.id]}</span>
+                  <span>
+                    {s.evaluated + s.unresolved}/{s.scheduled}
+                  </span>
+                </div>
+                <div
+                  className="flex h-3 overflow-hidden bg-white/5"
+                  role="img"
+                  aria-label={`${systems[s.id]}: ${outcomes.map((o) => `${values[o.key]} ${o.label.toLowerCase()}`).join(", ")}`}
+                >
+                  {outcomes.map((o) => (
+                    <span
+                      key={o.key}
+                      style={{
+                        width: `${(values[o.key] / s.scheduled) * 100}%`,
+                        background: o.color,
                       }}
-                      className={`min-h-12 border text-sm focus-visible:outline-2 focus-visible:outline-[#ff5c33] ${cert?.status === "certified" ? "border-[#8ccf9f]/25 bg-[#8ccf9f]/10 text-[#8ccf9f] hover:bg-[#8ccf9f]/20" : "border-white/10 bg-white/5 text-[#9ba6af]"}`}
-                    >
-                      {task ? "1" : "—"}
-                    </button>
-                  );
-                })}
+                    />
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-          <p className="mt-4 text-xs leading-5 text-[#9ba6af]">
-            Green = reference/evaluator certification. It is not an agent
-            success score.
-          </p>
+            );
+          })}
         </div>
-        <div className={panelClass}>
-          <h2 className={titleClass}>Where the $50 goes</h2>
-          <div className="mt-5">
-            <RingChart
-              items={setup.budget}
-              value="$50"
-              label="budget ceiling"
-            />
-          </div>
-          <p className="mt-4 text-xs text-[#9ba6af]">
-            Planned allocation · no paid run authorized.
-          </p>
+        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-[#9ba6af]">
+          {outcomes.map((o) => (
+            <span key={o.key} className="flex items-center gap-2">
+              <span
+                className="h-2 w-2"
+                style={{ background: o.color }}
+                aria-hidden="true"
+              />
+              {o.label}
+            </span>
+          ))}
         </div>
       </div>
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <div className={panelClass}>
-          <h2 className={titleClass}>Recorded setup checks</h2>
-          <div className="mt-5 space-y-3">
-            {[
-              [
-                "Task fixtures",
-                `${certified} certified`,
-                certified === data.task_count,
-              ],
-              [
-                "Native reasoning continuity",
-                setup.compatibility_status,
-                setup.compatibility_status === "passed",
-              ],
-              [
-                "Provider price bound",
-                setup.pricing_status,
-                setup.pricing_status === "passed",
-              ],
-            ].map(([name, value, passed]) => (
-              <div
-                key={String(name)}
-                className="flex justify-between gap-3 border-b border-white/5 pb-3 text-xs"
-              >
-                <span className="text-[#9ba6af]">{name}</span>
-                <span className={passed ? "text-[#8ccf9f]" : "text-[#e2bd6b]"}>
-                  {value}
-                </span>
+      <div>
+        <h2 className={titleClass}>Measured inference spend</h2>
+        <p className="mt-4 font-mono text-3xl text-[#d5dde3]">
+          {knownCost ? `$${spent.toFixed(2)}` : "Unavailable"}
+        </p>
+        <p className="mt-2 text-xs leading-6 text-[#9ba6af]">
+          {measured
+            ? "Includes failed attempts and eligible recoveries."
+            : "No measured attempts yet. Fills in as results are published."}
+        </p>
+        <details className="mt-3 text-xs text-[#9ba6af]">
+          <summary className="min-h-11 cursor-pointer py-3 text-[#7eb5d0]">
+            Budget plan · ${data.budget_usd} ceiling
+          </summary>
+          <dl className="space-y-2">
+            {setup.budget.map((b) => (
+              <div key={b.label} className="flex justify-between gap-3">
+                <dt>{b.label}</dt>
+                <dd>${b.value}</dd>
               </div>
             ))}
-          </div>
-          <details className="mt-2 text-xs text-[#9ba6af]">
-            <summary className="min-h-11 cursor-pointer py-3 text-[#7eb5d0]">
-              Native continuity checks
-            </summary>
-            <ul className="space-y-2">
-              {Object.entries(setup.compatibility_checks).map(
-                ([name, passed]) => (
-                  <li
-                    key={name}
-                    className="flex flex-wrap justify-between gap-2"
-                  >
-                    <span className="break-words">
-                      {name.replaceAll("_", " ")}
-                    </span>
-                    <span
-                      className={passed ? "text-[#8ccf9f]" : "text-[#e2bd6b]"}
-                    >
-                      {passed ? "Passed" : "Failed"}
-                    </span>
-                  </li>
-                ),
-              )}
-            </ul>
-          </details>
-          <p className="mt-2 text-xs leading-5 text-[#9ba6af]">
-            Historical setup evidence. Recheck after thinking/effort support
-            changes.
+          </dl>
+          <p className="mt-3 leading-5">
+            Allocation is fixed. The spend above excludes calibration, fees and
+            buffer; it is not the campaign bill.
           </p>
-        </div>
-        <div className={panelClass}>
-          <h2 className={titleClass}>Task cost vs. elapsed time</h2>
-          <div className="relative mt-5">
-            <svg
-              viewBox="0 0 400 160"
-              className="w-full"
-              role="img"
-              aria-label={
-                measuredPoints.length
-                  ? `${measuredPoints.length} measured task/system points, minutes on x-axis and dollars on y-axis`
-                  : "Cost versus time unavailable: no measured task attempts"
-              }
-            >
-              {[30, 65, 100, 135].map((y) => (
-                <path key={y} d={`M35 ${y} H380`} stroke="#ffffff10" />
-              ))}
-              <path d="M35 20 V135 H380" fill="none" stroke="#ffffff30" />
-              <text x="35" y="154" fill="#9ba6af" fontSize="10">
-                0 min
-              </text>
-              <text
-                x="370"
-                y="154"
-                fill="#9ba6af"
-                fontSize="10"
-                textAnchor="end"
-              >
-                {measuredPoints.length
-                  ? `${maxTime.toFixed(1)} min`
-                  : "elapsed →"}
-              </text>
-              <text x="3" y="25" fill="#9ba6af" fontSize="10">
-                {measuredPoints.length ? `$${maxCost.toFixed(2)}` : "$"}
-              </text>
-              {measuredPoints.map((p) => (
-                <a
-                  key={`${p.task}-${p.system}`}
-                  href={`/engine/results/runs/${data.run_id}/${p.attempt}`}
-                >
-                  <circle
-                    cx={35 + (p.elapsed / maxTime) * 335}
-                    cy={135 - (p.cost / maxCost) * 110}
-                    r="5"
-                    fill={p.system === "engine-core" ? "#ff5c33" : "#7eb5d0"}
-                  >
-                    <title>
-                      {p.task} · {p.system}: ${p.cost.toFixed(3)},{" "}
-                      {p.elapsed.toFixed(1)} minutes
-                    </title>
-                  </circle>
-                </a>
-              ))}
-              {!measuredPoints.length && (
-                <text
-                  x="210"
-                  y="78"
-                  textAnchor="middle"
-                  fill="#9ba6af"
-                  fontSize="12"
-                >
-                  Awaiting scored runs
-                </text>
-              )}
-            </svg>
-          </div>
-          <p className="mt-3 text-xs leading-5 text-[#9ba6af]">
-            Engine orange · mini blue. Each point includes eligible recovery
-            cost/time; unknown values are omitted.
-          </p>
-        </div>
+        </details>
       </div>
     </section>
+  );
+}
+
+export function BenchmarkSetupNotes() {
+  const base = `/benchmarks/${data.run_id}/setup`;
+  return (
+    <details className="border-b border-white/10 py-3 text-xs text-[#9ba6af]">
+      <summary className="min-h-11 cursor-pointer py-3 text-[#7eb5d0]">
+        Pre-run validation · recorded setup evidence
+      </summary>
+      <p className="mt-2 leading-6">
+        Checks of the test fixtures, model integration and price limits before
+        measurement. These are historical diagnostics, not agent scores.
+      </p>
+      <dl className="mt-4 space-y-4">
+        {[
+          {
+            name: "Task fixtures",
+            result: `${setup.certified_tasks}/${data.task_count} certified`,
+            detail:
+              "Reference fixes pass the graders; unchanged submissions fail.",
+            file: "certification.json",
+          },
+          {
+            name: "Model integration",
+            result: setup.compatibility_status,
+            detail:
+              "Whether native tool continuations preserve required reasoning state.",
+            file: "compatibility.json",
+          },
+          {
+            name: "Provider pricing",
+            result: setup.pricing_status,
+            detail:
+              "Whether observed prices fit the configured admission limits.",
+            file: "pricing.json",
+          },
+        ].map((c) => (
+          <div key={c.name}>
+            <dt className="text-[#d5dde3]">
+              {c.name} · {c.result}
+            </dt>
+            <dd className="mt-1 leading-6">
+              {c.detail}{" "}
+              <a
+                className="text-[#7eb5d0] underline"
+                href={`${base}/${c.file}`}
+              >
+                Evidence ↗
+              </a>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-4 leading-6">
+        Recheck after Engine thinking/effort changes. Paid runs remain paused.
+      </p>
+    </details>
   );
 }
 

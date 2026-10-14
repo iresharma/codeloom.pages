@@ -31,7 +31,7 @@ const grades = [
 
 export function GradingGuide() {
   return (
-    <section className="border-b border-white/10 py-10" id="grading">
+    <section className="py-6">
       <h2 className={titleClass}>How a run earns a pass</h2>
       <div className="mt-5 grid gap-3 md:grid-cols-3">
         {grades.map((g) => (

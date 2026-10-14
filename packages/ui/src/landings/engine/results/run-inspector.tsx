@@ -1,5 +1,7 @@
 "use client";
 
+import { RecordedAgentFlow } from "./recorded-agent-flow";
+
 import { useMemo, useState } from "react";
 import { PRODUCTS } from "@codeloom/config";
 import { SiteNav } from "../../../chrome/site-nav";
@@ -412,47 +414,57 @@ export function RunInspector({
           )}
           {tab === "Agents" && (
             <div className="space-y-3">
-              {run.agents.map((a) => (
-                <article key={a.id} className={panelClass}>
-                  <div className="flex flex-wrap justify-between gap-3">
-                    <h2 className={titleClass}>
-                      {a.profile}{" "}
-                      <span className="text-[#9ba6af]">· {a.id}</span>
-                    </h2>
-                    <span className="text-xs text-[#8ccf9f]">{a.status}</span>
-                  </div>
-                  <p className="mt-3 text-xs text-[#9ba6af]">
-                    {a.parent_id
-                      ? `Spawned by ${a.parent_id}`
-                      : "Root controller"}{" "}
-                    · {a.tool_calls} tool calls
-                  </p>
-                  {a.task && <Payload label="Assigned task" text={a.task} />}
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {a.tools.map((t) => (
-                      <span
-                        key={t.name}
-                        className="border border-white/10 px-3 py-2 font-mono text-xs text-[#9ba6af]"
+              <RecordedAgentFlow
+                agents={run.agents}
+                renderAgent={(id) => {
+                  const a = run.agents.find((agent) => agent.id === id)!;
+                  return (
+                    <article key={a.id} className={panelClass}>
+                      <div className="flex flex-wrap justify-between gap-3">
+                        <h2 className={titleClass}>
+                          {a.profile}{" "}
+                          <span className="text-[#9ba6af]">· {a.id}</span>
+                        </h2>
+                        <span className="text-xs text-[#8ccf9f]">
+                          {a.status}
+                        </span>
+                      </div>
+                      <p className="mt-3 text-xs text-[#9ba6af]">
+                        {a.parent_id
+                          ? `Spawned by ${a.parent_id}`
+                          : "Root controller"}{" "}
+                        · {a.tool_calls} tool calls
+                      </p>
+                      {a.task && (
+                        <Payload label="Assigned task" text={a.task} />
+                      )}
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {a.tools.map((t) => (
+                          <span
+                            key={t.name}
+                            className="border border-white/10 px-3 py-2 font-mono text-xs text-[#9ba6af]"
+                          >
+                            {t.name} <b className="text-[#d5dde3]">{t.count}</b>
+                          </span>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        className={`${buttonClass} mt-4`}
+                        onClick={() => {
+                          setAgent(a.id);
+                          setKind("all");
+                          setSearch("");
+                          setLimit(100);
+                          setTab("Timeline");
+                        }}
                       >
-                        {t.name} <b className="text-[#d5dde3]">{t.count}</b>
-                      </span>
-                    ))}
-                  </div>
-                  <button
-                    type="button"
-                    className={`${buttonClass} mt-4`}
-                    onClick={() => {
-                      setAgent(a.id);
-                      setKind("all");
-                      setSearch("");
-                      setLimit(100);
-                      setTab("Timeline");
-                    }}
-                  >
-                    Inspect this agent’s timeline
-                  </button>
-                </article>
-              ))}
+                        Inspect this agent’s timeline
+                      </button>
+                    </article>
+                  );
+                }}
+              />
               {run.agents.length === 1 && (
                 <p className="text-xs text-[#9ba6af]">
                   No child agents are recorded in this attempt.

@@ -1,8 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import data from "./data/benchmark.json";
-import { BenchmarkInsights, RunCatalog } from "./benchmark-insights";
+import {
+  BenchmarkInsights,
+  BenchmarkSetupNotes,
+  RunCatalog,
+} from "./benchmark-insights";
 import { GradingGuide } from "./grading-guide";
 
 type Outcome = "pass" | "fail" | "unresolved" | "unrun";
@@ -108,6 +112,13 @@ export function BenchmarkPanel() {
       ),
     [repo, category, outcome],
   );
+  useEffect(() => {
+    const target = window.location.hash.slice(1);
+    if (["grading", "task-explorer", "system-results"].includes(target)) {
+      const element = document.getElementById(target);
+      if (element instanceof HTMLDetailsElement) element.open = true;
+    }
+  }, []);
   const measured = benchmark.status !== "not_run";
   const pairs = [
     { key: "engine_only", title: "Engine only", color: "#ff5c33" },
@@ -121,7 +132,7 @@ export function BenchmarkPanel() {
   return (
     <>
       <section
-        className="border-b border-white/10 py-12 md:py-16"
+        className="border-b border-white/10 py-8 md:py-10"
         aria-labelledby="benchmark-title"
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -157,6 +168,10 @@ export function BenchmarkPanel() {
               key={href}
               className="inline-flex min-h-11 items-center border border-white/15 px-4 hover:border-[#ff5c33] focus-visible:outline-2 focus-visible:outline-[#ff5c33]"
               href={href}
+              onClick={() => {
+                const element = document.getElementById(href.slice(1));
+                if (element instanceof HTMLDetailsElement) element.open = true;
+              }}
             >
               {text} ↓
             </a>
@@ -203,114 +218,74 @@ export function BenchmarkPanel() {
         </div>
       </section>
 
-      <BenchmarkInsights
-        select={(nextRepo, nextCategory) => {
-          setRepo(nextRepo);
-          setCategory(nextCategory);
-          setOutcome("all");
-        }}
-      />
+      <BenchmarkInsights />
 
-      <section
-        className="grid gap-10 border-b border-white/10 py-10 md:grid-cols-2"
-        aria-label="Benchmark graphs"
-      >
-        <div>
-          <h2 className="font-mono text-sm font-semibold text-[#d5dde3]">
-            Where the systems disagree
-          </h2>
-          <p className="mt-2 text-xs leading-6 text-[#9ba6af]">
-            Paired outcomes lead the comparison. One vote per task.
-          </p>
-          <div
-            className="mt-5 space-y-3"
-            role="img"
-            aria-label={
-              measured
-                ? pairs
-                    .map((p) => `${p.title}: ${benchmark.pairs[p.key]}`)
-                    .join(", ")
-                : "Paired outcomes unavailable. No measured attempts."
-            }
-          >
-            {pairs.map((p) => (
-              <div
-                key={p.key}
-                className="grid grid-cols-[105px_1fr_24px] items-center gap-3 text-xs"
-              >
-                <span className="text-[#9ba6af]">{p.title}</span>
-                <span className="h-3 bg-white/5">
-                  <span
-                    className="block h-full"
-                    style={{
-                      width: `${pairTotal ? (benchmark.pairs[p.key] / pairTotal) * 100 : 0}%`,
-                      background: p.color,
-                    }}
-                  />
-                </span>
-                <span className="text-right font-mono text-[#d5dde3]">
-                  {measured ? benchmark.pairs[p.key] : "—"}
-                </span>
-              </div>
-            ))}
-          </div>
-          <p className="mt-4 text-xs text-[#9ba6af]">
-            {measured
-              ? `${benchmark.pairs.unresolved} unresolved pairs · ${benchmark.pairs.unrun} unrun pairs`
-              : "Awaiting scored task pairs"}
-          </p>
-        </div>
-        <div>
-          <h2 className="font-mono text-sm font-semibold text-[#d5dde3]">
-            What is in the task suite
-          </h2>
-          <p className="mt-2 text-xs leading-6 text-[#9ba6af]">
-            Author-designed corpus. Task mix is descriptive, not a result.
-          </p>
-          <div className="mt-5 space-y-3">
-            {Object.entries(categories).map(([key, name]) => {
-              const n = benchmark.tasks.filter(
-                (t) => t.category === key,
-              ).length;
-              return (
+      {measured && (
+        <section
+          className="border-b border-white/10 py-8"
+          aria-label="Paired benchmark outcomes"
+        >
+          <div>
+            <h2 className="font-mono text-sm font-semibold text-[#d5dde3]">
+              Where the systems disagree
+            </h2>
+            <p className="mt-2 text-xs leading-6 text-[#9ba6af]">
+              Paired outcomes lead the comparison. One vote per task.
+            </p>
+            <div
+              className="mt-5 space-y-3"
+              role="img"
+              aria-label={
+                measured
+                  ? pairs
+                      .map((p) => `${p.title}: ${benchmark.pairs[p.key]}`)
+                      .join(", ")
+                  : "Paired outcomes unavailable. No measured attempts."
+              }
+            >
+              {pairs.map((p) => (
                 <div
-                  key={key}
-                  className="grid grid-cols-[125px_1fr_24px] items-center gap-3 text-xs"
+                  key={p.key}
+                  className="grid grid-cols-[105px_1fr_24px] items-center gap-3 text-xs"
                 >
-                  <span className="text-[#9ba6af]">{name}</span>
-                  <span
-                    className="h-3 bg-white/5"
-                    role="img"
-                    aria-label={`${name}: ${n} tasks`}
-                  >
+                  <span className="text-[#9ba6af]">{p.title}</span>
+                  <span className="h-3 bg-white/5">
                     <span
-                      className="block h-full bg-[#7eb5d0]/70"
-                      style={{ width: `${(n / benchmark.task_count) * 100}%` }}
+                      className="block h-full"
+                      style={{
+                        width: `${pairTotal ? (benchmark.pairs[p.key] / pairTotal) * 100 : 0}%`,
+                        background: p.color,
+                      }}
                     />
                   </span>
                   <span className="text-right font-mono text-[#d5dde3]">
-                    {n}
+                    {measured ? benchmark.pairs[p.key] : "—"}
                   </span>
                 </div>
-              );
-            })}
+              ))}
+            </div>
+            <p className="mt-4 text-xs text-[#9ba6af]">
+              {measured
+                ? `${benchmark.pairs.unresolved} unresolved pairs · ${benchmark.pairs.unrun} unrun pairs`
+                : "Awaiting scored task pairs"}
+            </p>
           </div>
-          <p className="mt-4 text-xs text-[#9ba6af]">
-            Python, TypeScript and Go · pinned upstream commits
-          </p>
-        </div>
-      </section>
+        </section>
+      )}
 
-      <section
-        className="border-b border-white/10 py-10"
-        aria-labelledby="system-results"
+      <details
+        className="border-b border-white/10 py-3"
+        id="system-results"
+        open={measured}
       >
-        <h2
-          id="system-results"
-          className="font-mono text-sm font-semibold text-[#d5dde3]"
-        >
-          Success, spend and elapsed time
-        </h2>
+        <summary className="min-h-11 cursor-pointer py-3 font-mono text-sm text-[#d5dde3]">
+          Comparison metrics
+          {!measured && (
+            <span className="ml-3 text-xs text-[#9ba6af]">
+              Awaiting measured runs
+            </span>
+          )}
+        </summary>
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[850px] text-left text-xs">
             <caption className="sr-only">
@@ -371,23 +346,18 @@ export function BenchmarkPanel() {
           track newly failing upstream check commands; failures already present
           in the starting snapshot are excluded.
         </details>
-      </section>
+      </details>
 
-      <section
-        className="border-b border-white/10 py-10"
-        aria-labelledby="task-explorer"
-      >
-        <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h2
-            id="task-explorer"
-            className="font-mono text-sm font-semibold text-[#d5dde3]"
-          >
-            Explore every task
-          </h2>
-          <p className="font-mono text-xs text-[#9ba6af]" aria-live="polite">
-            {rows.length} of {benchmark.task_count} tasks
-          </p>
-        </div>
+      <details className="border-b border-white/10 py-3" id="task-explorer">
+        <summary className="min-h-11 cursor-pointer py-3 font-mono text-sm text-[#d5dde3]">
+          Task list{" "}
+          <span className="ml-3 text-xs text-[#9ba6af]">
+            {benchmark.task_count} planned tasks
+          </span>
+        </summary>
+        <p className="mt-3 text-xs text-[#9ba6af]" aria-live="polite">
+          {rows.length} of {benchmark.task_count} tasks
+        </p>
         <div className="mt-5 flex flex-wrap gap-4">
           <label className="grid gap-2 text-xs text-[#9ba6af]">
             Repository
@@ -508,10 +478,16 @@ export function BenchmarkPanel() {
             </p>
           )}
         </div>
-      </section>
+      </details>
 
       <RunCatalog />
-      <GradingGuide />
+      <details id="grading" className="border-b border-white/10 py-3">
+        <summary className="min-h-11 cursor-pointer py-3 text-xs text-[#7eb5d0]">
+          Grading rules & comparison method
+        </summary>
+        <GradingGuide />
+      </details>
+      <BenchmarkSetupNotes />
 
       <section
         className="grid gap-8 border-b border-white/10 py-10 md:grid-cols-2"

@@ -3,7 +3,6 @@
 import { PRODUCTS } from "@codeloom/config";
 import { ArrowRight } from "lucide-react";
 import { BenchmarkPanel } from "./benchmark-panel";
-import { BarChart, panelClass, titleClass } from "./charts";
 import { reportSummaries } from "./report-summary";
 
 import { SiteFooter } from "../../../chrome/footer";
@@ -35,39 +34,12 @@ export function EngineResultsIndexLanding() {
         <BenchmarkPanel />
         <section className="pt-10">
           <h2 className="font-mono text-sm font-semibold text-[#d5dde3]">
-            Earlier repository case studies
+            Old harness · archived case studies
           </h2>
           <p className="mt-2 text-xs leading-6 text-[#9ba6af]">
-            Three historical runs. Original reported metrics; no controlled
-            comparison.
+            Runs from the previous harness. Separate tasks and conditions;
+            excluded from this benchmark.
           </p>
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <div className={panelClass}>
-              <h3 className={titleClass}>Reported cost by case</h3>
-              <div className="mt-5">
-                <BarChart
-                  items={reports.map((r) => ({
-                    label: r.repo.split("/").at(-1)!,
-                    value: r.stats.costUsd,
-                  }))}
-                  format={(n) => `$${n.toFixed(2)}`}
-                  caption="Different tasks and run conditions. These costs do not rank the systems."
-                />
-              </div>
-            </div>
-            <div className={panelClass}>
-              <h3 className={titleClass}>Reported tool activity</h3>
-              <div className="mt-5">
-                <BarChart
-                  items={reports.map((r) => ({
-                    label: r.repo.split("/").at(-1)!,
-                    value: r.stats.toolCalls,
-                  }))}
-                  caption="Run-summary totals. Agent-phase totals can use a different, undocumented scope."
-                />
-              </div>
-            </div>
-          </div>
         </section>
 
         <section className="divide-y divide-white/10 border-b border-white/10">
@@ -113,7 +85,7 @@ export function EngineResultsIndexLanding() {
 
         <details className="py-6 text-xs leading-6 text-[#9ba6af]">
           <summary className="min-h-11 cursor-pointer py-3 text-[#7eb5d0]">
-            How the historical cases were reviewed
+            How the old-harness runs were reviewed
           </summary>
           <p className="font-mono text-[13px] font-bold text-[#d5dde3]">
             How these were graded.
