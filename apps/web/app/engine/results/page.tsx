@@ -7,10 +7,11 @@ const product = PRODUCTS.engine;
 export const metadata: Metadata = {
   title: "Results",
   description:
-    "Three real GitHub tickets run through CodeLoom Engine unattended, each with an independent code quality review and process review of the full agent trace.",
+    "A paired coding benchmark of CodeLoom Engine and mini-SWE-agent, with task outcomes, costs, hidden checks and downloadable evidence.",
   openGraph: {
     title: `Results · ${product.name}`,
-    description: "Three real PRs, reviewed end to end.",
+    description:
+      "Same coding tasks and model. Compare paired outcomes, cost and traces.",
     url: siteUrl("/engine/results"),
   },
 };
