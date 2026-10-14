@@ -17,113 +17,114 @@
       "value": 5
     }
   ],
-  "certification_status": "certified",
-  "certified_tasks": 16,
+  "certification_status": "stale",
+  "certified_tasks": 0,
   "compatibility_checks": {
-    "engine-core_wire_preserves_required_reasoning": false,
-    "engine_history_retains_reasoning_details": false,
-    "engine_stream_retains_reasoning_details": false,
-    "mini-swe-agent_wire_preserves_required_reasoning": true
+    "engine-core_wire_preserves_required_reasoning": true,
+    "engine_history_retains_reasoning_details": true,
+    "engine_stream_retains_reasoning_details": true,
+    "mini-swe-agent_wire_preserves_required_reasoning": true,
+    "native_effort_matches": true
   },
-  "compatibility_status": "failed",
-  "pricing_status": "failed",
+  "compatibility_status": "passed",
+  "pricing_status": "passed",
   "published_attempts": 0,
   "tasks": [
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "chi-B",
       "mutation_score": null,
-      "status": "certified"
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "chi-N",
       "mutation_score": null,
-      "status": "certified"
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "chi-T",
-      "mutation_score": 1.0,
-      "status": "certified"
+      "mutation_score": null,
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "chi-X",
       "mutation_score": null,
-      "status": "certified"
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "dotenv-B",
       "mutation_score": null,
-      "status": "certified"
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "dotenv-N",
       "mutation_score": null,
-      "status": "certified"
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "dotenv-T",
-      "mutation_score": 1.0,
-      "status": "certified"
+      "mutation_score": null,
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "dotenv-X",
       "mutation_score": null,
-      "status": "certified"
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "pqueue-B",
       "mutation_score": null,
-      "status": "certified"
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "pqueue-N",
       "mutation_score": null,
-      "status": "certified"
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "pqueue-T",
-      "mutation_score": 0.8,
-      "status": "certified"
+      "mutation_score": null,
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "pqueue-X",
       "mutation_score": null,
-      "status": "certified"
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "tinydb-B",
       "mutation_score": null,
-      "status": "certified"
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "tinydb-N",
       "mutation_score": null,
-      "status": "certified"
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "tinydb-T",
-      "mutation_score": 1.0,
-      "status": "certified"
+      "mutation_score": null,
+      "status": "stale"
     },
     {
-      "audit": "pass",
+      "audit": "unknown",
       "id": "tinydb-X",
       "mutation_score": null,
-      "status": "certified"
+      "status": "stale"
     }
   ]
 }

@@ -46,6 +46,8 @@ type Summary = {
   status: "not_run" | "partial" | "complete";
   model: string;
   provider: string;
+  reasoning_effort?: string;
+  thinking_enabled?: boolean;
   task_count: number;
   repo_count: number;
   budget_usd: number;
@@ -195,7 +197,7 @@ export function BenchmarkPanel() {
         {!measured && (
           <div className="mt-6 border-l-2 border-[#e2bd6b] bg-[#e2bd6b]/5 px-5 py-4 text-sm leading-6 text-[#c3cbd1]">
             <strong className="font-medium">
-              Paid runs paused for Engine thinking/effort updates.
+              Paid runs paused pending benchmark review.
             </strong>
             <p className="mt-1 text-xs">
               No scored results yet. Paid calibration and measurement require
@@ -213,6 +215,7 @@ export function BenchmarkPanel() {
         <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 font-mono text-[11px] text-[#9ba6af]">
           <span>{benchmark.model}</span>
           <span>{benchmark.provider}</span>
+          <span>Thinking {benchmark.thinking_enabled ? "on" : "off"} · {benchmark.reasoning_effort}</span>
           <span>Classifier off</span>
           <span>One run per task · zero ablations</span>
         </div>

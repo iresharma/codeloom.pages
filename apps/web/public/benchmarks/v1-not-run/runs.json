@@ -1,12 +1,12 @@
 [
   {
-    "agent_count": 1,
+    "agent_count": 2,
     "artifact_base": "/benchmarks/v1-not-run/setup/adapter-check/trials/adapter-engine-core",
     "cost_usd": 0.0,
-    "elapsed_s": 4.037855166941881,
+    "elapsed_s": 4.885910042095929,
     "id": "adapter-engine-core",
     "passed": false,
-    "request_count": 2,
+    "request_count": 4,
     "retry_of": null,
     "run_id": "adapter-check",
     "stage": "development",
@@ -14,14 +14,14 @@
     "system": "engine-core",
     "task_id": "tinydb-X",
     "termination": "completed",
-    "tool_calls": 1,
+    "tool_calls": 2,
     "trace_available": true
   },
   {
     "agent_count": 1,
     "artifact_base": "/benchmarks/v1-not-run/setup/adapter-check/trials/adapter-mini-swe-agent",
     "cost_usd": 0.0,
-    "elapsed_s": 2.8386399160372093,
+    "elapsed_s": 2.9643582090502605,
     "id": "adapter-mini-swe-agent",
     "passed": false,
     "request_count": 2,

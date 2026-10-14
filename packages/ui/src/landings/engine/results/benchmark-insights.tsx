@@ -136,9 +136,9 @@ export function BenchmarkSetupNotes() {
         {[
           {
             name: "Task fixtures",
-            result: `${setup.certified_tasks}/${data.task_count} certified`,
+            result: setup.certification_status === "stale" ? "stale · recertification required" : `${setup.certified_tasks}/${data.task_count} certified`,
             detail:
-              "Reference fixes pass the graders; unchanged submissions fail.",
+              "Certification must match the current Engine and runtime image.",
             file: "certification.json",
           },
           {
@@ -172,8 +172,9 @@ export function BenchmarkSetupNotes() {
           </div>
         ))}
       </dl>
+      <a className="mt-4 inline-block min-h-11 py-3 text-[#7eb5d0] underline" href={`${base}/cost-analysis.md`}>Cost projection · assumptions and rates ↗</a>
       <p className="mt-4 leading-6">
-        Recheck after Engine thinking/effort changes. Paid runs remain paused.
+        Native High effort checks pass. Fixture recertification and live calibration remain pending. Paid runs are paused.
       </p>
     </details>
   );

@@ -26,13 +26,13 @@
     {
       "command": "python -m pytest -o addopts= -q /tmp/oracle/check.py",
       "kind": "hidden",
-      "output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n__________________________________ test_flush __________________________________\n\ntmp_path = PosixPath('/tmp/pytest-of-bench/pytest-1/test_flush0')\n\n    def test_flush(tmp_path):\n>       assert Storage.flush(MemoryStorage()) is None\n               ^^^^^^^^^^^^^\nE       AttributeError: type object 'Storage' has no attribute 'flush'\n\n/tmp/oracle/check.py:7: AttributeError\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-_0t__6mb'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/lastfailed: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-dt9zimak'\n    config.cache.set(\"cache/lastfailed\", self.lastfailed)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED ../tmp/oracle/check.py::test_flush - AttributeError: type object 'Stor...\n1 failed, 2 warnings in 0.03s\n",
+      "output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n__________________________________ test_flush __________________________________\n\ntmp_path = PosixPath('/tmp/pytest-of-bench/pytest-1/test_flush0')\n\n    def test_flush(tmp_path):\n>       assert Storage.flush(MemoryStorage()) is None\n               ^^^^^^^^^^^^^\nE       AttributeError: type object 'Storage' has no attribute 'flush'\n\n/tmp/oracle/check.py:7: AttributeError\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-kexem1z1'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/lastfailed: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-2qkro8or'\n    config.cache.set(\"cache/lastfailed\", self.lastfailed)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED ../tmp/oracle/check.py::test_flush - AttributeError: type object 'Stor...\n1 failed, 2 warnings in 0.03s\n",
       "passed": false,
       "repeat": 0
     }
   ],
   "cost_usd": 0.0,
-  "elapsed_s": 2.8386399160372093,
+  "elapsed_s": 2.9643582090502605,
   "grading": {
     "checks": [
       {
@@ -45,7 +45,7 @@
       {
         "command": "python -m pytest -o addopts= -q /tmp/oracle/check.py",
         "kind": "hidden",
-        "output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n__________________________________ test_flush __________________________________\n\ntmp_path = PosixPath('/tmp/pytest-of-bench/pytest-1/test_flush0')\n\n    def test_flush(tmp_path):\n>       assert Storage.flush(MemoryStorage()) is None\n               ^^^^^^^^^^^^^\nE       AttributeError: type object 'Storage' has no attribute 'flush'\n\n/tmp/oracle/check.py:7: AttributeError\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-_0t__6mb'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/lastfailed: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-dt9zimak'\n    config.cache.set(\"cache/lastfailed\", self.lastfailed)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED ../tmp/oracle/check.py::test_flush - AttributeError: type object 'Stor...\n1 failed, 2 warnings in 0.03s\n",
+        "output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n__________________________________ test_flush __________________________________\n\ntmp_path = PosixPath('/tmp/pytest-of-bench/pytest-1/test_flush0')\n\n    def test_flush(tmp_path):\n>       assert Storage.flush(MemoryStorage()) is None\n               ^^^^^^^^^^^^^\nE       AttributeError: type object 'Storage' has no attribute 'flush'\n\n/tmp/oracle/check.py:7: AttributeError\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-kexem1z1'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/lastfailed: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-2qkro8or'\n    config.cache.set(\"cache/lastfailed\", self.lastfailed)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED ../tmp/oracle/check.py::test_flush - AttributeError: type object 'Stor...\n1 failed, 2 warnings in 0.03s\n",
         "repeat": 0,
         "returncode": 1
       }
@@ -58,16 +58,16 @@
   "patch": "",
   "requests": [
     {
-      "admission_queue_s": 0.001611415995284915,
-      "elapsed_s": 0.0058350409381091595,
-      "first_byte_s": 0.005228332942351699,
-      "id": "56378950af9af2c972ed282b",
+      "admission_queue_s": 0.0015653329901397228,
+      "elapsed_s": 0.005517665995284915,
+      "first_byte_s": 0.0049411250511184335,
+      "id": "d122a0b8bd4c9c0057b0fe83",
       "message_count": 2,
       "model": "deepseek/deepseek-v4-pro-0813",
       "providers": [
         "test"
       ],
-      "reasoning_effort": "xhigh",
+      "reasoning_effort": "high",
       "response": {
         "reasoning": "synthetic retained state",
         "text": "Synthetic adapter check; no live model.",
@@ -88,16 +88,16 @@
       }
     },
     {
-      "admission_queue_s": 0.0020039170049130917,
-      "elapsed_s": 0.0026925840647891164,
-      "first_byte_s": 0.0020137920510023832,
-      "id": "64a62d0c6d9644bb928fb5b8",
+      "admission_queue_s": 0.0018150829710066319,
+      "elapsed_s": 0.002600290928967297,
+      "first_byte_s": 0.0019810409285128117,
+      "id": "c78d0bc63b3b09a62dd14ada",
       "message_count": 4,
       "model": "deepseek/deepseek-v4-pro-0813",
       "providers": [
         "test"
       ],
-      "reasoning_effort": "xhigh",
+      "reasoning_effort": "high",
       "response": {
         "reasoning": "",
         "text": "Synthetic adapter check; no live model.",
