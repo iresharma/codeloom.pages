@@ -37,6 +37,8 @@ type Task = {
   repo: string;
   category: string;
   title: string;
+  difficulty: string;
+  attempt_limit_usd: number | null;
   language: string;
   provenance: string;
   systems: Record<string, Arm>;
@@ -49,6 +51,7 @@ type Summary = {
   reasoning_effort?: string;
   thinking_enabled?: boolean;
   task_count: number;
+  difficulty_mix: Record<string, number>;
   repo_count: number;
   budget_usd: number;
   pairs: Record<string, number>;
@@ -158,7 +161,7 @@ export function BenchmarkPanel() {
           <span className="text-[#ff5c33]">Two coding systems.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-sm leading-7 text-[#9ba6af]">
-          Independent checkouts. A $1 cap per attempt. Executable hidden checks.
+          Independent checkouts. Task-matched spending caps. Executable hidden checks.
         </p>
         <div className="mt-5 flex flex-wrap gap-3 text-xs text-[#7eb5d0]">
           {[
@@ -218,6 +221,7 @@ export function BenchmarkPanel() {
           <span>Thinking {benchmark.thinking_enabled ? "on" : "off"} · {benchmark.reasoning_effort}</span>
           <span>Classifier off</span>
           <span>One run per task · zero ablations</span>
+          <span>{benchmark.difficulty_mix.light} light · {benchmark.difficulty_mix.medium} medium · {benchmark.difficulty_mix.heavy} heavy</span>
         </div>
       </section>
 
@@ -345,7 +349,9 @@ export function BenchmarkPanel() {
           Infrastructure failures follow a fixed retry policy. Both attempts
           count toward cost and elapsed time; unresolved failures leave the
           evaluated denominator and remain in delivery coverage. Agent failures,
-          budget stops and regressions count as failures. Regression counts
+          budget stops and regressions count as failures. Individual attempt maxima
+          total $50 but share a $32 measurement envelope; remaining pairs can stay
+          unrun when that envelope is exhausted. Regression counts
           track newly failing upstream check commands; failures already present
           in the starting snapshot are excluded.
         </details>
@@ -359,7 +365,8 @@ export function BenchmarkPanel() {
           </span>
         </summary>
         <p className="mt-3 text-xs text-[#9ba6af]" aria-live="polite">
-          {rows.length} of {benchmark.task_count} tasks
+          {rows.length} of {benchmark.task_count} tasks · Scope labels are provisional.
+          Caps: $1 light / $2 medium / $4 heavy, per system.
         </p>
         <div className="mt-5 flex flex-wrap gap-4">
           <label className="grid gap-2 text-xs text-[#9ba6af]">
@@ -430,6 +437,7 @@ export function BenchmarkPanel() {
                       {categories[t.category]}
                     </span>
                     <p className="mt-1.5 leading-5 text-[#9ba6af]">{t.title}</p>
+                    <p className="mt-1 text-xs text-[#7eb5d0]"><span className="capitalize">{t.difficulty}</span> · {t.attempt_limit_usd === null ? "—" : `$${t.attempt_limit_usd.toFixed(2)}`} cap per system</p>
                     <p className="mt-1 text-[10px] text-[#9ba6af]">
                       {t.category === "bug"
                         ? "Fabricated regression · upstream tests retained"

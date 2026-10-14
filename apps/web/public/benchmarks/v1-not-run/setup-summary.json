@@ -44,25 +44,7 @@
     },
     {
       "audit": "unknown",
-      "id": "chi-T",
-      "mutation_score": null,
-      "status": "stale"
-    },
-    {
-      "audit": "unknown",
       "id": "chi-X",
-      "mutation_score": null,
-      "status": "stale"
-    },
-    {
-      "audit": "unknown",
-      "id": "dotenv-B",
-      "mutation_score": null,
-      "status": "stale"
-    },
-    {
-      "audit": "unknown",
-      "id": "dotenv-N",
       "mutation_score": null,
       "status": "stale"
     },
@@ -86,12 +68,6 @@
     },
     {
       "audit": "unknown",
-      "id": "pqueue-N",
-      "mutation_score": null,
-      "status": "stale"
-    },
-    {
-      "audit": "unknown",
       "id": "pqueue-T",
       "mutation_score": null,
       "status": "stale"
@@ -105,18 +81,6 @@
     {
       "audit": "unknown",
       "id": "tinydb-B",
-      "mutation_score": null,
-      "status": "stale"
-    },
-    {
-      "audit": "unknown",
-      "id": "tinydb-N",
-      "mutation_score": null,
-      "status": "stale"
-    },
-    {
-      "audit": "unknown",
-      "id": "tinydb-T",
       "mutation_score": null,
       "status": "stale"
     },
