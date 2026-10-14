@@ -1,334 +1,423 @@
 "use client";
 
 import { PRODUCTS } from "@codeloom/config";
-import { motion, useReducedMotion } from "motion/react";
-
 import { SiteFooter } from "../../../chrome/footer";
 import { SiteNav } from "../../../chrome/site-nav";
 import { EngineSubNav } from "../../../chrome/engine-subnav";
 import { ProductShell } from "../../../components/product-shell";
-import { Reveal } from "../../../magic/reveal";
 import { DecisionFlowGraph } from "./decision-flow";
-import { codeQualityTone, recommendationTone } from "./severity";
-import type { EngineResultReport, FlowPhase, ReportFinding, Severity } from "./types";
-
-const product = PRODUCTS.engine;
+import {
+  BarChart,
+  RingChart,
+  Stat,
+  chartColors,
+  panelClass,
+  titleClass,
+} from "./charts";
+import { reportSummaries } from "./report-summary";
+import type {
+  EngineResultReport as Report,
+  FlowPhase,
+  ReportFinding,
+  Severity,
+} from "./types";
 
 const severityColor: Record<Severity, string> = {
-  critical: "#ef4444",
-  high: "#ef4444",
-  medium: "#f2c14e",
-  low: "#7a848c",
+  critical: "#f28c79",
+  high: "#f28c79",
+  medium: "#e2bd6b",
+  low: "#7eb5d0",
 };
+const focus =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff5c33]";
 
-const verdictTone: Record<string, { color: string; label: string }> = {
-  approved: { color: "#34d399", label: "approved" },
-  acceptable: { color: "#34d399", label: "acceptable" },
-  efficient: { color: "#34d399", label: "efficient" },
-  merge: { color: "#34d399", label: "merge" },
-  "merge-ready": { color: "#34d399", label: "merge-ready" },
-  "needs-changes": { color: "#f2c14e", label: "needs changes" },
-  "request-changes": { color: "#f2c14e", label: "request changes" },
-  concerning: { color: "#f2c14e", label: "concerning" },
-  rejected: { color: "#ef4444", label: "rejected" },
-  blocked: { color: "#ef4444", label: "blocked" },
-};
-
-function ToneBadge({ tone }: { tone: { color: string; label: string } }) {
+function Finding({ finding }: { finding: ReportFinding }) {
   return (
-    <span
-      className="inline-flex items-center gap-1.5 border px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.06em]"
-      style={{ borderColor: `${tone.color}55`, color: tone.color, background: `${tone.color}14` }}
-    >
-      <span className="size-1.5 rounded-full" style={{ background: tone.color }} />
-      {tone.label}
-    </span>
-  );
-}
-
-function VerdictBadge({ verdict }: { verdict: string }) {
-  return <ToneBadge tone={verdictTone[verdict] ?? { color: "#7a848c", label: verdict }} />;
-}
-
-const statusColor: Record<string, string> = {
-  ok: "#34d399",
-  approve: "#34d399",
-  failed: "#ef4444",
-  error: "#ef4444",
-};
-
-function FlowCard({ phase }: { phase: FlowPhase }) {
-  const color = statusColor[phase.status] ?? "#7a848c";
-  return (
-    <div className="relative border border-white/10 border-l-2 p-4" style={{ borderLeftColor: color }}>
-      <div className="flex flex-wrap items-center gap-2 font-mono text-[12px]">
-        <span className="font-bold text-[#d5dde3] uppercase">{phase.profile}</span>
-        <span className="text-[#7a848c]">{phase.agentId}</span>
-        <span className="uppercase" style={{ color }}>
-          {phase.status || "running"}
-        </span>
-        <span className="ml-auto flex gap-2 text-[11px] text-[#7a848c]">
-          <span>${phase.costUsd.toFixed(4)}</span>
-          <span>{phase.tokens.toLocaleString("en-US")} tok</span>
-          <span>{phase.toolCalls} tools</span>
-        </span>
-      </div>
-      <p className="mt-2 text-[12.5px] leading-6 text-[#7a848c] italic">{phase.why}</p>
-      <div className="mt-2.5 flex flex-wrap gap-1.5">
-        {phase.topTools.map((tool) => (
-          <span key={tool.name} className="border border-white/10 px-1.5 py-0.5 font-mono text-[10.5px] text-[#7a848c]">
-            {tool.name} <b className="text-[#d5dde3]">{tool.count}</b>
-          </span>
-        ))}
-        {phase.judgeFlags > 0 ? (
-          <span className="border px-1.5 py-0.5 font-mono text-[10.5px]" style={{ borderColor: "#f2c14e55", color: "#f2c14e" }}>
-            {phase.judgeFlags} judge flag{phase.judgeFlags === 1 ? "" : "s"}
-          </span>
-        ) : null}
-      </div>
-      {phase.outcome ? (
-        <details className="group mt-2.5">
-          <summary className="cursor-pointer font-mono text-[11px] text-[#7a848c] hover:text-[#d5dde3]">
-            what it found / did
-          </summary>
-          <pre className="mt-2 max-h-72 overflow-y-auto border border-white/10 bg-[#0a0d10] p-3 font-mono text-[11.5px] leading-6 whitespace-pre-wrap text-[#7a848c]">
-            {phase.outcome}
-          </pre>
-        </details>
-      ) : null}
-      {phase.leftover ? (
-        <details className="group mt-2">
-          <summary className="cursor-pointer font-mono text-[11px] text-[#7a848c] hover:text-[#d5dde3]">
-            leftover questions
-          </summary>
-          <pre className="mt-2 max-h-72 overflow-y-auto border border-white/10 bg-[#0a0d10] p-3 font-mono text-[11.5px] leading-6 whitespace-pre-wrap text-[#7a848c]">
-            {phase.leftover}
-          </pre>
-        </details>
-      ) : null}
-    </div>
-  );
-}
-
-function StatTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border border-white/10 px-4 py-3">
-      <p className="font-mono text-[16px] font-bold text-[#d5dde3]">{value}</p>
-      <p className="mt-1 font-mono text-[11px] tracking-[0.06em] text-[#7a848c] uppercase">{label}</p>
-    </div>
-  );
-}
-
-function FindingCard({ finding }: { finding: ReportFinding }) {
-  const color = severityColor[finding.severity];
-  return (
-    <div className="border border-white/10 border-l-2 p-4" style={{ borderLeftColor: color }}>
-      <div className="flex flex-wrap items-center gap-2 font-mono text-[11px]">
-        <span className="size-1.5 rounded-full" style={{ background: color }} />
-        <span className="uppercase tracking-[0.06em]" style={{ color }}>
+    <details className="border-b border-white/10 py-2">
+      <summary
+        className={`min-h-11 cursor-pointer py-3 text-sm leading-6 text-[#c3cbd1] ${focus}`}
+      >
+        <span
+          className="mr-3 font-mono text-xs uppercase"
+          style={{ color: severityColor[finding.severity] }}
+        >
           {finding.severity}
         </span>
-        <span className="text-[#7a848c]">{finding.category}</span>
-        {finding.profile ? (
-          <span className="text-[#7a848c]">
-            · {finding.profile}
-            {finding.agentId ? ` (${finding.agentId})` : ""}
-          </span>
-        ) : null}
-        {finding.file ? (
-          <span className="ml-auto text-[#7a848c]">
+        {finding.summary}
+      </summary>
+      <div className="space-y-3 pb-4 text-xs leading-6 text-[#9ba6af]">
+        {finding.file && (
+          <p className="break-all font-mono text-[#7eb5d0]">
             {finding.file}
             {finding.line ? `:${finding.line}` : ""}
-          </span>
-        ) : null}
-      </div>
-      <p className="mt-2 text-[13px] leading-6 text-[#d5dde3]">{finding.summary}</p>
-      <details className="group mt-2">
-        <summary className="cursor-pointer font-mono text-[11px] text-[#7a848c] hover:text-[#d5dde3]">
-          detail
-        </summary>
-        <p className="mt-2 text-[12.5px] leading-6 text-[#7a848c]">{finding.detail}</p>
-        {finding.suggestedFix ? (
-          <p className="mt-2 text-[12.5px] leading-6 text-[#7a848c]">
-            <span className="text-[#d5dde3]">suggested fix — </span>
+          </p>
+        )}
+        <p>{finding.detail}</p>
+        {finding.suggestedFix && (
+          <p>
+            <b className="text-[#d5dde3]">Suggested fix: </b>
             {finding.suggestedFix}
           </p>
-        ) : null}
+        )}
+      </div>
+    </details>
+  );
+}
+
+function Phase({ phase }: { phase: FlowPhase }) {
+  return (
+    <div className={panelClass}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className={titleClass}>
+          {phase.profile}{" "}
+          <span className="text-[#9ba6af]">· {phase.agentId}</span>
+        </h3>
+        <span className="font-mono text-xs text-[#7eb5d0]">{phase.status}</span>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <Stat value={`$${phase.costUsd.toFixed(3)}`} label="Agent cost" />
+        <Stat value={phase.toolCalls} label="Tool calls" />
+        <Stat value={phase.tokens.toLocaleString("en-US")} label="Tokens" />
+        <Stat value={phase.judgeFlags} label="Judge flags" />
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {phase.topTools.map((t) => (
+          <span
+            className="border border-white/10 px-2 py-1 text-xs text-[#9ba6af]"
+            key={t.name}
+          >
+            {t.name} <b className="text-[#d5dde3]">{t.count}</b>
+          </span>
+        ))}
+      </div>
+      <details className="mt-3 text-xs leading-6 text-[#9ba6af]">
+        <summary
+          className={`min-h-11 cursor-pointer py-3 text-[#7eb5d0] ${focus}`}
+        >
+          Assigned task & recorded outcome
+        </summary>
+        <p>{phase.why}</p>
+        <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-words font-mono">
+          {phase.outcome || "No outcome summary recorded."}
+        </pre>
+        {phase.leftover && (
+          <p className="mt-3">
+            <b className="text-[#d5dde3]">Open questions: </b>
+            {phase.leftover}
+          </p>
+        )}
       </details>
+      <p className="text-xs leading-6 text-[#9ba6af]">
+        Individual call arguments/results were not published for this historical
+        run.
+      </p>
     </div>
   );
 }
 
-export function EngineResultReport({ report }: { report: EngineResultReport }) {
-  const reduce = useReducedMotion();
-  const tone = recommendationTone(report);
-  const cqTone = codeQualityTone(report);
-  const procTone = verdictTone[report.processReview.verdict] ?? { color: "#7a848c", label: report.processReview.verdict };
-
+export function EngineResultReport({ report }: { report: Report }) {
+  const summary = reportSummaries[report.slug];
+  const findings = [
+    ...report.codeReview.findings,
+    ...report.processReview.findings,
+  ];
+  const severities: Severity[] = ["critical", "high", "medium", "low"];
+  const tools: Record<string, number> = {};
+  report.decisionFlow.phases.forEach((p) =>
+    p.topTools.forEach((t) => (tools[t.name] = (tools[t.name] ?? 0) + t.count)),
+  );
+  const phaseTools = report.decisionFlow.phases.reduce(
+    (n, p) => n + p.toolCalls,
+    0,
+  );
   return (
-    <ProductShell product={product} className="bg-[#0c1014]">
+    <ProductShell product={PRODUCTS.engine} className="bg-[#0c1014]">
       <SiteNav active="engine" />
       <EngineSubNav active="results" />
-
-      <main className="mx-auto max-w-5xl px-5 md:px-8 xl:max-w-6xl">
-        <section className="border-b border-white/10 py-10 md:py-14">
-          <a href="/engine/results" className="font-mono text-[12px] text-[#7a848c] hover:text-[#d5dde3]">
-            ← results
-          </a>
-          <motion.h1
-            initial={reduce ? false : { opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mt-3 font-mono text-xl leading-snug font-bold text-[#d5dde3] sm:text-2xl"
+      <main className="mx-auto max-w-6xl px-5 md:px-8">
+        <header className="border-b border-white/10 py-10">
+          <a
+            href="/engine/results"
+            className={`inline-flex min-h-11 items-center text-xs text-[#7eb5d0] ${focus}`}
           >
-            {report.repo}
-          </motion.h1>
-          <p className="mt-2 text-[14px] leading-6 text-[#d5dde3]">{report.taskTitle}</p>
-          <p className="mt-2 max-w-xl text-[13px] leading-6 text-[#7a848c]">{report.taskSummary}</p>
-
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            <ToneBadge tone={{ label: `overall · ${tone.label}`, color: tone.color }} />
-            <ToneBadge tone={{ label: `code · ${cqTone.label}`, color: cqTone.color }} />
-            <ToneBadge tone={{ label: `process · ${procTone.label}`, color: procTone.color }} />
-            <a
-              href={report.prUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="font-mono text-[12px] text-[#ff5c33] underline underline-offset-4"
-            >
-              PR #{report.prNumber}
-            </a>
+            ← All results
+          </a>
+          <div className="mt-4 flex flex-wrap gap-2 font-mono text-xs">
+            <span className="border border-white/15 px-3 py-2 text-[#9ba6af]">
+              Historical case study · qualitative review
+            </span>
+            <span className="border border-white/15 px-3 py-2 text-[#e2bd6b]">
+              {report.overallAssessment.recommendation.replaceAll("-", " ")}
+            </span>
           </div>
-
-          <details className="group mt-5">
-            <summary className="cursor-pointer font-mono text-[12px] text-[#7a848c] hover:text-[#d5dde3]">
-              full task prompt
+          <h1 className="mt-5 break-words font-mono text-2xl text-[#d5dde3] md:text-3xl">
+            {report.repo}
+          </h1>
+          <p className="mt-3 text-sm text-[#c3cbd1]">{report.taskTitle}</p>
+          <p className="mt-4 max-w-2xl text-base leading-7 text-[#d5dde3]">
+            {summary?.takeaway ?? report.taskTitle}
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {[
+              ["#run-map", "Agent map"],
+              ["#review", "Review findings"],
+              [report.links.diffUrl, "View diff ↗"],
+              [report.prUrl, `PR #${report.prNumber} ↗`],
+            ].map(([url, label]) => (
+              <a
+                key={url}
+                href={url}
+                className={`inline-flex min-h-11 items-center border border-white/15 px-4 text-xs text-[#7eb5d0] hover:border-[#ff5c33] ${focus}`}
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+          <details className="mt-3 text-xs leading-6 text-[#9ba6af]">
+            <summary className={`min-h-11 cursor-pointer py-3 ${focus}`}>
+              Full task brief
             </summary>
-            <pre className="mt-3 max-w-2xl overflow-x-auto border border-white/10 bg-[#0a0d10] p-3 font-mono text-[12px] leading-6 whitespace-pre-wrap text-[#7a848c]">
+            <p>{report.taskSummary}</p>
+            <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-words font-mono">
               {report.taskPrompt}
             </pre>
           </details>
+        </header>
+        <section
+          aria-label="Run totals"
+          className="grid grid-cols-2 gap-3 py-6 md:grid-cols-4"
+        >
+          <Stat
+            value={`$${report.stats.costUsd.toFixed(2)}`}
+            label="Reported inference cost"
+          />
+          <Stat
+            value={`${Math.round(report.stats.elapsedSeconds)}s`}
+            label="Reported elapsed"
+          />
+          <Stat value={report.stats.toolCalls} label="Reported tool total" />
+          <Stat
+            value={report.decisionFlow.phases.length}
+            label="Recorded agent phases"
+          />
         </section>
-
-        <section className="border-b border-white/10 py-8">
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-            <StatTile label="cost" value={`$${report.stats.costUsd.toFixed(2)}`} />
-            <StatTile label="tokens" value={report.stats.totalTokens.toLocaleString("en-US")} />
-            <StatTile label="turns" value={String(report.stats.turns)} />
-            <StatTile label="tool calls" value={String(report.stats.toolCalls)} />
+        <section
+          className="grid gap-4 border-b border-white/10 pb-8 md:grid-cols-3"
+          aria-label="Run charts"
+        >
+          <div className={panelClass}>
+            <h2 className={titleClass}>Cost by agent phase</h2>
+            <div className="mt-5">
+              <BarChart
+                items={report.decisionFlow.phases.map((p, i) => ({
+                  label: `${i + 1} · ${p.profile}`,
+                  value: p.costUsd,
+                }))}
+                format={(n) => `$${n.toFixed(3)}`}
+                caption="Recorded phase costs; not an elapsed-time chart."
+              />
+            </div>
           </div>
-          <p className="mt-3 font-mono text-[11.5px] text-[#7a848c]">
-            {report.stats.elapsedSeconds.toFixed(0)}s · agents spawned: {report.stats.agentProfiles.join(", ")}
-          </p>
-          <p className="mt-2 font-mono text-[11.5px] text-[#7a848c]">
-            {report.verification.language} · builds: {report.verification.builds ? "yes" : "no"} · tests:{" "}
-            {report.verification.hasTests ? (report.verification.testsPass ? "pass" : "fail") : "none"}
-          </p>
-        </section>
-
-        <section className="border-b border-white/10 py-10">
-          <p className="font-mono text-[13px] font-bold text-[#d5dde3]">
-            How it got here <span className="text-[#7a848c]">— decision flow, spawn-by-spawn</span>
-          </p>
-          <Reveal className="mt-5">
-            <DecisionFlowGraph report={report} renderPhase={(phase) => <FlowCard phase={phase} />} />
-          </Reveal>
-        </section>
-
-        <section className="border-b border-white/10 py-10">
-          <div className="flex items-baseline justify-between gap-4">
-            <p className="font-mono text-[13px] font-bold text-[#d5dde3]">Overall assessment</p>
-            <ToneBadge tone={tone} />
+          <div className={panelClass}>
+            <h2 className={titleClass}>Most-used tools</h2>
+            <div className="mt-5">
+              <BarChart
+                items={Object.entries(tools)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 6)
+                  .map(([label, value]) => ({ label, value }))}
+                caption="Sum of published top-tool counts. Tools outside those lists are omitted."
+              />
+            </div>
           </div>
-          <blockquote
-            className="mt-4 border-l-2 bg-white/[0.02] py-3 pl-4 text-[13px] leading-6 text-[#d5dde3]"
-            style={{ borderLeftColor: tone.color }}
+          <div className={panelClass}>
+            <h2 className={titleClass}>Review findings</h2>
+            <div className="mt-5">
+              <RingChart
+                items={severities.map((s) => ({
+                  label: s,
+                  value: findings.filter((f) => f.severity === s).length,
+                  color: severityColor[s],
+                }))}
+                value={String(findings.length)}
+                label="findings"
+              />
+            </div>
+            <p className="mt-4 text-xs leading-6 text-[#9ba6af]">
+              Recorded review severity; not a hidden-test score.
+            </p>
+          </div>
+        </section>
+        <section className="grid gap-4 border-b border-white/10 py-8 sm:grid-cols-2">
+          {[
+            {
+              label: "What worked",
+              items: summary?.strengths ?? [],
+              color: chartColors[2],
+            },
+            {
+              label: "What needs attention",
+              items: summary?.concerns ?? [],
+              color: chartColors[3],
+            },
+          ].map((group) => (
+            <div className={panelClass} key={group.label}>
+              <h2 className={titleClass} style={{ color: group.color }}>
+                {group.label}
+              </h2>
+              <ul className="mt-4 space-y-3">
+                {group.items.map((item) => (
+                  <li
+                    className="border-l-2 pl-3 text-sm leading-6 text-[#c3cbd1]"
+                    style={{ borderColor: group.color }}
+                    key={item}
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+        <section
+          id="run-map"
+          className="scroll-mt-24 border-b border-white/10 py-8"
+        >
+          <h2 className={titleClass}>Agent map</h2>
+          <p className="mt-2 text-xs leading-6 text-[#9ba6af]">
+            Select a phase to inspect its task, outcome and tools. Reconstructed
+            from phase summaries; no timestamped call trace was published.
+          </p>
+          <div className="mt-5">
+            <DecisionFlowGraph
+              report={report}
+              renderPhase={(p) => <Phase phase={p} />}
+            />
+          </div>
+          {phaseTools !== report.stats.toolCalls && (
+            <details className="mt-4 text-xs leading-6 text-[#9ba6af]">
+              <summary
+                className={`min-h-11 cursor-pointer py-3 text-[#e2bd6b] ${focus}`}
+              >
+                Count discrepancy in source report
+              </summary>
+              <p>
+                Agent-phase tool counts sum to {phaseTools}; the run summary
+                reports {report.stats.toolCalls}. Their aggregation scopes are
+                not documented. Both are preserved rather than treated as
+                interchangeable.
+              </p>
+            </details>
+          )}
+        </section>
+        <section
+          id="review"
+          className="scroll-mt-24 border-b border-white/10 py-8"
+        >
+          <h2 className={titleClass}>Review evidence</h2>
+          <p className="mt-2 text-xs leading-6 text-[#9ba6af]">
+            Expand a review for findings, locations and suggested fixes. These
+            qualitative reviews are separate from benchmark grading.
+          </p>
+          <div className="mt-5 space-y-3">
+            <details className={panelClass}>
+              <summary
+                className={`min-h-11 cursor-pointer py-3 text-sm text-[#d5dde3] ${focus}`}
+              >
+                Code review · {report.codeReview.verdict} ·{" "}
+                {report.codeReview.findings.length} findings
+              </summary>
+              <div className="mt-2">
+                {report.codeReview.findings.map((f) => (
+                  <Finding key={f.id} finding={f} />
+                ))}
+                <details className="mt-4 text-xs leading-6 text-[#9ba6af]">
+                  <summary className="min-h-11 cursor-pointer py-3">
+                    Original code-review narrative
+                  </summary>
+                  <p>{report.codeReview.summary}</p>
+                </details>
+              </div>
+            </details>
+            <details className={panelClass}>
+              <summary
+                className={`min-h-11 cursor-pointer py-3 text-sm text-[#d5dde3] ${focus}`}
+              >
+                Process review · {report.processReview.verdict} ·{" "}
+                {report.processReview.findings.length} findings
+              </summary>
+              <p className="mt-3 text-xs text-[#9ba6af]">
+                Navigation hierarchy:{" "}
+                {report.processReview.followedNavigationHierarchy
+                  ? "followed"
+                  : "not followed"}{" "}
+                · Read-before-edit violations:{" "}
+                {report.processReview.readBeforeEditViolations}
+              </p>
+              {report.processReview.findings.map((f) => (
+                <Finding key={f.id} finding={f} />
+              ))}
+              <details className="mt-4 text-xs leading-6 text-[#9ba6af]">
+                <summary className="min-h-11 cursor-pointer py-3">
+                  Original process-review narrative
+                </summary>
+                <p>{report.processReview.summary}</p>
+              </details>
+            </details>
+            <details className={panelClass}>
+              <summary
+                className={`min-h-11 cursor-pointer py-3 text-sm text-[#d5dde3] ${focus}`}
+              >
+                Original overall assessment
+              </summary>
+              <p className="mt-3 text-sm leading-7 text-[#9ba6af]">
+                {report.overallAssessment.narrative}
+              </p>
+              {[
+                {
+                  label: "Strengths",
+                  items: report.overallAssessment.strengths,
+                },
+                { label: "Concerns", items: report.overallAssessment.concerns },
+              ].map((g) => (
+                <div key={g.label}>
+                  <h3 className="mt-4 text-xs text-[#d5dde3]">{g.label}</h3>
+                  <ul className="mt-2 list-disc space-y-2 pl-5 text-xs leading-6 text-[#9ba6af]">
+                    {g.items.map((i) => (
+                      <li key={i}>{i}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </details>
+          </div>
+        </section>
+        <footer className="flex flex-wrap gap-5 py-8 text-xs text-[#7eb5d0]">
+          <a
+            className={`inline-flex min-h-11 items-center ${focus}`}
+            href={report.links.prUrl}
           >
-            {report.overallAssessment.narrative}
-          </blockquote>
-
-          <div className="mt-6 grid gap-x-6 gap-y-5 sm:grid-cols-2">
-            <div>
-              <p className="flex items-center gap-2 font-mono text-[11px] font-bold text-[#34d399] uppercase tracking-[0.08em]">
-                <span className="flex size-4 items-center justify-center rounded-full bg-[#34d399]/15 text-[10px]">✓</span>
-                Strengths
-              </p>
-              <ul className="mt-3 space-y-3">
-                {report.overallAssessment.strengths.map((item, i) => (
-                  <li key={i} className="border-l-2 border-[#34d399]/30 pl-3 text-[12.5px] leading-6 text-[#7a848c]">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <p className="flex items-center gap-2 font-mono text-[11px] font-bold text-[#f2c14e] uppercase tracking-[0.08em]">
-                <span className="flex size-4 items-center justify-center rounded-full bg-[#f2c14e]/15 text-[10px]">!</span>
-                Concerns
-              </p>
-              <ul className="mt-3 space-y-3">
-                {report.overallAssessment.concerns.map((item, i) => (
-                  <li key={i} className="border-l-2 border-[#f2c14e]/30 pl-3 text-[12.5px] leading-6 text-[#7a848c]">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <section className="border-b border-white/10 py-10">
-          <div className="flex items-baseline justify-between gap-4">
-            <p className="font-mono text-[13px] font-bold text-[#d5dde3]">
-              Code quality review <span className="text-[#7a848c]">({report.codeReview.findings.length})</span>
-            </p>
-            <ToneBadge tone={cqTone} />
-          </div>
-          <p className="mt-2 max-w-xl text-[13px] leading-6 text-[#7a848c]">{report.codeReview.summary}</p>
-          <div className="mt-5 space-y-3">
-            {report.codeReview.findings.map((finding, i) => (
-              <Reveal key={finding.id} delay={i * 0.03}>
-                <FindingCard finding={finding} />
-              </Reveal>
-            ))}
-          </div>
-        </section>
-
-        <section className="border-b border-white/10 py-10">
-          <div className="flex items-baseline justify-between gap-4">
-            <p className="font-mono text-[13px] font-bold text-[#d5dde3]">
-              Process review <span className="text-[#7a848c]">({report.processReview.findings.length})</span>
-            </p>
-            <VerdictBadge verdict={report.processReview.verdict} />
-          </div>
-          <p className="mt-2 max-w-xl text-[13px] leading-6 text-[#7a848c]">{report.processReview.summary}</p>
-          <p className="mt-2 font-mono text-[11.5px] text-[#7a848c]">
-            navigation hierarchy followed: {report.processReview.followedNavigationHierarchy ? "yes" : "no"} ·
-            read-before-edit violations: {report.processReview.readBeforeEditViolations}
-          </p>
-          <div className="mt-5 space-y-3">
-            {report.processReview.findings.map((finding, i) => (
-              <Reveal key={finding.id} delay={i * 0.03}>
-                <FindingCard finding={finding} />
-              </Reveal>
-            ))}
-          </div>
-        </section>
-
-        <section className="flex flex-wrap items-center gap-x-6 gap-y-2 py-8 font-mono text-[12px] text-[#7a848c]">
-          <a href={report.links.prUrl} target="_blank" rel="noreferrer" className="hover:text-[#ff5c33]">
-            pull request
+            Pull request ↗
           </a>
-          <a href={report.links.diffUrl} target="_blank" rel="noreferrer" className="hover:text-[#ff5c33]">
-            diff
+          <a
+            className={`inline-flex min-h-11 items-center ${focus}`}
+            href={report.links.diffUrl}
+          >
+            Diff ↗
           </a>
-          <a href={report.links.repoUrl} target="_blank" rel="noreferrer" className="hover:text-[#ff5c33]">
-            repo
+          <a
+            className={`inline-flex min-h-11 items-center ${focus}`}
+            href={report.links.repoUrl}
+          >
+            Repository ↗
           </a>
-        </section>
+          <span className="self-center text-[#9ba6af]">
+            {report.stats.turns} turns ·{" "}
+            {report.stats.totalTokens.toLocaleString("en-US")} reported tokens
+          </span>
+        </footer>
       </main>
-
-      <SiteFooter product={product} />
+      <SiteFooter product={PRODUCTS.engine} />
     </ProductShell>
   );
 }

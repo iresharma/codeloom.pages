@@ -3,6 +3,8 @@
 import { PRODUCTS } from "@codeloom/config";
 import { ArrowRight } from "lucide-react";
 import { BenchmarkPanel } from "./benchmark-panel";
+import { BarChart, panelClass, titleClass } from "./charts";
+import { reportSummaries } from "./report-summary";
 
 import { SiteFooter } from "../../../chrome/footer";
 import { SiteNav } from "../../../chrome/site-nav";
@@ -36,9 +38,36 @@ export function EngineResultsIndexLanding() {
             Earlier repository case studies
           </h2>
           <p className="mt-2 text-xs leading-6 text-[#9ba6af]">
-            Reviewed real tickets from previous runs. These are separate from
-            the paired benchmark.
+            Three historical runs. Original reported metrics; no controlled
+            comparison.
           </p>
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className={panelClass}>
+              <h3 className={titleClass}>Reported cost by case</h3>
+              <div className="mt-5">
+                <BarChart
+                  items={reports.map((r) => ({
+                    label: r.repo.split("/").at(-1)!,
+                    value: r.stats.costUsd,
+                  }))}
+                  format={(n) => `$${n.toFixed(2)}`}
+                  caption="Different tasks and run conditions. These costs do not rank the systems."
+                />
+              </div>
+            </div>
+            <div className={panelClass}>
+              <h3 className={titleClass}>Reported tool activity</h3>
+              <div className="mt-5">
+                <BarChart
+                  items={reports.map((r) => ({
+                    label: r.repo.split("/").at(-1)!,
+                    value: r.stats.toolCalls,
+                  }))}
+                  caption="Run-summary totals. Agent-phase totals can use a different, undocumented scope."
+                />
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className="divide-y divide-white/10 border-b border-white/10">
@@ -55,7 +84,13 @@ export function EngineResultsIndexLanding() {
                       {report.repo}
                     </p>
                     <p className="mt-1 max-w-md text-[13px] leading-6 text-[#7a848c]">
-                      {report.taskTitle}
+                      {reportSummaries[report.slug]?.takeaway ??
+                        report.taskTitle}
+                    </p>
+                    <p className="mt-2 font-mono text-xs text-[#9ba6af]">
+                      ${report.stats.costUsd.toFixed(2)} ·{" "}
+                      {Math.round(report.stats.elapsedSeconds)}s ·{" "}
+                      {report.decisionFlow.phases.length} agent phases
                     </p>
                   </div>
                   <div className="flex items-center gap-3 sm:shrink-0">
@@ -63,7 +98,10 @@ export function EngineResultsIndexLanding() {
                       className="font-mono text-[11px] uppercase tracking-[0.06em]"
                       style={{ color: tone.color }}
                     >
-                      {tone.label}
+                      {report.overallAssessment.recommendation.replaceAll(
+                        "-",
+                        " ",
+                      )}
                     </span>
                     <ArrowRight className="size-3.5 shrink-0 text-[#7a848c] transition-transform group-hover:translate-x-1 group-hover:text-[#ff5c33]" />
                   </div>
@@ -73,7 +111,10 @@ export function EngineResultsIndexLanding() {
           })}
         </section>
 
-        <section className="py-10">
+        <details className="py-6 text-xs leading-6 text-[#9ba6af]">
+          <summary className="min-h-11 cursor-pointer py-3 text-[#7eb5d0]">
+            How the historical cases were reviewed
+          </summary>
           <p className="font-mono text-[13px] font-bold text-[#d5dde3]">
             How these were graded.
           </p>
@@ -83,7 +124,7 @@ export function EngineResultsIndexLanding() {
             navigation, judge flags, read-before-edit discipline. Neither review
             sees the other's verdict.
           </p>
-        </section>
+        </details>
       </main>
 
       <SiteFooter product={product} />

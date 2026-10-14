@@ -1,0 +1,160 @@
+{
+  "agents": [
+    {
+      "id": "root",
+      "parent_id": null,
+      "profile": "controller",
+      "status": "completed",
+      "task": "",
+      "tool_calls": 1,
+      "tools": [
+        {
+          "count": 1,
+          "name": "run_command"
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "command": "python -m pytest -o addopts= -q tests",
+      "kind": "trusted",
+      "output": "....................................................................s... [ 31%]\n........................................................................ [ 63%]\n........................................................................ [ 94%]\n............                                                             [100%]\n227 passed, 1 skipped in 0.72s\n",
+      "passed": true,
+      "repeat": 0
+    },
+    {
+      "command": "python -m pytest -o addopts= -q /tmp/oracle/check.py",
+      "kind": "hidden",
+      "output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n__________________________________ test_flush __________________________________\n\ntmp_path = PosixPath('/tmp/pytest-of-bench/pytest-1/test_flush0')\n\n    def test_flush(tmp_path):\n>       assert Storage.flush(MemoryStorage()) is None\n               ^^^^^^^^^^^^^\nE       AttributeError: type object 'Storage' has no attribute 'flush'\n\n/tmp/oracle/check.py:7: AttributeError\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-_unn8dpo'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/lastfailed: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-nbqam893'\n    config.cache.set(\"cache/lastfailed\", self.lastfailed)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED ../tmp/oracle/check.py::test_flush - AttributeError: type object 'Stor...\n1 failed, 2 warnings in 0.04s\n",
+      "passed": false,
+      "repeat": 0
+    }
+  ],
+  "cost_usd": 0.0,
+  "elapsed_s": 4.037855166941881,
+  "grading": {
+    "checks": [
+      {
+        "command": "python -m pytest -o addopts= -q tests",
+        "kind": "trusted",
+        "output": "....................................................................s... [ 31%]\n........................................................................ [ 63%]\n........................................................................ [ 94%]\n............                                                             [100%]\n227 passed, 1 skipped in 0.72s\n",
+        "repeat": 0,
+        "returncode": 0
+      },
+      {
+        "command": "python -m pytest -o addopts= -q /tmp/oracle/check.py",
+        "kind": "hidden",
+        "output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n__________________________________ test_flush __________________________________\n\ntmp_path = PosixPath('/tmp/pytest-of-bench/pytest-1/test_flush0')\n\n    def test_flush(tmp_path):\n>       assert Storage.flush(MemoryStorage()) is None\n               ^^^^^^^^^^^^^\nE       AttributeError: type object 'Storage' has no attribute 'flush'\n\n/tmp/oracle/check.py:7: AttributeError\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-_unn8dpo'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/lastfailed: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-nbqam893'\n    config.cache.set(\"cache/lastfailed\", self.lastfailed)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED ../tmp/oracle/check.py::test_flush - AttributeError: type object 'Stor...\n1 failed, 2 warnings in 0.04s\n",
+        "repeat": 0,
+        "returncode": 1
+      }
+    ],
+    "pass": false,
+    "reason": "verification"
+  },
+  "id": "adapter-engine-core",
+  "passed": false,
+  "patch": "",
+  "requests": [
+    {
+      "admission_queue_s": 0.004835541010834277,
+      "elapsed_s": 0.004876582999713719,
+      "first_byte_s": 0.0040315830847248435,
+      "id": "b50e46300ad4f142703d3d58",
+      "message_count": 2,
+      "model": "deepseek/deepseek-v4-pro-0813",
+      "providers": [
+        "test"
+      ],
+      "reasoning_effort": "xhigh",
+      "response": {
+        "reasoning": "synthetic retained state",
+        "text": "Synthetic adapter check; no live model.",
+        "tool_calls": [
+          {
+            "arguments": "{\"command\": \"pwd\"}",
+            "id": "t1",
+            "name": "run_command"
+          }
+        ]
+      },
+      "status": "complete",
+      "usage": {
+        "completion_tokens": 1,
+        "cost": 0,
+        "prompt_tokens": 10,
+        "total_tokens": 11
+      }
+    },
+    {
+      "admission_queue_s": 0.0037612910382449627,
+      "elapsed_s": 0.003381082904525101,
+      "first_byte_s": 0.0025636659702286124,
+      "id": "8ddbdf7dae71e104b7d61abb",
+      "message_count": 4,
+      "model": "deepseek/deepseek-v4-pro-0813",
+      "providers": [
+        "test"
+      ],
+      "reasoning_effort": "xhigh",
+      "response": {
+        "reasoning": "",
+        "text": "Synthetic adapter check; no live model.",
+        "tool_calls": []
+      },
+      "status": "complete",
+      "usage": {
+        "completion_tokens": 1,
+        "cost": 0,
+        "prompt_tokens": 10,
+        "total_tokens": 11
+      }
+    }
+  ],
+  "retry_of": null,
+  "stage": "development",
+  "synthetic": true,
+  "system": "engine-core",
+  "task_id": "tinydb-X",
+  "termination": "completed",
+  "timeline": [
+    {
+      "agent_id": "root",
+      "detail": "Add TinyDB.flush() -> None and Storage.flush() -> None. Default Storage.flush is a no-op; JSONStorage remains usable. TinyDB delegates to storage so CachingMiddleware.flush persists pending writes without closing. Calling flush repeatedly is safe; flushing a closed caching middleware still raises ValueError.\n\nWork autonomously. Leave the final output on the main task checkout, not only a branch/worktree. You may edit production source and add tests under benchmark_tests/, but existing tests/configuration and .bench files are immutable.",
+      "kind": "message",
+      "reasoning": "",
+      "sequence": 1,
+      "title": "user"
+    },
+    {
+      "agent_id": "root",
+      "detail": "Synthetic adapter check; no live model.",
+      "kind": "message",
+      "reasoning": "synthetic retained state",
+      "sequence": 2,
+      "title": "assistant"
+    },
+    {
+      "agent_id": "root",
+      "call_id": "t1",
+      "detail": "{\"command\": \"pwd\"}",
+      "duration_ms": 0,
+      "kind": "tool",
+      "ok": false,
+      "output": "error: unknown tool run_command",
+      "sequence": 3,
+      "title": "run_command"
+    },
+    {
+      "agent_id": "root",
+      "detail": "Synthetic adapter check; no live model.",
+      "kind": "message",
+      "reasoning": "",
+      "sequence": 4,
+      "title": "assistant"
+    }
+  ],
+  "tool_output_is_preview": true,
+  "trace_available": true
+}

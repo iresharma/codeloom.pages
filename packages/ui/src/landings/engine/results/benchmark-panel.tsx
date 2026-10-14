@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import data from "./data/benchmark.json";
+import { BenchmarkInsights, RunCatalog } from "./benchmark-insights";
+import { GradingGuide } from "./grading-guide";
 
 type Outcome = "pass" | "fail" | "unresolved" | "unrun";
 type Arm = {
@@ -143,10 +145,23 @@ export function BenchmarkPanel() {
           <span className="text-[#ff5c33]">Two coding systems.</span>
         </h1>
         <p className="mt-5 max-w-2xl text-sm leading-7 text-[#9ba6af]">
-          An exploratory comparison of Engine core and the existing
-          mini-SWE-agent. Each system gets an independent checkout, the same
-          task brief and a $1 inference cap. Hidden checks decide task success.
+          Independent checkouts. A $1 cap per attempt. Executable hidden checks.
         </p>
+        <div className="mt-5 flex flex-wrap gap-3 text-xs text-[#7eb5d0]">
+          {[
+            ["#task-explorer", "Explore tasks"],
+            ["#runs", "Inspect runs"],
+            ["#grading", "Grading rules"],
+          ].map(([href, text]) => (
+            <a
+              key={href}
+              className="inline-flex min-h-11 items-center border border-white/15 px-4 hover:border-[#ff5c33] focus-visible:outline-2 focus-visible:outline-[#ff5c33]"
+              href={href}
+            >
+              {text} ↓
+            </a>
+          ))}
+        </div>
         <dl className="mt-8 grid grid-cols-2 gap-px border border-white/10 bg-white/10 md:grid-cols-4">
           {[
             ["Tasks", benchmark.task_count],
@@ -165,11 +180,19 @@ export function BenchmarkPanel() {
         {!measured && (
           <div className="mt-6 border-l-2 border-[#e2bd6b] bg-[#e2bd6b]/5 px-5 py-4 text-sm leading-6 text-[#c3cbd1]">
             <strong className="font-medium">
-              Measured results are pending.
-            </strong>{" "}
-            {benchmark.blocked_reason ??
-              "Fixture certification and native model compatibility must pass before inference spending begins."}{" "}
-            No success rate or cost estimate is presented as a result.
+              Paid runs paused for Engine thinking/effort updates.
+            </strong>
+            <p className="mt-1 text-xs">
+              No scored results yet. Paid calibration and measurement require
+              explicit approval.
+            </p>
+            <details className="mt-2 text-xs">
+              <summary className="min-h-11 cursor-pointer py-3 text-[#7eb5d0]">
+                Last recorded run gate
+              </summary>
+              {benchmark.blocked_reason ??
+                "Setup validation is required before measurement."}
+            </details>
           </div>
         )}
         <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 font-mono text-[11px] text-[#9ba6af]">
@@ -179,6 +202,14 @@ export function BenchmarkPanel() {
           <span>One run per task · zero ablations</span>
         </div>
       </section>
+
+      <BenchmarkInsights
+        select={(nextRepo, nextCategory) => {
+          setRepo(nextRepo);
+          setCategory(nextCategory);
+          setOutcome("all");
+        }}
+      />
 
       <section
         className="grid gap-10 border-b border-white/10 py-10 md:grid-cols-2"
@@ -328,7 +359,10 @@ export function BenchmarkPanel() {
             </tbody>
           </table>
         </div>
-        <p className="mt-4 max-w-3xl text-xs leading-6 text-[#9ba6af]">
+        <details className="mt-4 max-w-3xl text-xs leading-6 text-[#9ba6af]">
+          <summary className="min-h-11 cursor-pointer py-3 text-[#7eb5d0]">
+            Denominators, retries and regressions
+          </summary>
           Pass / scheduled keeps infrastructure outcomes in the denominator.
           Infrastructure failures follow a fixed retry policy. Both attempts
           count toward cost and elapsed time; unresolved failures leave the
@@ -336,7 +370,7 @@ export function BenchmarkPanel() {
           budget stops and regressions count as failures. Regression counts
           track newly failing upstream check commands; failures already present
           in the starting snapshot are excluded.
-        </p>
+        </details>
       </section>
 
       <section
@@ -455,7 +489,7 @@ export function BenchmarkPanel() {
                         <a
                           key={s}
                           className="mb-2 block text-[#7eb5d0] underline underline-offset-4"
-                          href={`${download}/${a.artifact_path}result.json`}
+                          href={`/engine/results/runs/${benchmark.run_id}/${a.attempt_id}`}
                         >
                           {names[s]}
                         </a>
@@ -476,6 +510,9 @@ export function BenchmarkPanel() {
         </div>
       </section>
 
+      <RunCatalog />
+      <GradingGuide />
+
       <section
         className="grid gap-8 border-b border-white/10 py-10 md:grid-cols-2"
         aria-label="Protocol and downloads"
@@ -485,13 +522,7 @@ export function BenchmarkPanel() {
             Read the protocol. Rebuild the report.
           </h2>
           <p className="mt-3 text-xs leading-6 text-[#9ba6af]">
-            The inference broker enforces a shared budget across concurrent
-            children. Agents never see the hidden evaluator. Only the final main
-            checkout is graded; unmerged child branches are not submitted.
-          </p>
-          <p className="mt-3 text-xs leading-6 text-[#9ba6af]">
-            These runs compare whole systems. Without ablations, they cannot
-            establish which component caused a difference.
+            Whole-system comparison · zero ablations · deterministic grading.
           </p>
           <a
             className="mt-4 inline-block text-xs text-[#7eb5d0] underline underline-offset-4"
@@ -510,6 +541,7 @@ export function BenchmarkPanel() {
               ["summary.csv", "Results CSV"],
               ["summary.json", "Results JSON"],
               ["attempts.jsonl", "All attempts"],
+              ["runs.json", "Run index"],
               ["evidence.zip", "Evidence ZIP"],
             ].map(([file, title]) => (
               <a
