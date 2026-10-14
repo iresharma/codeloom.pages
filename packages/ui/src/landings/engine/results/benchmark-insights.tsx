@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import setup from "./data/setup.json";
-import data from "./data/benchmark.json";
-import runs from "./data/run-index.json";
+import { useBenchmarkSnapshot } from "./live-benchmark";
 import { panelClass, titleClass } from "./charts";
 
 const control =
@@ -20,6 +18,7 @@ const outcomes = [
 ];
 
 export function BenchmarkInsights() {
+  const { summary: data, setup } = useBenchmarkSnapshot();
   const measured = data.status !== "not_run";
   const knownCost =
     !measured ||
@@ -122,6 +121,7 @@ export function BenchmarkInsights() {
 }
 
 export function BenchmarkSetupNotes() {
+  const { summary: data, setup, worker } = useBenchmarkSnapshot();
   const base = `/benchmarks/${data.run_id}/setup`;
   return (
     <details className="border-b border-white/10 py-3 text-xs text-[#9ba6af]">
@@ -174,13 +174,14 @@ export function BenchmarkSetupNotes() {
       </dl>
       <a className="mt-4 inline-block min-h-11 py-3 text-[#7eb5d0] underline" href={`${base}/cost-analysis.md`}>Cost projection · assumptions and rates ↗</a>
       <p className="mt-4 leading-6">
-        Native High effort checks pass. Fixture recertification and live calibration remain pending. Paid runs are paused.
+        {worker?.message ?? "The setup evidence above records the last published validation state."}
       </p>
     </details>
   );
 }
 
 export function RunCatalog() {
+  const { runs } = useBenchmarkSnapshot();
   const [kind, setKind] = useState("all");
   const rows = runs.filter(
     (r) => kind === "all" || (kind === "synthetic") === r.synthetic,
@@ -239,7 +240,7 @@ export function RunCatalog() {
       </div>
       {!rows.length && (
         <p className="border border-white/10 px-5 py-8 text-sm text-[#9ba6af]">
-          No task attempts have been published. Paid runs remain paused.
+          No sealed attempts have been published yet. Completed calibration and measured attempts appear here automatically.
         </p>
       )}
     </section>
