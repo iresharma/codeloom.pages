@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { LiveBenchmarkProvider, LiveBenchmarkStatus, useBenchmarkSnapshot } from "./live-benchmark";
+import data from "./data/benchmark.json";
 import {
   BenchmarkInsights,
   BenchmarkSetupNotes,
@@ -43,7 +43,7 @@ type Task = {
   provenance: string;
   systems: Record<string, Arm>;
 };
-export type Summary = {
+type Summary = {
   run_id: string;
   status: "not_run" | "partial" | "complete";
   model: string;
@@ -62,6 +62,7 @@ export type Summary = {
   preregistration_commit: string | null;
   blocked_reason?: string;
 };
+const benchmark = data as Summary;
 const names: Record<string, string> = {
   "mini-swe-agent": "mini-SWE-agent",
   "engine-core": "Engine core",
@@ -87,6 +88,7 @@ const label: Record<Outcome, string> = {
   unresolved: "Infrastructure",
   unrun: "Not run",
 };
+const download = `/benchmarks/${benchmark.run_id}`;
 
 function Status({ arm }: { arm: Arm }) {
   return (
@@ -101,12 +103,6 @@ function Status({ arm }: { arm: Arm }) {
 }
 
 export function BenchmarkPanel() {
-  return <LiveBenchmarkProvider><BenchmarkContent /></LiveBenchmarkProvider>;
-}
-
-function BenchmarkContent() {
-  const { summary: benchmark, worker } = useBenchmarkSnapshot();
-  const download = `/benchmarks/${benchmark.run_id}`;
   const [repo, setRepo] = useState("all");
   const [category, setCategory] = useState("all");
   const [outcome, setOutcome] = useState("all");
@@ -119,7 +115,7 @@ function BenchmarkContent() {
           (outcome === "all" ||
             Object.values(t.systems).some((a) => a.status === outcome)),
       ),
-    [repo, category, outcome, benchmark],
+    [repo, category, outcome],
   );
   useEffect(() => {
     const target = window.location.hash.slice(1);
@@ -140,7 +136,7 @@ function BenchmarkContent() {
     "min-h-11 border border-white/15 bg-[#13191f] px-3 font-mono text-xs text-[#d5dde3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff5c33]";
   return (
     <>
-      <LiveBenchmarkStatus />
+      <a href="https://benchmark-monitor-production.up.railway.app" className="mt-6 inline-flex min-h-11 items-center border border-white/15 px-4 text-xs text-[#7eb5d0] hover:border-[#ff5c33] focus-visible:outline-2 focus-visible:outline-[#ff5c33]">Live Railway monitor · unscored smoke test and campaign status ↗</a>
       <section
         className="border-b border-white/10 py-8 md:py-10"
         aria-labelledby="benchmark-title"
@@ -205,10 +201,10 @@ function BenchmarkContent() {
         {!measured && (
           <div className="mt-6 border-l-2 border-[#e2bd6b] bg-[#e2bd6b]/5 px-5 py-4 text-sm leading-6 text-[#c3cbd1]">
             <strong className="font-medium">
-              {worker ? "Measurement has not started yet." : "No scored results published yet."}
+              Official measured results have not been published yet.
             </strong>
             <p className="mt-1 text-xs">
-              {worker?.message ?? "Certification, native adapter checks and calibration must pass before measurement."}
+              Completed benchmark results will be published here as static data after the campaign finishes.
             </p>
             <details className="mt-2 text-xs">
               <summary className="min-h-11 cursor-pointer py-3 text-[#7eb5d0]">
