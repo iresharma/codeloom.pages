@@ -60,7 +60,7 @@ type Summary = {
   limitations: string[];
   calibration_status: string;
   preregistration_commit: string | null;
-  blocked_reason?: string;
+  blocked_reason?: string | null;
 };
 const benchmark = data as Summary;
 const names: Record<string, string> = {
