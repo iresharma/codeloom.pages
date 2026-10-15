@@ -1,0 +1,13 @@
+{
+  "budget_policy": "actual-spend",
+  "call_limit_multiplier": 3,
+  "difficulty": "medium",
+  "id": "railway-v1-restart-20261015-chi-N-mini-swe-agent",
+  "limit_usd": 2,
+  "retry_of": null,
+  "stage": "measured",
+  "started_at": 1792078070.7334213,
+  "system": "mini-swe-agent",
+  "task_id": "chi-N",
+  "watchdog_s": null
+}

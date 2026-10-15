@@ -1,0 +1,116 @@
+diff --git a/benchmark_tests/test_selected_values.py b/benchmark_tests/test_selected_values.py
+new file mode 100644
+index 0000000..6685c10
+--- /dev/null
++++ b/benchmark_tests/test_selected_values.py
+@@ -0,0 +1,110 @@
++"""Deterministic tests for dotenv.main.selected_values."""
++
++from collections import ChainMap
++
++import pytest
++
++from dotenv.main import selected_values
++
++
++def test_selected_values_returns_requested_non_none_values() -> None:
++    values = {"A": "1", "B": None, "C": "", "D": "4"}
++
++    result = selected_values(values, ["A", "B", "C", "D"])
++
++    assert result == {"A": "1", "C": "", "D": "4"}
++
++
++def test_selected_values_preserves_empty_strings() -> None:
++    values = {"EMPTY": "", "BLANK": ""}
++
++    result = selected_values(values, ["EMPTY", "BLANK"])
++
++    assert result == {"EMPTY": "", "BLANK": ""}
++
++
++def test_selected_values_omits_none_values() -> None:
++    values = {"NONE": None, "ALSO_NONE": None}
++
++    result = selected_values(values, ["NONE", "ALSO_NONE"])
++
++    assert result == {}
++
++
++def test_selected_values_selects_only_requested_names() -> None:
++    values = {"A": "1", "B": "2", "C": "3"}
++
++    result = selected_values(values, ["C", "A"])
++
++    assert result == {"C": "3", "A": "1"}
++
++
++def test_selected_values_supports_a_generator_of_names() -> None:
++    values = {"A": "1", "B": None, "C": ""}
++
++    def names():
++        yield "B"
++        yield "C"
++        yield "A"
++
++    result = selected_values(values, names())
++
++    assert result == {"C": "", "A": "1"}
++
++
++def test_selected_values_supports_repeated_names() -> None:
++    values = {"A": "1", "B": "2"}
++
++    result = selected_values(values, ["A", "B", "A"])
++
++    assert result == {"A": "1", "B": "2"}
++
++
++def test_selected_values_accepts_any_input_mapping() -> None:
++    values = ChainMap({"A": "old"}, {"A": "new", "B": "2"})
++
++    result = selected_values(values, ["A", "B"])
++
++    assert result == {"A": "old", "B": "2"}
++
++
++def test_selected_values_returns_a_detached_mapping() -> None:
++    values = {"A": "1", "B": "2"}
++
++    result = selected_values(values, ["A", "B"])
++    result["A"] = "changed"
++    result["C"] = "added"
++
++    assert values == {"A": "1", "B": "2"}
++    assert result == {"A": "changed", "B": "2", "C": "added"}
++
++
++def test_selected_values_is_detached_from_later_input_changes() -> None:
++    values = {"A": "1"}
++
++    result = selected_values(values, ["A"])
++    values["A"] = "changed"
++
++    assert result == {"A": "1"}
++
++
++def test_selected_values_raises_keyerror_for_missing_name() -> None:
++    values = {"A": "1"}
++
++    with pytest.raises(KeyError):
++        selected_values(values, ["A", "MISSING"])
++
++
++def test_selected_values_raises_keyerror_for_each_missing_name() -> None:
++    values = {}
++
++    with pytest.raises(KeyError):
++        selected_values(values, ["MISSING"])
++
++
++def test_selected_values_accepts_an_empty_names_iterable() -> None:
++    values = {"A": "1", "B": None}
++
++    result = selected_values(values, [])
++
++    assert result == {}

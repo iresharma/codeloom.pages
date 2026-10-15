@@ -1,0 +1,41 @@
+diff --git a/navigation-answer.json b/navigation-answer.json
+new file mode 100644
+index 0000000..192ab49
+--- /dev/null
++++ b/navigation-answer.json
+@@ -0,0 +1,35 @@
++{
++  "task_id": "nested-route-params",
++  "symbols": [
++    {"path": "mux.go", "name": "(*Mux).ServeHTTP"},
++    {"path": "mux.go", "name": "(*Mux).routeHTTP"},
++    {"path": "mux.go", "name": "(*Mux).Mount"},
++    {"path": "mux.go", "name": "(*Mux).nextRoutePath"},
++    {"path": "tree.go", "name": "(*node).FindRoute"},
++    {"path": "tree.go", "name": "(*node).findRoute"},
++    {"path": "context.go", "name": "URLParam"},
++    {"path": "context.go", "name": "URLParamFromCtx"},
++    {"path": "context.go", "name": "RouteContext"},
++    {"path": "context.go", "name": "(*Context).Reset"},
++    {"path": "context.go", "name": "(*Context).URLParam"},
++    {"path": "context.go", "name": "NewRouteContext"}
++  ],
++  "edges": [
++    {"from": "(*Mux).ServeHTTP", "to": "(*Context).Reset"},
++    {"from": "(*Mux).ServeHTTP", "to": "(*Mux).routeHTTP"},
++    {"from": "(*Mux).routeHTTP", "to": "(*node).FindRoute"},
++    {"from": "(*node).FindRoute", "to": "(*node).findRoute"},
++    {"from": "(*node).findRoute", "to": "(*node).findRoute"},
++    {"from": "(*Mux).Mount", "to": "(*Mux).nextRoutePath"},
++    {"from": "(*Mux).Mount", "to": "(*Mux).ServeHTTP"},
++    {"from": "URLParam", "to": "URLParamFromCtx"},
++    {"from": "URLParamFromCtx", "to": "RouteContext"},
++    {"from": "URLParamFromCtx", "to": "(*Context).URLParam"},
++    {"from": "(*Mux).ServeHTTP", "to": "NewRouteContext"}
++  ],
++  "claims": {
++    "precedence": "last matching parameter",
++    "reset": "clear parameters",
++    "pool": "Get and Put around request"
++  }
++}

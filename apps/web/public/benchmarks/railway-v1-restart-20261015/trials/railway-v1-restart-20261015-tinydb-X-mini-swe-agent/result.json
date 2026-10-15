@@ -1,0 +1,40 @@
+{
+  "budget_policy": "actual-spend",
+  "call_limit_multiplier": 3,
+  "controller_termination": "completed",
+  "cost_is_conservative": false,
+  "cost_usd": 0.016143,
+  "elapsed_s": 224.92265336506534,
+  "evaluation_elapsed_s": 12.48013344896026,
+  "id": "railway-v1-restart-20261015-tinydb-X-mini-swe-agent",
+  "limit_usd": 2,
+  "new_failing_check_commands": [],
+  "request_count": 21,
+  "retry_of": null,
+  "stage": "measured",
+  "system": "mini-swe-agent",
+  "task_id": "tinydb-X",
+  "termination": "completed",
+  "upstream_check_failures": [],
+  "verification": {
+    "checks": [
+      {
+        "command": "python -m pytest -o addopts= -q tests",
+        "kind": "trusted",
+        "output": "....................................................................s... [ 31%]\n........................................................................ [ 63%]\n........................................................................ [ 94%]\n............                                                             [100%]\n227 passed, 1 skipped in 1.88s\n",
+        "repeat": 0,
+        "returncode": 0
+      },
+      {
+        "command": "python -m pytest -o addopts= -q /tmp/oracle/check.py",
+        "kind": "hidden",
+        "output": ".                                                                        [100%]\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-wbloneox'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n1 passed, 1 warning in 0.04s\n",
+        "repeat": 0,
+        "returncode": 0
+      }
+    ],
+    "pass": true,
+    "reason": "verification"
+  },
+  "watchdog_s": null
+}

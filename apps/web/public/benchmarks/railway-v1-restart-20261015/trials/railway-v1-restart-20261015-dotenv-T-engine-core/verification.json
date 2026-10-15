@@ -1,0 +1,471 @@
+{
+  "checks": [
+    {
+      "command": "python -m pytest -q tests",
+      "kind": "trusted",
+      "output": "........................................................................ [ 25%]\n........................................................................ [ 50%]\n........................................................................ [ 76%]\n....................................................................     [100%]\n=============================== warnings summary ===============================\ntests/test_cli.py: 32 warnings\n  /task/tests/conftest.py:8: DeprecationWarning: 'isolated_filesystem' is deprecated and will be removed in Click 9.0. Use 'tempfile.TemporaryDirectory' or pytest's 'tmp_path' fixture with absolute paths instead.\n    with runner.isolated_filesystem():\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n284 passed, 1 skipped, 32 warnings in 12.93s\n",
+      "repeat": 0,
+      "returncode": 0
+    }
+  ],
+  "correct_runs": [
+    {
+      "assertion_signature": null,
+      "executed_tests": 15,
+      "output": "...............                                                          [100%]\n15 passed in 0.13s\n",
+      "returncode": 0
+    },
+    {
+      "assertion_signature": null,
+      "executed_tests": 15,
+      "output": "...............                                                          [100%]\n15 passed in 0.06s\n",
+      "returncode": 0
+    },
+    {
+      "assertion_signature": null,
+      "executed_tests": 15,
+      "output": "...............                                                          [100%]\n15 passed in 0.06s\n",
+      "returncode": 0
+    }
+  ],
+  "mutation_score": 1.0,
+  "mutations": [
+    {
+      "index": 0,
+      "killed": true,
+      "runs": [
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_accepts_any_mapping",
+              89
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_omits_none_values",
+              32
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_empty_strings",
+              40
+            ]
+          ],
+          "executed_tests": 15,
+          "output": "....FF.....F...                                                          [100%]\n=================================== FAILURES ===================================\n____________________________ test_omits_none_values ____________________________\n\n    def test_omits_none_values():\n        result = selected_values(\n            {\"a\": None, \"b\": \"2\", \"c\": None, \"d\": \"4\"},\n            [\"a\", \"b\", \"c\", \"d\"],\n        )\n    \n>       assert result == {\"b\": \"2\", \"d\": \"4\"}\nE       AssertionError: assert {'a': None, '...one, 'd': '4'} == {'b': '2', 'd': '4'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 2 more items:\nE         {'a': None, 'c': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:32: AssertionError\n_________________________ test_preserves_empty_strings _________________________\n\n    def test_preserves_empty_strings():\n        result = selected_values({\"empty\": \"\", \"none\": None}, [\"empty\", \"none\"])\n    \n>       assert result == {\"empty\": \"\"}\nE       AssertionError: assert {'empty': '', 'none': None} == {'empty': ''}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'none': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:40: AssertionError\n___________________________ test_accepts_any_mapping ___________________________\n\n    def test_accepts_any_mapping():\n        values = MappingProxyType({\"a\": \"1\", \"b\": None})\n    \n        result = selected_values(values, [\"a\", \"b\"])\n    \n>       assert result == {\"a\": \"1\"}\nE       AssertionError: assert {'a': '1', 'b': None} == {'a': '1'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'b': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:89: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_omits_none_values - Asse...\nFAILED benchmark_tests/test_selected_values.py::test_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_accepts_any_mapping - As...\n3 failed, 12 passed in 0.07s\n",
+          "returncode": 1
+        },
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_accepts_any_mapping",
+              89
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_omits_none_values",
+              32
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_empty_strings",
+              40
+            ]
+          ],
+          "executed_tests": 15,
+          "output": "....FF.....F...                                                          [100%]\n=================================== FAILURES ===================================\n____________________________ test_omits_none_values ____________________________\n\n    def test_omits_none_values():\n        result = selected_values(\n            {\"a\": None, \"b\": \"2\", \"c\": None, \"d\": \"4\"},\n            [\"a\", \"b\", \"c\", \"d\"],\n        )\n    \n>       assert result == {\"b\": \"2\", \"d\": \"4\"}\nE       AssertionError: assert {'a': None, '...one, 'd': '4'} == {'b': '2', 'd': '4'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 2 more items:\nE         {'a': None, 'c': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:32: AssertionError\n_________________________ test_preserves_empty_strings _________________________\n\n    def test_preserves_empty_strings():\n        result = selected_values({\"empty\": \"\", \"none\": None}, [\"empty\", \"none\"])\n    \n>       assert result == {\"empty\": \"\"}\nE       AssertionError: assert {'empty': '', 'none': None} == {'empty': ''}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'none': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:40: AssertionError\n___________________________ test_accepts_any_mapping ___________________________\n\n    def test_accepts_any_mapping():\n        values = MappingProxyType({\"a\": \"1\", \"b\": None})\n    \n        result = selected_values(values, [\"a\", \"b\"])\n    \n>       assert result == {\"a\": \"1\"}\nE       AssertionError: assert {'a': '1', 'b': None} == {'a': '1'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'b': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:89: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_omits_none_values - Asse...\nFAILED benchmark_tests/test_selected_values.py::test_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_accepts_any_mapping - As...\n3 failed, 12 passed in 0.08s\n",
+          "returncode": 1
+        },
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_accepts_any_mapping",
+              89
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_omits_none_values",
+              32
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_empty_strings",
+              40
+            ]
+          ],
+          "executed_tests": 15,
+          "output": "....FF.....F...                                                          [100%]\n=================================== FAILURES ===================================\n____________________________ test_omits_none_values ____________________________\n\n    def test_omits_none_values():\n        result = selected_values(\n            {\"a\": None, \"b\": \"2\", \"c\": None, \"d\": \"4\"},\n            [\"a\", \"b\", \"c\", \"d\"],\n        )\n    \n>       assert result == {\"b\": \"2\", \"d\": \"4\"}\nE       AssertionError: assert {'a': None, '...one, 'd': '4'} == {'b': '2', 'd': '4'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 2 more items:\nE         {'a': None, 'c': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:32: AssertionError\n_________________________ test_preserves_empty_strings _________________________\n\n    def test_preserves_empty_strings():\n        result = selected_values({\"empty\": \"\", \"none\": None}, [\"empty\", \"none\"])\n    \n>       assert result == {\"empty\": \"\"}\nE       AssertionError: assert {'empty': '', 'none': None} == {'empty': ''}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'none': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:40: AssertionError\n___________________________ test_accepts_any_mapping ___________________________\n\n    def test_accepts_any_mapping():\n        values = MappingProxyType({\"a\": \"1\", \"b\": None})\n    \n        result = selected_values(values, [\"a\", \"b\"])\n    \n>       assert result == {\"a\": \"1\"}\nE       AssertionError: assert {'a': '1', 'b': None} == {'a': '1'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'b': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:89: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_omits_none_values - Asse...\nFAILED benchmark_tests/test_selected_values.py::test_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_accepts_any_mapping - As...\n3 failed, 12 passed in 0.09s\n",
+          "returncode": 1
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "killed": true,
+      "runs": [
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_empty_strings",
+              40
+            ]
+          ],
+          "executed_tests": 15,
+          "output": ".....F.........                                                          [100%]\n=================================== FAILURES ===================================\n_________________________ test_preserves_empty_strings _________________________\n\n    def test_preserves_empty_strings():\n        result = selected_values({\"empty\": \"\", \"none\": None}, [\"empty\", \"none\"])\n    \n>       assert result == {\"empty\": \"\"}\nE       AssertionError: assert {} == {'empty': ''}\nE         \nE         Right contains 1 more item:\nE         {'empty': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:40: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_preserves_empty_strings\n1 failed, 14 passed in 0.08s\n",
+          "returncode": 1
+        },
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_empty_strings",
+              40
+            ]
+          ],
+          "executed_tests": 15,
+          "output": ".....F.........                                                          [100%]\n=================================== FAILURES ===================================\n_________________________ test_preserves_empty_strings _________________________\n\n    def test_preserves_empty_strings():\n        result = selected_values({\"empty\": \"\", \"none\": None}, [\"empty\", \"none\"])\n    \n>       assert result == {\"empty\": \"\"}\nE       AssertionError: assert {} == {'empty': ''}\nE         \nE         Right contains 1 more item:\nE         {'empty': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:40: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_preserves_empty_strings\n1 failed, 14 passed in 0.08s\n",
+          "returncode": 1
+        },
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_empty_strings",
+              40
+            ]
+          ],
+          "executed_tests": 15,
+          "output": ".....F.........                                                          [100%]\n=================================== FAILURES ===================================\n_________________________ test_preserves_empty_strings _________________________\n\n    def test_preserves_empty_strings():\n        result = selected_values({\"empty\": \"\", \"none\": None}, [\"empty\", \"none\"])\n    \n>       assert result == {\"empty\": \"\"}\nE       AssertionError: assert {} == {'empty': ''}\nE         \nE         Right contains 1 more item:\nE         {'empty': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:40: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_preserves_empty_strings\n1 failed, 14 passed in 0.04s\n",
+          "returncode": 1
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "killed": true,
+      "runs": [
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values0-names0-missing]",
+              101
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values1-names1-missing]",
+              101
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values2-names2-missing]",
+              101
+            ]
+          ],
+          "executed_tests": 15,
+          "output": "............FFF                                                          [100%]\n=================================== FAILURES ===================================\n________ test_raises_keyerror_for_missing_name[values0-names0-missing] _________\n\nvalues = {}, names = ['missing'], missing = 'missing'\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"missing\"),\n        [\n            ({}, [\"missing\"], \"missing\"),\n            ({\"a\": \"1\"}, [\"a\", \"missing\"], \"missing\"),\n            ({\"a\": None}, [\"a\", \"missing\"], \"missing\"),\n        ],\n    )\n    def test_raises_keyerror_for_missing_name(values, names, missing):\n>       with pytest.raises(KeyError) as exc_info:\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:101: Failed\n________ test_raises_keyerror_for_missing_name[values1-names1-missing] _________\n\nvalues = {'a': '1'}, names = ['a', 'missing'], missing = 'missing'\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"missing\"),\n        [\n            ({}, [\"missing\"], \"missing\"),\n            ({\"a\": \"1\"}, [\"a\", \"missing\"], \"missing\"),\n            ({\"a\": None}, [\"a\", \"missing\"], \"missing\"),\n        ],\n    )\n    def test_raises_keyerror_for_missing_name(values, names, missing):\n>       with pytest.raises(KeyError) as exc_info:\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:101: Failed\n________ test_raises_keyerror_for_missing_name[values2-names2-missing] _________\n\nvalues = {'a': None}, names = ['a', 'missing'], missing = 'missing'\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"missing\"),\n        [\n            ({}, [\"missing\"], \"missing\"),\n            ({\"a\": \"1\"}, [\"a\", \"missing\"], \"missing\"),\n            ({\"a\": None}, [\"a\", \"missing\"], \"missing\"),\n        ],\n    )\n    def test_raises_keyerror_for_missing_name(values, names, missing):\n>       with pytest.raises(KeyError) as exc_info:\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:101: Failed\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values0-names0-missing]\nFAILED benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values1-names1-missing]\nFAILED benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values2-names2-missing]\n3 failed, 12 passed in 0.09s\n",
+          "returncode": 1
+        },
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values0-names0-missing]",
+              101
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values1-names1-missing]",
+              101
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values2-names2-missing]",
+              101
+            ]
+          ],
+          "executed_tests": 15,
+          "output": "............FFF                                                          [100%]\n=================================== FAILURES ===================================\n________ test_raises_keyerror_for_missing_name[values0-names0-missing] _________\n\nvalues = {}, names = ['missing'], missing = 'missing'\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"missing\"),\n        [\n            ({}, [\"missing\"], \"missing\"),\n            ({\"a\": \"1\"}, [\"a\", \"missing\"], \"missing\"),\n            ({\"a\": None}, [\"a\", \"missing\"], \"missing\"),\n        ],\n    )\n    def test_raises_keyerror_for_missing_name(values, names, missing):\n>       with pytest.raises(KeyError) as exc_info:\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:101: Failed\n________ test_raises_keyerror_for_missing_name[values1-names1-missing] _________\n\nvalues = {'a': '1'}, names = ['a', 'missing'], missing = 'missing'\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"missing\"),\n        [\n            ({}, [\"missing\"], \"missing\"),\n            ({\"a\": \"1\"}, [\"a\", \"missing\"], \"missing\"),\n            ({\"a\": None}, [\"a\", \"missing\"], \"missing\"),\n        ],\n    )\n    def test_raises_keyerror_for_missing_name(values, names, missing):\n>       with pytest.raises(KeyError) as exc_info:\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:101: Failed\n________ test_raises_keyerror_for_missing_name[values2-names2-missing] _________\n\nvalues = {'a': None}, names = ['a', 'missing'], missing = 'missing'\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"missing\"),\n        [\n            ({}, [\"missing\"], \"missing\"),\n            ({\"a\": \"1\"}, [\"a\", \"missing\"], \"missing\"),\n            ({\"a\": None}, [\"a\", \"missing\"], \"missing\"),\n        ],\n    )\n    def test_raises_keyerror_for_missing_name(values, names, missing):\n>       with pytest.raises(KeyError) as exc_info:\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:101: Failed\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values0-names0-missing]\nFAILED benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values1-names1-missing]\nFAILED benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values2-names2-missing]\n3 failed, 12 passed in 0.11s\n",
+          "returncode": 1
+        },
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values0-names0-missing]",
+              101
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values1-names1-missing]",
+              101
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values2-names2-missing]",
+              101
+            ]
+          ],
+          "executed_tests": 15,
+          "output": "............FFF                                                          [100%]\n=================================== FAILURES ===================================\n________ test_raises_keyerror_for_missing_name[values0-names0-missing] _________\n\nvalues = {}, names = ['missing'], missing = 'missing'\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"missing\"),\n        [\n            ({}, [\"missing\"], \"missing\"),\n            ({\"a\": \"1\"}, [\"a\", \"missing\"], \"missing\"),\n            ({\"a\": None}, [\"a\", \"missing\"], \"missing\"),\n        ],\n    )\n    def test_raises_keyerror_for_missing_name(values, names, missing):\n>       with pytest.raises(KeyError) as exc_info:\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:101: Failed\n________ test_raises_keyerror_for_missing_name[values1-names1-missing] _________\n\nvalues = {'a': '1'}, names = ['a', 'missing'], missing = 'missing'\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"missing\"),\n        [\n            ({}, [\"missing\"], \"missing\"),\n            ({\"a\": \"1\"}, [\"a\", \"missing\"], \"missing\"),\n            ({\"a\": None}, [\"a\", \"missing\"], \"missing\"),\n        ],\n    )\n    def test_raises_keyerror_for_missing_name(values, names, missing):\n>       with pytest.raises(KeyError) as exc_info:\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:101: Failed\n________ test_raises_keyerror_for_missing_name[values2-names2-missing] _________\n\nvalues = {'a': None}, names = ['a', 'missing'], missing = 'missing'\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"missing\"),\n        [\n            ({}, [\"missing\"], \"missing\"),\n            ({\"a\": \"1\"}, [\"a\", \"missing\"], \"missing\"),\n            ({\"a\": None}, [\"a\", \"missing\"], \"missing\"),\n        ],\n    )\n    def test_raises_keyerror_for_missing_name(values, names, missing):\n>       with pytest.raises(KeyError) as exc_info:\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:101: Failed\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values0-names0-missing]\nFAILED benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values1-names1-missing]\nFAILED benchmark_tests/test_selected_values.py::test_raises_keyerror_for_missing_name[values2-names2-missing]\n3 failed, 12 passed in 0.08s\n",
+          "returncode": 1
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "killed": true,
+      "runs": [
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_accepts_any_mapping",
+              89
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_omits_none_values",
+              32
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_empty_strings",
+              40
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_other_falsy_non_none_values[0]",
+              47
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_other_falsy_non_none_values[false]",
+              47
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_returns_detached_mapping",
+              81
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values0-names0-expected0]",
+              22
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values1-names1-expected1]",
+              22
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_supports_generator_names",
+              66
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_supports_repeated_names",
+              56
+            ]
+          ],
+          "executed_tests": 15,
+          "output": "FF..FFFFFFFF...                                                          [100%]\n=================================== FAILURES ===================================\n_______ test_selects_requested_names_in_order[values0-names0-expected0] ________\n\nvalues = {'a': '1', 'b': '2', 'c': '3'}, names = ['c', 'a']\nexpected = {'a': '1', 'c': '3'}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n>       assert result == expected\nE       AssertionError: assert {'a': 'a', 'c': 'c'} == {'a': '1', 'c': '3'}\nE         \nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         {'c': 'c'} != {'c': '3'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:22: AssertionError\n_______ test_selects_requested_names_in_order[values1-names1-expected1] ________\n\nvalues = {'a': '1', 'b': '2'}, names = ['b', 'a']\nexpected = {'a': '1', 'b': '2'}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n>       assert result == expected\nE       AssertionError: assert {'a': 'a', 'b': 'b'} == {'a': '1', 'b': '2'}\nE         \nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         {'b': 'b'} != {'b': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:22: AssertionError\n____________________________ test_omits_none_values ____________________________\n\n    def test_omits_none_values():\n        result = selected_values(\n            {\"a\": None, \"b\": \"2\", \"c\": None, \"d\": \"4\"},\n            [\"a\", \"b\", \"c\", \"d\"],\n        )\n    \n>       assert result == {\"b\": \"2\", \"d\": \"4\"}\nE       AssertionError: assert {'b': 'b', 'd': 'd'} == {'b': '2', 'd': '4'}\nE         \nE         Differing items:\nE         {'d': 'd'} != {'d': '4'}\nE         {'b': 'b'} != {'b': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:32: AssertionError\n_________________________ test_preserves_empty_strings _________________________\n\n    def test_preserves_empty_strings():\n        result = selected_values({\"empty\": \"\", \"none\": None}, [\"empty\", \"none\"])\n    \n>       assert result == {\"empty\": \"\"}\nE       AssertionError: assert {'empty': 'empty'} == {'empty': ''}\nE         \nE         Differing items:\nE         {'empty': 'empty'} != {'empty': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:40: AssertionError\n________________ test_preserves_other_falsy_non_none_values[0] _________________\n\nvalue = '0'\n\n    @pytest.mark.parametrize(\"value\", [\"0\", \"false\"])\n    def test_preserves_other_falsy_non_none_values(value):\n        result = selected_values({\"key\": value}, [\"key\"])\n    \n>       assert result == {\"key\": value}\nE       AssertionError: assert {'key': 'key'} == {'key': '0'}\nE         \nE         Differing items:\nE         {'key': 'key'} != {'key': '0'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:47: AssertionError\n______________ test_preserves_other_falsy_non_none_values[false] _______________\n\nvalue = 'false'\n\n    @pytest.mark.parametrize(\"value\", [\"0\", \"false\"])\n    def test_preserves_other_falsy_non_none_values(value):\n        result = selected_values({\"key\": value}, [\"key\"])\n    \n>       assert result == {\"key\": value}\nE       AssertionError: assert {'key': 'key'} == {'key': 'false'}\nE         \nE         Differing items:\nE         {'key': 'key'} != {'key': 'false'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:47: AssertionError\n_________________________ test_supports_repeated_names _________________________\n\n    def test_supports_repeated_names():\n        result = selected_values(\n            {\"a\": \"1\", \"b\": \"2\"},\n            [\"a\", \"a\", \"b\", \"a\", \"b\"],\n        )\n    \n>       assert result == {\"a\": \"1\", \"b\": \"2\"}\nE       AssertionError: assert {'a': 'a', 'b': 'b'} == {'a': '1', 'b': '2'}\nE         \nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         {'b': 'b'} != {'b': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:56: AssertionError\n________________________ test_supports_generator_names _________________________\n\n    def test_supports_generator_names():\n        result = selected_values(\n            {\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"},\n            (name for name in [\"a\", \"c\"]),\n        )\n    \n>       assert result == {\"a\": \"1\", \"c\": \"3\"}\nE       AssertionError: assert {'a': 'a', 'c': 'c'} == {'a': '1', 'c': '3'}\nE         \nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         {'c': 'c'} != {'c': '3'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:66: AssertionError\n________________________ test_returns_detached_mapping _________________________\n\n    def test_returns_detached_mapping():\n        values = {\"a\": \"1\"}\n        result = selected_values(values, [\"a\"])\n    \n        assert result is not values\n        assert type(result) is dict\n    \n        result[\"b\"] = \"2\"\n        assert values == {\"a\": \"1\"}\n    \n        values[\"c\"] = \"3\"\n>       assert result == {\"a\": \"1\", \"b\": \"2\"}\nE       AssertionError: assert {'a': 'a', 'b': '2'} == {'a': '1', 'b': '2'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:81: AssertionError\n___________________________ test_accepts_any_mapping ___________________________\n\n    def test_accepts_any_mapping():\n        values = MappingProxyType({\"a\": \"1\", \"b\": None})\n    \n        result = selected_values(values, [\"a\", \"b\"])\n    \n>       assert result == {\"a\": \"1\"}\nE       AssertionError: assert {'a': 'a'} == {'a': '1'}\nE         \nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:89: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values0-names0-expected0]\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values1-names1-expected1]\nFAILED benchmark_tests/test_selected_values.py::test_omits_none_values - Asse...\nFAILED benchmark_tests/test_selected_values.py::test_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_preserves_other_falsy_non_none_values[0]\nFAILED benchmark_tests/test_selected_values.py::test_preserves_other_falsy_non_none_values[false]\nFAILED benchmark_tests/test_selected_values.py::test_supports_repeated_names\nFAILED benchmark_tests/test_selected_values.py::test_supports_generator_names\nFAILED benchmark_tests/test_selected_values.py::test_returns_detached_mapping\nFAILED benchmark_tests/test_selected_values.py::test_accepts_any_mapping - As...\n10 failed, 5 passed in 0.10s\n",
+          "returncode": 1
+        },
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_accepts_any_mapping",
+              89
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_omits_none_values",
+              32
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_empty_strings",
+              40
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_other_falsy_non_none_values[0]",
+              47
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_other_falsy_non_none_values[false]",
+              47
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_returns_detached_mapping",
+              81
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values0-names0-expected0]",
+              22
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values1-names1-expected1]",
+              22
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_supports_generator_names",
+              66
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_supports_repeated_names",
+              56
+            ]
+          ],
+          "executed_tests": 15,
+          "output": "FF..FFFFFFFF...                                                          [100%]\n=================================== FAILURES ===================================\n_______ test_selects_requested_names_in_order[values0-names0-expected0] ________\n\nvalues = {'a': '1', 'b': '2', 'c': '3'}, names = ['c', 'a']\nexpected = {'a': '1', 'c': '3'}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n>       assert result == expected\nE       AssertionError: assert {'a': 'a', 'c': 'c'} == {'a': '1', 'c': '3'}\nE         \nE         Differing items:\nE         {'c': 'c'} != {'c': '3'}\nE         {'a': 'a'} != {'a': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:22: AssertionError\n_______ test_selects_requested_names_in_order[values1-names1-expected1] ________\n\nvalues = {'a': '1', 'b': '2'}, names = ['b', 'a']\nexpected = {'a': '1', 'b': '2'}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n>       assert result == expected\nE       AssertionError: assert {'a': 'a', 'b': 'b'} == {'a': '1', 'b': '2'}\nE         \nE         Differing items:\nE         {'b': 'b'} != {'b': '2'}\nE         {'a': 'a'} != {'a': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:22: AssertionError\n____________________________ test_omits_none_values ____________________________\n\n    def test_omits_none_values():\n        result = selected_values(\n            {\"a\": None, \"b\": \"2\", \"c\": None, \"d\": \"4\"},\n            [\"a\", \"b\", \"c\", \"d\"],\n        )\n    \n>       assert result == {\"b\": \"2\", \"d\": \"4\"}\nE       AssertionError: assert {'b': 'b', 'd': 'd'} == {'b': '2', 'd': '4'}\nE         \nE         Differing items:\nE         {'b': 'b'} != {'b': '2'}\nE         {'d': 'd'} != {'d': '4'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:32: AssertionError\n_________________________ test_preserves_empty_strings _________________________\n\n    def test_preserves_empty_strings():\n        result = selected_values({\"empty\": \"\", \"none\": None}, [\"empty\", \"none\"])\n    \n>       assert result == {\"empty\": \"\"}\nE       AssertionError: assert {'empty': 'empty'} == {'empty': ''}\nE         \nE         Differing items:\nE         {'empty': 'empty'} != {'empty': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:40: AssertionError\n________________ test_preserves_other_falsy_non_none_values[0] _________________\n\nvalue = '0'\n\n    @pytest.mark.parametrize(\"value\", [\"0\", \"false\"])\n    def test_preserves_other_falsy_non_none_values(value):\n        result = selected_values({\"key\": value}, [\"key\"])\n    \n>       assert result == {\"key\": value}\nE       AssertionError: assert {'key': 'key'} == {'key': '0'}\nE         \nE         Differing items:\nE         {'key': 'key'} != {'key': '0'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:47: AssertionError\n______________ test_preserves_other_falsy_non_none_values[false] _______________\n\nvalue = 'false'\n\n    @pytest.mark.parametrize(\"value\", [\"0\", \"false\"])\n    def test_preserves_other_falsy_non_none_values(value):\n        result = selected_values({\"key\": value}, [\"key\"])\n    \n>       assert result == {\"key\": value}\nE       AssertionError: assert {'key': 'key'} == {'key': 'false'}\nE         \nE         Differing items:\nE         {'key': 'key'} != {'key': 'false'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:47: AssertionError\n_________________________ test_supports_repeated_names _________________________\n\n    def test_supports_repeated_names():\n        result = selected_values(\n            {\"a\": \"1\", \"b\": \"2\"},\n            [\"a\", \"a\", \"b\", \"a\", \"b\"],\n        )\n    \n>       assert result == {\"a\": \"1\", \"b\": \"2\"}\nE       AssertionError: assert {'a': 'a', 'b': 'b'} == {'a': '1', 'b': '2'}\nE         \nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         {'b': 'b'} != {'b': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:56: AssertionError\n________________________ test_supports_generator_names _________________________\n\n    def test_supports_generator_names():\n        result = selected_values(\n            {\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"},\n            (name for name in [\"a\", \"c\"]),\n        )\n    \n>       assert result == {\"a\": \"1\", \"c\": \"3\"}\nE       AssertionError: assert {'a': 'a', 'c': 'c'} == {'a': '1', 'c': '3'}\nE         \nE         Differing items:\nE         {'c': 'c'} != {'c': '3'}\nE         {'a': 'a'} != {'a': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:66: AssertionError\n________________________ test_returns_detached_mapping _________________________\n\n    def test_returns_detached_mapping():\n        values = {\"a\": \"1\"}\n        result = selected_values(values, [\"a\"])\n    \n        assert result is not values\n        assert type(result) is dict\n    \n        result[\"b\"] = \"2\"\n        assert values == {\"a\": \"1\"}\n    \n        values[\"c\"] = \"3\"\n>       assert result == {\"a\": \"1\", \"b\": \"2\"}\nE       AssertionError: assert {'a': 'a', 'b': '2'} == {'a': '1', 'b': '2'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:81: AssertionError\n___________________________ test_accepts_any_mapping ___________________________\n\n    def test_accepts_any_mapping():\n        values = MappingProxyType({\"a\": \"1\", \"b\": None})\n    \n        result = selected_values(values, [\"a\", \"b\"])\n    \n>       assert result == {\"a\": \"1\"}\nE       AssertionError: assert {'a': 'a'} == {'a': '1'}\nE         \nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:89: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values0-names0-expected0]\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values1-names1-expected1]\nFAILED benchmark_tests/test_selected_values.py::test_omits_none_values - Asse...\nFAILED benchmark_tests/test_selected_values.py::test_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_preserves_other_falsy_non_none_values[0]\nFAILED benchmark_tests/test_selected_values.py::test_preserves_other_falsy_non_none_values[false]\nFAILED benchmark_tests/test_selected_values.py::test_supports_repeated_names\nFAILED benchmark_tests/test_selected_values.py::test_supports_generator_names\nFAILED benchmark_tests/test_selected_values.py::test_returns_detached_mapping\nFAILED benchmark_tests/test_selected_values.py::test_accepts_any_mapping - As...\n10 failed, 5 passed in 0.09s\n",
+          "returncode": 1
+        },
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_accepts_any_mapping",
+              89
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_omits_none_values",
+              32
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_empty_strings",
+              40
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_other_falsy_non_none_values[0]",
+              47
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_other_falsy_non_none_values[false]",
+              47
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_returns_detached_mapping",
+              81
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values0-names0-expected0]",
+              22
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values1-names1-expected1]",
+              22
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_supports_generator_names",
+              66
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_supports_repeated_names",
+              56
+            ]
+          ],
+          "executed_tests": 15,
+          "output": "FF..FFFFFFFF...                                                          [100%]\n=================================== FAILURES ===================================\n_______ test_selects_requested_names_in_order[values0-names0-expected0] ________\n\nvalues = {'a': '1', 'b': '2', 'c': '3'}, names = ['c', 'a']\nexpected = {'a': '1', 'c': '3'}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n>       assert result == expected\nE       AssertionError: assert {'a': 'a', 'c': 'c'} == {'a': '1', 'c': '3'}\nE         \nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         {'c': 'c'} != {'c': '3'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:22: AssertionError\n_______ test_selects_requested_names_in_order[values1-names1-expected1] ________\n\nvalues = {'a': '1', 'b': '2'}, names = ['b', 'a']\nexpected = {'a': '1', 'b': '2'}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n>       assert result == expected\nE       AssertionError: assert {'a': 'a', 'b': 'b'} == {'a': '1', 'b': '2'}\nE         \nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         {'b': 'b'} != {'b': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:22: AssertionError\n____________________________ test_omits_none_values ____________________________\n\n    def test_omits_none_values():\n        result = selected_values(\n            {\"a\": None, \"b\": \"2\", \"c\": None, \"d\": \"4\"},\n            [\"a\", \"b\", \"c\", \"d\"],\n        )\n    \n>       assert result == {\"b\": \"2\", \"d\": \"4\"}\nE       AssertionError: assert {'b': 'b', 'd': 'd'} == {'b': '2', 'd': '4'}\nE         \nE         Differing items:\nE         {'b': 'b'} != {'b': '2'}\nE         {'d': 'd'} != {'d': '4'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:32: AssertionError\n_________________________ test_preserves_empty_strings _________________________\n\n    def test_preserves_empty_strings():\n        result = selected_values({\"empty\": \"\", \"none\": None}, [\"empty\", \"none\"])\n    \n>       assert result == {\"empty\": \"\"}\nE       AssertionError: assert {'empty': 'empty'} == {'empty': ''}\nE         \nE         Differing items:\nE         {'empty': 'empty'} != {'empty': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:40: AssertionError\n________________ test_preserves_other_falsy_non_none_values[0] _________________\n\nvalue = '0'\n\n    @pytest.mark.parametrize(\"value\", [\"0\", \"false\"])\n    def test_preserves_other_falsy_non_none_values(value):\n        result = selected_values({\"key\": value}, [\"key\"])\n    \n>       assert result == {\"key\": value}\nE       AssertionError: assert {'key': 'key'} == {'key': '0'}\nE         \nE         Differing items:\nE         {'key': 'key'} != {'key': '0'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:47: AssertionError\n______________ test_preserves_other_falsy_non_none_values[false] _______________\n\nvalue = 'false'\n\n    @pytest.mark.parametrize(\"value\", [\"0\", \"false\"])\n    def test_preserves_other_falsy_non_none_values(value):\n        result = selected_values({\"key\": value}, [\"key\"])\n    \n>       assert result == {\"key\": value}\nE       AssertionError: assert {'key': 'key'} == {'key': 'false'}\nE         \nE         Differing items:\nE         {'key': 'key'} != {'key': 'false'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:47: AssertionError\n_________________________ test_supports_repeated_names _________________________\n\n    def test_supports_repeated_names():\n        result = selected_values(\n            {\"a\": \"1\", \"b\": \"2\"},\n            [\"a\", \"a\", \"b\", \"a\", \"b\"],\n        )\n    \n>       assert result == {\"a\": \"1\", \"b\": \"2\"}\nE       AssertionError: assert {'a': 'a', 'b': 'b'} == {'a': '1', 'b': '2'}\nE         \nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         {'b': 'b'} != {'b': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:56: AssertionError\n________________________ test_supports_generator_names _________________________\n\n    def test_supports_generator_names():\n        result = selected_values(\n            {\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"},\n            (name for name in [\"a\", \"c\"]),\n        )\n    \n>       assert result == {\"a\": \"1\", \"c\": \"3\"}\nE       AssertionError: assert {'a': 'a', 'c': 'c'} == {'a': '1', 'c': '3'}\nE         \nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         {'c': 'c'} != {'c': '3'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:66: AssertionError\n________________________ test_returns_detached_mapping _________________________\n\n    def test_returns_detached_mapping():\n        values = {\"a\": \"1\"}\n        result = selected_values(values, [\"a\"])\n    \n        assert result is not values\n        assert type(result) is dict\n    \n        result[\"b\"] = \"2\"\n        assert values == {\"a\": \"1\"}\n    \n        values[\"c\"] = \"3\"\n>       assert result == {\"a\": \"1\", \"b\": \"2\"}\nE       AssertionError: assert {'a': 'a', 'b': '2'} == {'a': '1', 'b': '2'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:81: AssertionError\n___________________________ test_accepts_any_mapping ___________________________\n\n    def test_accepts_any_mapping():\n        values = MappingProxyType({\"a\": \"1\", \"b\": None})\n    \n        result = selected_values(values, [\"a\", \"b\"])\n    \n>       assert result == {\"a\": \"1\"}\nE       AssertionError: assert {'a': 'a'} == {'a': '1'}\nE         \nE         Differing items:\nE         {'a': 'a'} != {'a': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:89: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values0-names0-expected0]\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values1-names1-expected1]\nFAILED benchmark_tests/test_selected_values.py::test_omits_none_values - Asse...\nFAILED benchmark_tests/test_selected_values.py::test_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_preserves_other_falsy_non_none_values[0]\nFAILED benchmark_tests/test_selected_values.py::test_preserves_other_falsy_non_none_values[false]\nFAILED benchmark_tests/test_selected_values.py::test_supports_repeated_names\nFAILED benchmark_tests/test_selected_values.py::test_supports_generator_names\nFAILED benchmark_tests/test_selected_values.py::test_returns_detached_mapping\nFAILED benchmark_tests/test_selected_values.py::test_accepts_any_mapping - As...\n10 failed, 5 passed in 0.12s\n",
+          "returncode": 1
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "killed": true,
+      "runs": [
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_accepts_any_mapping",
+              89
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_omits_none_values",
+              32
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_empty_strings",
+              40
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_returns_detached_mapping",
+              74
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values0-names0-expected0]",
+              22
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values1-names1-expected1]",
+              23
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values2-names2-expected2]",
+              22
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_supports_generator_names",
+              66
+            ]
+          ],
+          "executed_tests": 15,
+          "output": "FFF.FF...FFF...                                                          [100%]\n=================================== FAILURES ===================================\n_______ test_selects_requested_names_in_order[values0-names0-expected0] ________\n\nvalues = {'a': '1', 'b': '2', 'c': '3'}, names = ['c', 'a']\nexpected = {'a': '1', 'c': '3'}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n>       assert result == expected\nE       AssertionError: assert {'a': '1', 'b': '2', 'c': '3'} == {'a': '1', 'c': '3'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'b': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:22: AssertionError\n_______ test_selects_requested_names_in_order[values1-names1-expected1] ________\n\nvalues = {'a': '1', 'b': '2'}, names = ['b', 'a']\nexpected = {'a': '1', 'b': '2'}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n        assert result == expected\n>       assert list(result) == list(expected)\nE       AssertionError: assert ['a', 'b'] == ['b', 'a']\nE         \nE         At index 0 diff: 'a' != 'b'\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:23: AssertionError\n_______ test_selects_requested_names_in_order[values2-names2-expected2] ________\n\nvalues = {'a': '1'}, names = [], expected = {}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n>       assert result == expected\nE       AssertionError: assert {'a': '1'} == {}\nE         \nE         Left contains 1 more item:\nE         {'a': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:22: AssertionError\n____________________________ test_omits_none_values ____________________________\n\n    def test_omits_none_values():\n        result = selected_values(\n            {\"a\": None, \"b\": \"2\", \"c\": None, \"d\": \"4\"},\n            [\"a\", \"b\", \"c\", \"d\"],\n        )\n    \n>       assert result == {\"b\": \"2\", \"d\": \"4\"}\nE       AssertionError: assert {'a': None, '...one, 'd': '4'} == {'b': '2', 'd': '4'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 2 more items:\nE         {'a': None, 'c': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:32: AssertionError\n_________________________ test_preserves_empty_strings _________________________\n\n    def test_preserves_empty_strings():\n        result = selected_values({\"empty\": \"\", \"none\": None}, [\"empty\", \"none\"])\n    \n>       assert result == {\"empty\": \"\"}\nE       AssertionError: assert {'empty': '', 'none': None} == {'empty': ''}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'none': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:40: AssertionError\n________________________ test_supports_generator_names _________________________\n\n    def test_supports_generator_names():\n        result = selected_values(\n            {\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"},\n            (name for name in [\"a\", \"c\"]),\n        )\n    \n>       assert result == {\"a\": \"1\", \"c\": \"3\"}\nE       AssertionError: assert {'a': '1', 'b': '2', 'c': '3'} == {'a': '1', 'c': '3'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'b': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:66: AssertionError\n________________________ test_returns_detached_mapping _________________________\n\n    def test_returns_detached_mapping():\n        values = {\"a\": \"1\"}\n        result = selected_values(values, [\"a\"])\n    \n>       assert result is not values\nE       AssertionError: assert {'a': '1'} is not {'a': '1'}\n\nbenchmark_tests/test_selected_values.py:74: AssertionError\n___________________________ test_accepts_any_mapping ___________________________\n\n    def test_accepts_any_mapping():\n        values = MappingProxyType({\"a\": \"1\", \"b\": None})\n    \n        result = selected_values(values, [\"a\", \"b\"])\n    \n>       assert result == {\"a\": \"1\"}\nE       AssertionError: assert mappingproxy(...', 'b': None}) == {'a': '1'}\nE         \nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:89: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values0-names0-expected0]\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values1-names1-expected1]\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values2-names2-expected2]\nFAILED benchmark_tests/test_selected_values.py::test_omits_none_values - Asse...\nFAILED benchmark_tests/test_selected_values.py::test_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_supports_generator_names\nFAILED benchmark_tests/test_selected_values.py::test_returns_detached_mapping\nFAILED benchmark_tests/test_selected_values.py::test_accepts_any_mapping - As...\n8 failed, 7 passed in 0.10s\n",
+          "returncode": 1
+        },
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_accepts_any_mapping",
+              89
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_omits_none_values",
+              32
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_empty_strings",
+              40
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_returns_detached_mapping",
+              74
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values0-names0-expected0]",
+              22
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values1-names1-expected1]",
+              23
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values2-names2-expected2]",
+              22
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_supports_generator_names",
+              66
+            ]
+          ],
+          "executed_tests": 15,
+          "output": "FFF.FF...FFF...                                                          [100%]\n=================================== FAILURES ===================================\n_______ test_selects_requested_names_in_order[values0-names0-expected0] ________\n\nvalues = {'a': '1', 'b': '2', 'c': '3'}, names = ['c', 'a']\nexpected = {'a': '1', 'c': '3'}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n>       assert result == expected\nE       AssertionError: assert {'a': '1', 'b': '2', 'c': '3'} == {'a': '1', 'c': '3'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'b': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:22: AssertionError\n_______ test_selects_requested_names_in_order[values1-names1-expected1] ________\n\nvalues = {'a': '1', 'b': '2'}, names = ['b', 'a']\nexpected = {'a': '1', 'b': '2'}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n        assert result == expected\n>       assert list(result) == list(expected)\nE       AssertionError: assert ['a', 'b'] == ['b', 'a']\nE         \nE         At index 0 diff: 'a' != 'b'\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:23: AssertionError\n_______ test_selects_requested_names_in_order[values2-names2-expected2] ________\n\nvalues = {'a': '1'}, names = [], expected = {}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n>       assert result == expected\nE       AssertionError: assert {'a': '1'} == {}\nE         \nE         Left contains 1 more item:\nE         {'a': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:22: AssertionError\n____________________________ test_omits_none_values ____________________________\n\n    def test_omits_none_values():\n        result = selected_values(\n            {\"a\": None, \"b\": \"2\", \"c\": None, \"d\": \"4\"},\n            [\"a\", \"b\", \"c\", \"d\"],\n        )\n    \n>       assert result == {\"b\": \"2\", \"d\": \"4\"}\nE       AssertionError: assert {'a': None, '...one, 'd': '4'} == {'b': '2', 'd': '4'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 2 more items:\nE         {'a': None, 'c': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:32: AssertionError\n_________________________ test_preserves_empty_strings _________________________\n\n    def test_preserves_empty_strings():\n        result = selected_values({\"empty\": \"\", \"none\": None}, [\"empty\", \"none\"])\n    \n>       assert result == {\"empty\": \"\"}\nE       AssertionError: assert {'empty': '', 'none': None} == {'empty': ''}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'none': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:40: AssertionError\n________________________ test_supports_generator_names _________________________\n\n    def test_supports_generator_names():\n        result = selected_values(\n            {\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"},\n            (name for name in [\"a\", \"c\"]),\n        )\n    \n>       assert result == {\"a\": \"1\", \"c\": \"3\"}\nE       AssertionError: assert {'a': '1', 'b': '2', 'c': '3'} == {'a': '1', 'c': '3'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'b': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:66: AssertionError\n________________________ test_returns_detached_mapping _________________________\n\n    def test_returns_detached_mapping():\n        values = {\"a\": \"1\"}\n        result = selected_values(values, [\"a\"])\n    \n>       assert result is not values\nE       AssertionError: assert {'a': '1'} is not {'a': '1'}\n\nbenchmark_tests/test_selected_values.py:74: AssertionError\n___________________________ test_accepts_any_mapping ___________________________\n\n    def test_accepts_any_mapping():\n        values = MappingProxyType({\"a\": \"1\", \"b\": None})\n    \n        result = selected_values(values, [\"a\", \"b\"])\n    \n>       assert result == {\"a\": \"1\"}\nE       AssertionError: assert mappingproxy(...', 'b': None}) == {'a': '1'}\nE         \nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:89: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values0-names0-expected0]\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values1-names1-expected1]\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values2-names2-expected2]\nFAILED benchmark_tests/test_selected_values.py::test_omits_none_values - Asse...\nFAILED benchmark_tests/test_selected_values.py::test_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_supports_generator_names\nFAILED benchmark_tests/test_selected_values.py::test_returns_detached_mapping\nFAILED benchmark_tests/test_selected_values.py::test_accepts_any_mapping - As...\n8 failed, 7 passed in 0.07s\n",
+          "returncode": 1
+        },
+        {
+          "assertion_signature": [
+            [
+              "benchmark_tests/test_selected_values.py::test_accepts_any_mapping",
+              89
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_omits_none_values",
+              32
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_preserves_empty_strings",
+              40
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_returns_detached_mapping",
+              74
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values0-names0-expected0]",
+              22
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values1-names1-expected1]",
+              23
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values2-names2-expected2]",
+              22
+            ],
+            [
+              "benchmark_tests/test_selected_values.py::test_supports_generator_names",
+              66
+            ]
+          ],
+          "executed_tests": 15,
+          "output": "FFF.FF...FFF...                                                          [100%]\n=================================== FAILURES ===================================\n_______ test_selects_requested_names_in_order[values0-names0-expected0] ________\n\nvalues = {'a': '1', 'b': '2', 'c': '3'}, names = ['c', 'a']\nexpected = {'a': '1', 'c': '3'}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n>       assert result == expected\nE       AssertionError: assert {'a': '1', 'b': '2', 'c': '3'} == {'a': '1', 'c': '3'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'b': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:22: AssertionError\n_______ test_selects_requested_names_in_order[values1-names1-expected1] ________\n\nvalues = {'a': '1', 'b': '2'}, names = ['b', 'a']\nexpected = {'a': '1', 'b': '2'}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n        assert result == expected\n>       assert list(result) == list(expected)\nE       AssertionError: assert ['a', 'b'] == ['b', 'a']\nE         \nE         At index 0 diff: 'a' != 'b'\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:23: AssertionError\n_______ test_selects_requested_names_in_order[values2-names2-expected2] ________\n\nvalues = {'a': '1'}, names = [], expected = {}\n\n    @pytest.mark.parametrize(\n        (\"values\", \"names\", \"expected\"),\n        [\n            ({\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"}, [\"c\", \"a\"], {\"c\": \"3\", \"a\": \"1\"}),\n            ({\"a\": \"1\", \"b\": \"2\"}, [\"b\", \"a\"], {\"b\": \"2\", \"a\": \"1\"}),\n            ({\"a\": \"1\"}, [], {}),\n            ({}, [], {}),\n        ],\n    )\n    def test_selects_requested_names_in_order(values, names, expected):\n        result = selected_values(values, names)\n    \n>       assert result == expected\nE       AssertionError: assert {'a': '1'} == {}\nE         \nE         Left contains 1 more item:\nE         {'a': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:22: AssertionError\n____________________________ test_omits_none_values ____________________________\n\n    def test_omits_none_values():\n        result = selected_values(\n            {\"a\": None, \"b\": \"2\", \"c\": None, \"d\": \"4\"},\n            [\"a\", \"b\", \"c\", \"d\"],\n        )\n    \n>       assert result == {\"b\": \"2\", \"d\": \"4\"}\nE       AssertionError: assert {'a': None, '...one, 'd': '4'} == {'b': '2', 'd': '4'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 2 more items:\nE         {'a': None, 'c': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:32: AssertionError\n_________________________ test_preserves_empty_strings _________________________\n\n    def test_preserves_empty_strings():\n        result = selected_values({\"empty\": \"\", \"none\": None}, [\"empty\", \"none\"])\n    \n>       assert result == {\"empty\": \"\"}\nE       AssertionError: assert {'empty': '', 'none': None} == {'empty': ''}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'none': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:40: AssertionError\n________________________ test_supports_generator_names _________________________\n\n    def test_supports_generator_names():\n        result = selected_values(\n            {\"a\": \"1\", \"b\": \"2\", \"c\": \"3\"},\n            (name for name in [\"a\", \"c\"]),\n        )\n    \n>       assert result == {\"a\": \"1\", \"c\": \"3\"}\nE       AssertionError: assert {'a': '1', 'b': '2', 'c': '3'} == {'a': '1', 'c': '3'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'b': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:66: AssertionError\n________________________ test_returns_detached_mapping _________________________\n\n    def test_returns_detached_mapping():\n        values = {\"a\": \"1\"}\n        result = selected_values(values, [\"a\"])\n    \n>       assert result is not values\nE       AssertionError: assert {'a': '1'} is not {'a': '1'}\n\nbenchmark_tests/test_selected_values.py:74: AssertionError\n___________________________ test_accepts_any_mapping ___________________________\n\n    def test_accepts_any_mapping():\n        values = MappingProxyType({\"a\": \"1\", \"b\": None})\n    \n        result = selected_values(values, [\"a\", \"b\"])\n    \n>       assert result == {\"a\": \"1\"}\nE       AssertionError: assert mappingproxy(...', 'b': None}) == {'a': '1'}\nE         \nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:89: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values0-names0-expected0]\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values1-names1-expected1]\nFAILED benchmark_tests/test_selected_values.py::test_selects_requested_names_in_order[values2-names2-expected2]\nFAILED benchmark_tests/test_selected_values.py::test_omits_none_values - Asse...\nFAILED benchmark_tests/test_selected_values.py::test_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_supports_generator_names\nFAILED benchmark_tests/test_selected_values.py::test_returns_detached_mapping\nFAILED benchmark_tests/test_selected_values.py::test_accepts_any_mapping - As...\n8 failed, 7 passed in 0.09s\n",
+          "returncode": 1
+        }
+      ]
+    }
+  ],
+  "pass": true,
+  "reason": "verification"
+}

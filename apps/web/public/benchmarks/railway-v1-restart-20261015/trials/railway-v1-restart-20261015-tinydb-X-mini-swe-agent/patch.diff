@@ -1,0 +1,150 @@
+diff --git a/benchmark_tests/test_flush.py b/benchmark_tests/test_flush.py
+new file mode 100644
+index 0000000..062c4ed
+--- /dev/null
++++ b/benchmark_tests/test_flush.py
+@@ -0,0 +1,88 @@
++import pytest
++
++from tinydb import TinyDB
++from tinydb.middlewares import CachingMiddleware
++from tinydb.storages import JSONStorage, MemoryStorage, Storage
++
++
++class RecordingStorage(Storage):
++    """Storage that records flush calls."""
++
++    def __init__(self):
++        self.data = None
++        self.flush_calls = 0
++
++    def read(self):
++        return self.data
++
++    def write(self, data):
++        self.data = data
++
++    def flush(self):
++        self.flush_calls += 1
++
++
++def test_storage_flush_is_noop_by_default():
++    storage = MemoryStorage()
++    assert storage.flush() is None
++
++
++def test_tinydb_flush_delegates_to_storage():
++    db = TinyDB(storage=RecordingStorage)
++    recording = db.storage
++
++    assert recording.flush_calls == 0
++    db.flush()
++    assert recording.flush_calls == 1
++    db.flush()
++    assert recording.flush_calls == 2
++    db.close()
++
++
++def test_tinydb_flush_persists_caching_middleware_without_closing():
++    db = TinyDB(storage=CachingMiddleware(MemoryStorage))
++    db.insert({'key': 'value'})
++
++    caching_storage = db.storage
++    underlying = caching_storage.storage
++    assert underlying.memory is None  # write is still buffered
++
++    db.flush()
++
++    assert underlying.memory == {
++        '_default': {'1': {'key': 'value'}}
++    }
++    assert not caching_storage._closed
++
++
++def test_tinydb_flush_repeatedly_is_safe():
++    db = TinyDB(storage=CachingMiddleware(MemoryStorage))
++    db.insert({'key': 'value'})
++
++    db.flush()
++    db.flush()
++
++    assert db.storage.storage.memory == {
++        '_default': {'1': {'key': 'value'}}
++    }
++
++
++def test_tinydb_flush_closed_caching_middleware_raises_value_error():
++    db = TinyDB(storage=CachingMiddleware(MemoryStorage))
++    db.insert({'key': 'value'})
++    db.close()
++
++    with pytest.raises(ValueError, match='closed'):
++        db.flush()
++
++
++def test_tinydb_flush_caching_json_storage_persists_without_closing(tmp_path):
++    path = tmp_path / 'db.json'
++    db = TinyDB(path, storage=CachingMiddleware(JSONStorage))
++    db.insert({'key': 'value'})
++
++    db.flush()
++
++    assert 'value' in path.read_text()
++    assert not db.storage._closed  # still open/usable after flush
++    db.close()
+diff --git a/tinydb/database.py b/tinydb/database.py
+index 0cd2b7e..130a4af 100644
+--- a/tinydb/database.py
++++ b/tinydb/database.py
+@@ -211,6 +211,17 @@ class TinyDB(TableBase):
+         """
+         return self._storage
+ 
++    def flush(self) -> None:
++        """
++        Flush pending data to the storage.
++
++        This delegates to the storage's ``flush`` method. For storages that
++        buffer writes, such as :class:`~tinydb.middlewares.CachingMiddleware`,
++        this persists pending data without closing the storage.
++        """
++
++        self.storage.flush()
++
+     def close(self) -> None:
+         """
+         Close the database.
+diff --git a/tinydb/middlewares.py b/tinydb/middlewares.py
+index ba6a6c2..6bbb527 100644
+--- a/tinydb/middlewares.py
++++ b/tinydb/middlewares.py
+@@ -117,7 +117,7 @@ class CachingMiddleware(Middleware):
+         if self._cache_modified_count >= self.WRITE_CACHE_SIZE:
+             self.flush()
+ 
+-    def flush(self):
++    def flush(self) -> None:
+         """
+         Flush all unwritten data to disk.
+         """
+diff --git a/tinydb/storages.py b/tinydb/storages.py
+index 59337a1..10408f0 100644
+--- a/tinydb/storages.py
++++ b/tinydb/storages.py
+@@ -68,6 +68,16 @@ class Storage(ABC):
+ 
+         raise NotImplementedError('To be overridden!')
+ 
++    def flush(self) -> None:
++        """
++        Flush pending data to the storage.
++
++        This is a no-op by default. Storages that buffer writes may override
++        this method to persist pending data.
++        """
++
++        pass
++
+     def close(self) -> None:
+         """
+         Optional: Close open file handles, etc.

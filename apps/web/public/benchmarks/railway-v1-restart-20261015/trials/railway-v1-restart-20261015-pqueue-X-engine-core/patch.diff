@@ -1,0 +1,422 @@
+diff --git a/benchmark_tests/set-priorities.test.ts b/benchmark_tests/set-priorities.test.ts
+new file mode 100644
+index 0000000..0618e76
+--- /dev/null
++++ b/benchmark_tests/set-priorities.test.ts
+@@ -0,0 +1,291 @@
++import {test} from 'node:test';
++import assert from 'node:assert/strict';
++import pDefer from 'p-defer';
++import PQueue from '../source/index.js';
++import PriorityQueue from '../source/priority-queue.js';
++import {FifoQueue} from '../test/helpers.js';
++
++const createRun = (value: string) => async () => value;
++
++test('PriorityQueue setPriorities reorders items and applies duplicate ids in update order', () => {
++	const evaluateQueue = new PriorityQueue();
++	const firstRun = createRun('first');
++	const secondRun = createRun('second');
++	const thirdRun = createRun('third');
++
++	evaluateQueue.enqueue(firstRun, {id: 'first', priority: 3});
++	evaluateQueue.enqueue(secondRun, {id: 'second', priority: 2});
++	evaluateQueue.enqueue(thirdRun, {id: 'third', priority: 1});
++
++	evaluateQueue.setPriorities([
++		{id: 'first', priority: 0},
++		{id: 'second', priority: -1},
++		{id: 'first', priority: 4},
++	]);
++
++	assert.deepEqual(
++		[evaluateQueue.dequeue(), evaluateQueue.dequeue(), evaluateQueue.dequeue()],
++		[firstRun, thirdRun, secondRun],
++	);
++	assert.equal(evaluateQueue.dequeue(), undefined);
++});
++
++test('PriorityQueue setPriorities no-ops on an empty batch', () => {
++	const idleQueue = new PriorityQueue();
++	const firstIdleRun = createRun('first');
++	const secondIdleRun = createRun('second');
++
++	idleQueue.enqueue(firstIdleRun, {id: 'first', priority: 1});
++	idleQueue.enqueue(secondIdleRun, {id: 'second', priority: 0});
++
++	idleQueue.setPriorities([]);
++
++	assert.deepEqual([idleQueue.dequeue(), idleQueue.dequeue()], [firstIdleRun, secondIdleRun]);
++	assert.equal(idleQueue.dequeue(), undefined);
++});
++
++test('PriorityQueue setPriorities validates every id before mutating', () => {
++	const validationQueue = new PriorityQueue();
++	const firstValidationRun = createRun('first');
++	const secondValidationRun = createRun('second');
++
++	validationQueue.enqueue(firstValidationRun, {id: 'first', priority: 2});
++	validationQueue.enqueue(secondValidationRun, {id: 'second', priority: 1});
++
++	assert.throws(() => {
++		validationQueue.setPriorities([
++			{id: 'first', priority: 5},
++			{id: 'missing', priority: 3},
++		]);
++	}, {
++		name: 'ReferenceError',
++		message: 'No promise function with the id "missing" exists in the queue.',
++	});
++
++	assert.deepEqual(
++		[validationQueue.dequeue(), validationQueue.dequeue()],
++		[firstValidationRun, secondValidationRun],
++	);
++	assert.equal(validationQueue.dequeue(), undefined);
++});
++
++test('PQueue setPriorities rejects nonfinite priorities before changing anything', async () => {
++	const invalidPriorityValues = [NaN, Infinity, -Infinity, '1', undefined];
++
++	for (const invalidPriorityValue of invalidPriorityValues) {
++		const nonfiniteQueue = new PQueue({concurrency: 1, autoStart: false});
++		const nonfiniteOrder: string[] = [];
++		const nonfiniteObserved: number[] = [];
++		const enqueueNonfiniteTask = (nonfiniteId: string, nonfiniteInitialPriority: number) => {
++			nonfiniteQueue.add(async () => {
++				nonfiniteOrder.push(nonfiniteId);
++				nonfiniteObserved.push(nonfiniteQueue.runningTasks[0]?.priority ?? -1);
++			}, {id: nonfiniteId, priority: nonfiniteInitialPriority});
++		};
++
++		enqueueNonfiniteTask('first', 2);
++		enqueueNonfiniteTask('second', 1);
++
++		assert.throws(() => {
++			nonfiniteQueue.setPriorities([
++				{id: 'first', priority: invalidPriorityValue as number},
++			]);
++		}, {
++			name: 'TypeError',
++			message: `Expected \`priority\` to be a finite number, got \`${String(invalidPriorityValue)}\` (${typeof invalidPriorityValue})`,
++		});
++
++		nonfiniteQueue.start();
++		await nonfiniteQueue.onIdle();
++
++		assert.deepEqual(nonfiniteOrder, ['first', 'second']);
++		assert.deepEqual(nonfiniteObserved, [2, 1]);
++	}
++});
++
++test('PQueue setPriorities rejects an unknown id before changing other entries', async () => {
++	const unknownIdQueue = new PQueue({concurrency: 1, autoStart: false});
++	const unknownIdOrder: string[] = [];
++	const unknownIdObserved: number[] = [];
++	const enqueueUnknownIdTask = (unknownId: string, unknownIdPriority: number) => {
++		unknownIdQueue.add(async () => {
++			unknownIdOrder.push(unknownId);
++			unknownIdObserved.push(unknownIdQueue.runningTasks[0]?.priority ?? -1);
++		}, {id: unknownId, priority: unknownIdPriority});
++	};
++
++	enqueueUnknownIdTask('first', 2);
++	enqueueUnknownIdTask('second', 1);
++
++	assert.throws(() => {
++		unknownIdQueue.setPriorities([
++			{id: 'first', priority: 9},
++			{id: 'missing', priority: 5},
++		]);
++	}, {
++		name: 'ReferenceError',
++		message: 'No promise function with the id "missing" exists in the queue.',
++	});
++
++	unknownIdQueue.start();
++	await unknownIdQueue.onIdle();
++
++	assert.deepEqual(unknownIdOrder, ['first', 'second']);
++	assert.deepEqual(unknownIdObserved, [2, 1]);
++});
++
++test('PQueue setPriorities rejects an already-running id before changing anything', async () => {
++	const runningQueue = new PQueue({concurrency: 1});
++	const {promise: runningPromise, resolve: resolveRunningTask} = pDefer();
++	const runningOrder: string[] = [];
++	const runningObserved: number[] = [];
++
++	runningQueue.add(async () => runningPromise, {id: 'running', priority: 3});
++	runningQueue.add(async () => {
++		runningOrder.push('waiting');
++		runningObserved.push(runningQueue.runningTasks[0]?.priority ?? -1);
++	}, {id: 'waiting', priority: 1});
++
++	assert.throws(() => {
++		runningQueue.setPriorities([
++			{id: 'running', priority: 7},
++			{id: 'waiting', priority: 7},
++		]);
++	}, {
++		name: 'ReferenceError',
++		message: 'No promise function with the id "running" exists in the queue.',
++	});
++
++	assert.deepEqual(runningOrder, []);
++
++	resolveRunningTask();
++	await runningQueue.onIdle();
++
++	assert.deepEqual(runningOrder, ['waiting']);
++	assert.deepEqual(runningObserved, [1]);
++});
++
++test('PQueue setPriorities is a no-op for an empty batch', async () => {
++	const idlePQueue = new PQueue({concurrency: 1, autoStart: false});
++	const idlePQueueOrder: string[] = [];
++
++	idlePQueue.add(async () => {
++		idlePQueueOrder.push('a');
++	}, {id: 'a', priority: 0});
++	idlePQueue.add(async () => {
++		idlePQueueOrder.push('b');
++	}, {id: 'b', priority: 1});
++
++	assert.equal(idlePQueue.size, 2);
++	idlePQueue.setPriorities([]);
++	assert.equal(idlePQueue.size, 2);
++
++	idlePQueue.start();
++	await idlePQueue.onIdle();
++
++	assert.deepEqual(idlePQueueOrder, ['b', 'a']);
++});
++
++test('PQueue default queue setPriorities reorders waiting tasks and keeps runningTasks metadata', async () => {
++	const metadataQueue = new PQueue({concurrency: 1, autoStart: false});
++	const metadataStarted: Array<{id: string | undefined; priority: number | undefined}> = [];
++	const enqueueMetadataTask = (metadataId: string, metadataPriority: number) => {
++		metadataQueue.add(async () => {
++			const [{id: metadataRunningId, priority: metadataRunningPriority}] = metadataQueue.runningTasks;
++			metadataStarted.push({id: metadataRunningId, priority: metadataRunningPriority});
++		}, {id: metadataId, priority: metadataPriority});
++	};
++
++	enqueueMetadataTask('a', 2);
++	enqueueMetadataTask('b', 1);
++	enqueueMetadataTask('c', 0);
++
++	metadataQueue.setPriorities([
++		{id: 'a', priority: 0},
++		{id: 'b', priority: 5},
++		{id: 'c', priority: 4},
++	]);
++
++	metadataQueue.start();
++	await metadataQueue.onIdle();
++
++	assert.deepEqual(metadataStarted, [
++		{id: 'b', priority: 5},
++		{id: 'c', priority: 4},
++		{id: 'a', priority: 0},
++	]);
++});
++
++test('PQueue default queue applies duplicate setPriorities updates in order', async () => {
++	const duplicateQueue = new PQueue({concurrency: 1, autoStart: false});
++	const duplicateOrder: string[] = [];
++	const enqueueDuplicateTask = (duplicateId: string, duplicatePriority: number) => {
++		duplicateQueue.add(async () => {
++			duplicateOrder.push(duplicateId);
++		}, {id: duplicateId, priority: duplicatePriority});
++	};
++
++	enqueueDuplicateTask('a', 3);
++	enqueueDuplicateTask('b', 2);
++	enqueueDuplicateTask('c', 1);
++
++	duplicateQueue.setPriorities([
++		{id: 'a', priority: 0},
++		{id: 'a', priority: 4},
++	]);
++
++	duplicateQueue.start();
++	await duplicateQueue.onIdle();
++
++	assert.deepEqual(duplicateOrder, ['a', 'b', 'c']);
++});
++
++test('PQueue default queue preserves FIFO order for equal priorities', async () => {
++	const fifoQueue = new PQueue({concurrency: 1, autoStart: false});
++	const fifoOrder: string[] = [];
++	const enqueueFifoTask = (fifoId: string, fifoPriority: number) => {
++		fifoQueue.add(async () => {
++			fifoOrder.push(fifoId);
++		}, {id: fifoId, priority: fifoPriority});
++	};
++
++	enqueueFifoTask('a', 1);
++	enqueueFifoTask('b', 3);
++	enqueueFifoTask('c', 1);
++
++	fifoQueue.setPriorities([
++		{id: 'b', priority: 1},
++	]);
++
++	fifoQueue.start();
++	await fifoQueue.onIdle();
++
++	assert.deepEqual(fifoOrder, ['a', 'c', 'b']);
++});
++
++test('PQueue setPriorities works with a custom queue that has no bulk method', async () => {
++	const customQueue = new PQueue({concurrency: 1, queueClass: FifoQueue});
++	const {promise: customPromise, resolve: resolveCustomTask} = pDefer();
++	const customStarted: Array<{id: string | undefined; priority: number | undefined}> = [];
++	const recordCustomTask = () => {
++		const [{id: customRunningId, priority: customRunningPriority}] = customQueue.runningTasks;
++		customStarted.push({id: customRunningId, priority: customRunningPriority});
++	};
++
++	customQueue.add(async () => customPromise);
++	customQueue.add(recordCustomTask, {id: 'first', priority: 1});
++	customQueue.add(recordCustomTask, {id: 'second'});
++
++	customQueue.setPriorities([
++		{id: 'second', priority: 9},
++		{id: 'first', priority: 4},
++	]);
++
++	resolveCustomTask();
++	await customQueue.onIdle();
++
++	assert.deepEqual(customStarted, [
++		{id: 'first', priority: 4},
++		{id: 'second', priority: 9},
++	]);
++});
+diff --git a/source/index.ts b/source/index.ts
+index 2b9b9e5..7dd677b 100644
+--- a/source/index.ts
++++ b/source/index.ts
+@@ -48,8 +48,15 @@ const validateTimeout = (timeout: number | undefined): void => {
+ 	}
+ };
+ 
++const validatePriority = (priority: number) => {
++	if (typeof priority !== 'number' || !Number.isFinite(priority)) {
++		throw new TypeError(`Expected \`priority\` to be a finite number, got \`${priority}\` (${typeof priority})`);
++	}
++};
++
+ // A fraction would let one more task through, because the checks are `count < limit`.
+ // Not `Number.isSafeInteger()`, because a larger integer, like `Number.MAX_VALUE`, is a valid limit.
++
+ const validateLimit = (name: string, value: unknown): void => {
+ 	if (!(typeof value === 'number' && value >= 1 && (value === Infinity || Number.isInteger(value)))) { // eslint-disable-line unicorn/prefer-number-is-safe-integer
+ 		throw new TypeError(`Expected \`${name}\` to be an integer from 1 and up or \`Infinity\`, got \`${String(value)}\` (${typeof value})`);
+@@ -153,6 +160,16 @@ export default class PQueue<QueueType extends Queue<RunFunction, EnqueueOptionsT
+ 	// The waiting tasks, so that `.clear()` can reject their promises.
+ 	readonly #waitingTasks = new Set<WaitingTask>();
+ 
++	#findWaitingTask(id: string): WaitingTask | undefined {
++		for (const waitingTask of this.#waitingTasks) {
++			if (waitingTask.id === id) {
++				return waitingTask;
++			}
++		}
++
++		return undefined;
++	}
++
+ 	#timeout: number | undefined;
+ 
+ 	constructor(options?: Options<QueueType, EnqueueOptionsType>) {
+@@ -835,9 +852,7 @@ export default class PQueue<QueueType extends Queue<RunFunction, EnqueueOptionsT
+ 	```
+ 	*/
+ 	setPriority(id: string, priority: number) {
+-		if (typeof priority !== 'number' || !Number.isFinite(priority)) {
+-			throw new TypeError(`Expected \`priority\` to be a finite number, got \`${priority}\` (${typeof priority})`);
+-		}
++		validatePriority(priority);
+ 
+ 		// Checked here, not only in `PriorityQueue`, so that it also throws with a custom queue class.
+ 		for (const waitingTask of this.#waitingTasks) {
+@@ -851,6 +866,38 @@ export default class PQueue<QueueType extends Queue<RunFunction, EnqueueOptionsT
+ 		throw new ReferenceError(`No promise function with the id "${id}" exists in the queue.`);
+ 	}
+ 
++	/**
++	Changes the priority of multiple waiting tasks at once. Throws before changing anything if any priority is not a finite number or any id is unknown.
++	*/
++	setPriorities(updates: ReadonlyArray<{id: string; priority: number}>) {
++		if (updates.length === 0) {
++			return;
++		}
++
++		for (const {id, priority} of updates) {
++			validatePriority(priority);
++
++			if (this.#findWaitingTask(id) === undefined) {
++				throw new ReferenceError(`No promise function with the id "${id}" exists in the queue.`);
++			}
++		}
++
++		if (typeof this.#queue.setPriorities === 'function') {
++			this.#queue.setPriorities(updates);
++
++			for (const {id, priority} of updates) {
++				const waitingTask = this.#findWaitingTask(id);
++				if (waitingTask !== undefined) {
++					waitingTask.priority = priority;
++				}
++			}
++		} else {
++			for (const {id, priority} of updates) {
++				this.setPriority(id, priority);
++			}
++		}
++	}
++
+ 	/**
+ 	Adds a sync or async task to the queue.
+ 
+diff --git a/source/priority-queue.ts b/source/priority-queue.ts
+index c0c8642..cc1b414 100644
+--- a/source/priority-queue.ts
++++ b/source/priority-queue.ts
+@@ -104,6 +104,22 @@ export default class PriorityQueue implements Queue<RunFunction, PriorityQueueOp
+ 		this.enqueue(item!.run, {priority, id});
+ 	}
+ 
++	setPriorities(updates: ReadonlyArray<{id: string; priority: number}>) {
++		for (const {id, priority} of updates) {
++			if (typeof priority !== 'number' || !Number.isFinite(priority)) {
++				throw new TypeError(`Expected \`priority\` to be a finite number, got \`${priority}\` (${typeof priority})`);
++			}
++
++			if (this.#findIndex(element => element.id === id) === -1) {
++				throw new ReferenceError(`No promise function with the id "${id}" exists in the queue.`);
++			}
++		}
++
++		for (const {id, priority} of updates) {
++			this.setPriority(id, priority);
++		}
++	}
++
+ 	remove(id: string): void;
+ 	remove(run: RunFunction): void;
+ 	remove(idOrRun: string | RunFunction): void {
+diff --git a/source/queue.ts b/source/queue.ts
+index b1c256a..58c1610 100644
+--- a/source/queue.ts
++++ b/source/queue.ts
+@@ -6,5 +6,6 @@ export type Queue<Element, Options> = {
+ 	dequeue: () => Element | undefined;
+ 	enqueue: (run: Element, options?: Partial<Options>) => void;
+ 	setPriority: (id: string, priority: number) => void;
++	setPriorities?: (updates: ReadonlyArray<{id: string; priority: number}>) => void;
+ 	remove: (id: string) => void;
+ };

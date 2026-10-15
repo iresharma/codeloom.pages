@@ -1,0 +1,230 @@
+diff --git a/benchmark_tests/reset_test.go b/benchmark_tests/reset_test.go
+new file mode 100644
+index 0000000..29e0470
+--- /dev/null
++++ b/benchmark_tests/reset_test.go
+@@ -0,0 +1,211 @@
++package benchmark_tests
++
++import (
++	"context"
++	"io"
++	"net/http"
++	"net/http/httptest"
++	"reflect"
++	"testing"
++	"unsafe"
++
++	"github.com/go-chi/chi/v5"
++)
++
++func TestContext_Reset(t *testing.T) {
++	r := chi.NewRouter()
++	r.Get("/users/{id}", func(w http.ResponseWriter, r *http.Request) {})
++
++	rctx := chi.NewRouteContext()
++	rctx.Routes = r
++	rctx.RoutePath = "/users/42"
++	rctx.RouteMethod = "GET"
++	rctx.RoutePatterns = []string{"/users/{id}"}
++	rctx.URLParams = chi.RouteParams{
++		Keys:   make([]string, 2, 8),
++		Values: make([]string, 2, 8),
++	}
++	rctx.URLParams.Keys[0] = "id"
++	rctx.URLParams.Values[0] = "42"
++	rctx.URLParams.Keys[1] = "name"
++	rctx.URLParams.Values[1] = "chi"
++
++	setUnexportedField(rctx, "parentCtx", context.Background())
++
++	// Populate the routing-only fields through the public router API so the
++	// test does not need to fabricate unexported chi types. The wrong-method
++	// lookup first records methodNotAllowed/methodsAllowed, then the matching
++	// lookup records routeParams, routePattern, and appends URLParams.
++	if got := r.Find(rctx, "POST", "/users/42"); got != "" {
++		t.Fatalf("POST Find should not match a GET route, got pattern %q", got)
++	}
++	if got := r.Find(rctx, "GET", "/users/42"); got != "/users/{id}" {
++		t.Fatalf("GET Find returned unexpected pattern %q", got)
++	}
++
++	keysCapBefore := cap(rctx.URLParams.Keys)
++	valuesCapBefore := cap(rctx.URLParams.Values)
++
++	rctx.Reset()
++
++	if got := len(rctx.URLParams.Keys); got != 0 {
++		t.Fatalf("Reset should clear URLParams.Keys, got len %d", got)
++	}
++	if got := len(rctx.URLParams.Values); got != 0 {
++		t.Fatalf("Reset should clear URLParams.Values, got len %d", got)
++	}
++	if got := cap(rctx.URLParams.Keys); got < keysCapBefore {
++		t.Fatalf("Reset should preserve URLParams.Keys capacity, got %d want >= %d", got, keysCapBefore)
++	}
++	if got := cap(rctx.URLParams.Values); got < valuesCapBefore {
++		t.Fatalf("Reset should preserve URLParams.Values capacity, got %d want >= %d", got, valuesCapBefore)
++	}
++
++	if rctx.Routes != nil {
++		t.Fatalf("Reset should clear Routes, got %v", rctx.Routes)
++	}
++	if rctx.RoutePath != "" {
++		t.Fatalf("Reset should clear RoutePath, got %q", rctx.RoutePath)
++	}
++	if rctx.RouteMethod != "" {
++		t.Fatalf("Reset should clear RouteMethod, got %q", rctx.RouteMethod)
++	}
++	if got := len(rctx.RoutePatterns); got != 0 {
++		t.Fatalf("Reset should clear RoutePatterns, got len %d", got)
++	}
++
++	routeParams := unexportedField(rctx, "routeParams")
++	if got := routeParams.FieldByName("Keys").Len(); got != 0 {
++		t.Fatalf("Reset should clear routeParams.Keys, got len %d", got)
++	}
++	if got := routeParams.FieldByName("Values").Len(); got != 0 {
++		t.Fatalf("Reset should clear routeParams.Values, got len %d", got)
++	}
++
++	if got := unexportedField(rctx, "routePattern").String(); got != "" {
++		t.Fatalf("Reset should clear routePattern, got %q", got)
++	}
++	if got := unexportedField(rctx, "methodsAllowed").Len(); got != 0 {
++		t.Fatalf("Reset should clear methodsAllowed, got len %d", got)
++	}
++	if unexportedField(rctx, "methodNotAllowed").Bool() {
++		t.Fatal("Reset should clear methodNotAllowed, got true")
++	}
++	if got := unexportedField(rctx, "parentCtx").Interface(); got != nil {
++		t.Fatalf("Reset should clear parentCtx, got %v", got)
++	}
++}
++
++func TestPooledContextResetClearsURLParams(t *testing.T) {
++	r := chi.NewRouter()
++	r.Get("/users/{id}", func(w http.ResponseWriter, r *http.Request) {
++		io.WriteString(w, chi.URLParam(r, "id"))
++	})
++	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
++		io.WriteString(w, chi.URLParam(r, "id"))
++	})
++
++	ts := httptest.NewServer(r)
++	defer ts.Close()
++
++	if got := get(t, ts.URL+"/users/42"); got != "42" {
++		t.Fatalf("first request should see id %q, got %q", "42", got)
++	}
++	if got := get(t, ts.URL+"/ping"); got != "" {
++		t.Fatalf("second request should see no stale id, got %q", got)
++	}
++}
++
++func get(t *testing.T, url string) string {
++	t.Helper()
++
++	resp, err := http.Get(url)
++	if err != nil {
++		t.Fatalf("GET %s: %v", url, err)
++	}
++	defer resp.Body.Close()
++
++	body, err := io.ReadAll(resp.Body)
++	if err != nil {
++		t.Fatalf("read body from %s: %v", url, err)
++	}
++	return string(body)
++}
++
++func setUnexportedField(v any, name string, value any) {
++	rv := reflect.ValueOf(v).Elem()
++	field := rv.FieldByName(name)
++	if !field.IsValid() {
++		panic("setUnexportedField: no field " + name)
++	}
++
++	dst := reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem()
++	dst.Set(reflect.ValueOf(value))
++}
++
++func unexportedField(v any, name string) reflect.Value {
++	rv := reflect.ValueOf(v).Elem()
++	field := rv.FieldByName(name)
++	if !field.IsValid() {
++		panic("unexportedField: no field " + name)
++	}
++
++	return reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem()
++}
++
++// TestContextResetCapacityPreservation verifies that Reset preserves backing
++// array capacity while clearing length, ensuring efficient pooling of contexts.
++func TestContextResetCapacityPreservation(t *testing.T) {
++	rctx := chi.NewRouteContext()
++
++	// Pre-allocate with specific capacities
++	rctx.URLParams.Keys = make([]string, 0, 16)
++	rctx.URLParams.Values = make([]string, 0, 16)
++	rctx.RoutePatterns = make([]string, 0, 8)
++
++	// Add items to grow the length
++	for i := 0; i < 10; i++ {
++		rctx.URLParams.Keys = append(rctx.URLParams.Keys, "key"+string(rune(i)))
++		rctx.URLParams.Values = append(rctx.URLParams.Values, "val"+string(rune(i)))
++	}
++	for i := 0; i < 5; i++ {
++		rctx.RoutePatterns = append(rctx.RoutePatterns, "/pattern"+string(rune(i)))
++	}
++
++	keysCapBefore := cap(rctx.URLParams.Keys)
++	valuesCapBefore := cap(rctx.URLParams.Values)
++	patternsCapBefore := cap(rctx.RoutePatterns)
++
++	// Reset and verify capacity is preserved
++	rctx.Reset()
++
++	if len(rctx.URLParams.Keys) != 0 {
++		t.Fatalf("URLParams.Keys should have len 0 after Reset, got %d", len(rctx.URLParams.Keys))
++	}
++	if len(rctx.URLParams.Values) != 0 {
++		t.Fatalf("URLParams.Values should have len 0 after Reset, got %d", len(rctx.URLParams.Values))
++	}
++	if len(rctx.RoutePatterns) != 0 {
++		t.Fatalf("RoutePatterns should have len 0 after Reset, got %d", len(rctx.RoutePatterns))
++	}
++
++	if cap(rctx.URLParams.Keys) < keysCapBefore {
++		t.Fatalf("URLParams.Keys capacity should be preserved, got %d want >= %d",
++			cap(rctx.URLParams.Keys), keysCapBefore)
++	}
++	if cap(rctx.URLParams.Values) < valuesCapBefore {
++		t.Fatalf("URLParams.Values capacity should be preserved, got %d want >= %d",
++			cap(rctx.URLParams.Values), valuesCapBefore)
++	}
++	if cap(rctx.RoutePatterns) < patternsCapBefore {
++		t.Fatalf("RoutePatterns capacity should be preserved, got %d want >= %d",
++			cap(rctx.RoutePatterns), patternsCapBefore)
++	}
++
++	// Verify we can reuse the cleared slices without reallocation
++	rctx.URLParams.Keys = append(rctx.URLParams.Keys, "reused")
++	rctx.URLParams.Values = append(rctx.URLParams.Values, "value")
++	if len(rctx.URLParams.Keys) != 1 || len(rctx.URLParams.Values) != 1 {
++		t.Fatal("should be able to reuse cleared URLParams")
++	}
++}
+diff --git a/context.go b/context.go
+index f6d51bf..cc7bf01 100644
+--- a/context.go
++++ b/context.go
+@@ -85,6 +85,8 @@ func (x *Context) Reset() {
+ 	x.RouteMethod = ""
+ 	x.RoutePatterns = x.RoutePatterns[:0]
+ 	// Regression: accumulated URLParams were not cleared.
++	x.URLParams.Keys = x.URLParams.Keys[:0]
++	x.URLParams.Values = x.URLParams.Values[:0]
+ 
+ 	x.routePattern = ""
+ 	x.routeParams.Keys = x.routeParams.Keys[:0]

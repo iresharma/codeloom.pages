@@ -1,0 +1,354 @@
+{
+  "blocked_reason": null,
+  "budget_is_hard_ceiling": false,
+  "budget_policy": "actual-spend",
+  "budget_usd": 50,
+  "calibration_status": "reused",
+  "call_limit_multiplier": 3,
+  "classifier": "off",
+  "difficulty_mix": {
+    "heavy": 3,
+    "light": 3,
+    "medium": 3
+  },
+  "limitations": [
+    "Author-designed corpus; no independent review.",
+    "One run per task; no reliability, interaction, or component-effect claims.",
+    "Synthetic bugs keep upstream tests, which can reveal the regression.",
+    "Test-generation features are supplied with their reference tests withheld.",
+    "Offline report rebuilding is reproducible; model outputs, endpoint availability and prices are not.",
+    "Owner waived fresh paid calibration and redundant compatibility probes. Historical request timing and existing adapter tests are accepted; the current runtime has not passed a fresh end-to-end calibration. Fixture certification remains required."
+  ],
+  "model": "deepseek/deepseek-v4-pro-0813",
+  "paid_runs_authorized": true,
+  "pairs": {
+    "both_fail": 1,
+    "both_pass": 8,
+    "engine_only": 0,
+    "mini_only": 0,
+    "unresolved": 0,
+    "unrun": 0
+  },
+  "platform": "linux/amd64",
+  "preregistration_commit": "cb73e2c92ea23efcd622e4f9a1b2d612319312bc",
+  "provider": "baidu/fp8",
+  "reasoning_effort": "high",
+  "repeat_count": 0,
+  "repo_count": 4,
+  "run_id": "railway-v1-restart-20261015",
+  "schema_version": 1,
+  "status": "complete",
+  "suite": "v1",
+  "systems": [
+    {
+      "budget_hits": 0,
+      "call_cost_limit_hits": 0,
+      "cost_per_success_usd": 0.033876875,
+      "cost_usd": 0.271015,
+      "evaluated": 9,
+      "id": "mini-swe-agent",
+      "max_elapsed_s": 1265.3785058540525,
+      "median_elapsed_s": 395.86282367107924,
+      "min_elapsed_s": 211.59439802495763,
+      "passed": 8,
+      "regressions": 0,
+      "scheduled": 9,
+      "unknown_costs": 0,
+      "unresolved": 0,
+      "unrun": 0,
+      "watchdog_hits": 0
+    },
+    {
+      "budget_hits": 2,
+      "call_cost_limit_hits": 0,
+      "cost_per_success_usd": null,
+      "cost_usd": null,
+      "evaluated": 9,
+      "id": "engine-core",
+      "max_elapsed_s": 3652.996444926015,
+      "median_elapsed_s": 1163.7998264469206,
+      "min_elapsed_s": 820.6673728709575,
+      "passed": 8,
+      "regressions": 0,
+      "scheduled": 9,
+      "unknown_costs": 1,
+      "unresolved": 0,
+      "unrun": 0,
+      "watchdog_hits": 0
+    }
+  ],
+  "task_count": 9,
+  "tasks": [
+    {
+      "attempt_limit_usd": 1,
+      "category": "bug",
+      "difficulty": "light",
+      "id": "tinydb-B",
+      "language": "python",
+      "provenance": "fabricated",
+      "repo": "tinydb",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-tinydb-B-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-tinydb-B-engine-core",
+          "cost_usd": 0.249979,
+          "elapsed_s": 944.0109471590258,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-tinydb-B-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-tinydb-B-mini-swe-agent",
+          "cost_usd": 0.025651,
+          "elapsed_s": 241.26318743394222,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Query cache survives writes"
+    },
+    {
+      "attempt_limit_usd": 1,
+      "category": "bug",
+      "difficulty": "light",
+      "id": "chi-B",
+      "language": "go",
+      "provenance": "fabricated",
+      "repo": "chi",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-chi-B-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-chi-B-engine-core",
+          "cost_usd": 0.250957,
+          "elapsed_s": 1163.7998264469206,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-chi-B-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-chi-B-mini-swe-agent",
+          "cost_usd": 0.012096,
+          "elapsed_s": 273.1807059010025,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Pooled context leaks URL params"
+    },
+    {
+      "attempt_limit_usd": 1,
+      "category": "test-generation",
+      "difficulty": "light",
+      "id": "dotenv-T",
+      "language": "python",
+      "provenance": "new_feature",
+      "repo": "dotenv",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-dotenv-T-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-dotenv-T-engine-core",
+          "cost_usd": 0.17604,
+          "elapsed_s": 832.4813027488999,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-dotenv-T-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-dotenv-T-mini-swe-agent",
+          "cost_usd": 0.011281,
+          "elapsed_s": 211.59439802495763,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Test selection of assigned dotenv values"
+    },
+    {
+      "attempt_limit_usd": 2,
+      "category": "navigation",
+      "difficulty": "medium",
+      "id": "chi-N",
+      "language": "go",
+      "provenance": "navigation",
+      "repo": "chi",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-chi-N-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-chi-N-engine-core",
+          "cost_usd": 0.13375,
+          "elapsed_s": 820.6673728709575,
+          "regressions": 0,
+          "status": "fail",
+          "termination": "completed"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-chi-N-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-chi-N-mini-swe-agent",
+          "cost_usd": 0.029127,
+          "elapsed_s": 395.86282367107924,
+          "regressions": 0,
+          "status": "fail",
+          "termination": "completed"
+        }
+      },
+      "title": "Code path and lifecycle navigation"
+    },
+    {
+      "attempt_limit_usd": 2,
+      "category": "cross-file",
+      "difficulty": "medium",
+      "id": "tinydb-X",
+      "language": "python",
+      "provenance": "cross-file",
+      "repo": "tinydb",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-tinydb-X-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-tinydb-X-engine-core",
+          "cost_usd": 0.240428,
+          "elapsed_s": 1010.6262777650263,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-tinydb-X-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-tinydb-X-mini-swe-agent",
+          "cost_usd": 0.016143,
+          "elapsed_s": 224.92265336506534,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Public storage flush contract"
+    },
+    {
+      "attempt_limit_usd": 2,
+      "category": "bug",
+      "difficulty": "medium",
+      "id": "pqueue-B",
+      "language": "typescript",
+      "provenance": "fabricated",
+      "repo": "pqueue",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-pqueue-B-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-pqueue-B-engine-core",
+          "cost_usd": 0.43546,
+          "elapsed_s": 2559.265746093006,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-pqueue-B-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-pqueue-B-mini-swe-agent",
+          "cost_usd": 0.017978,
+          "elapsed_s": 472.74331982200965,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Priority updates target the wrong queued task"
+    },
+    {
+      "attempt_limit_usd": 4,
+      "category": "cross-file",
+      "difficulty": "heavy",
+      "id": "dotenv-X",
+      "language": "python",
+      "provenance": "cross-file",
+      "repo": "dotenv",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-dotenv-X-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-dotenv-X-engine-core",
+          "cost_usd": 0.727761,
+          "elapsed_s": 3652.996444926015,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "budget_exhausted"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-dotenv-X-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-dotenv-X-mini-swe-agent",
+          "cost_usd": 0.066469,
+          "elapsed_s": 691.1743199250195,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Strict dotenv loading API and CLI"
+    },
+    {
+      "attempt_limit_usd": 4,
+      "category": "cross-file",
+      "difficulty": "heavy",
+      "id": "pqueue-X",
+      "language": "typescript",
+      "provenance": "cross-file",
+      "repo": "pqueue",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-pqueue-X-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-pqueue-X-engine-core",
+          "cost_usd": null,
+          "elapsed_s": 1858.3482691959944,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "budget_exhausted"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-pqueue-X-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-pqueue-X-mini-swe-agent",
+          "cost_usd": 0.063912,
+          "elapsed_s": 1265.3785058540525,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Atomic bulk queue priority updates"
+    },
+    {
+      "attempt_limit_usd": 4,
+      "category": "cross-file",
+      "difficulty": "heavy",
+      "id": "chi-X",
+      "language": "go",
+      "provenance": "new_feature",
+      "repo": "chi",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-chi-X-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-chi-X-engine-core",
+          "cost_usd": 0.138388,
+          "elapsed_s": 1555.3553792439634,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-chi-X-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-chi-X-mini-swe-agent",
+          "cost_usd": 0.028358,
+          "elapsed_s": 671.9937968619633,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Immutable bulk response-header middleware"
+    }
+  ],
+  "thinking_enabled": true
+}

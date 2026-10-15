@@ -1,0 +1,25 @@
+{
+  "budget_policy": "actual-spend",
+  "call_limit_multiplier": 3,
+  "controller_termination": "completed",
+  "cost_is_conservative": false,
+  "cost_usd": 0.029127,
+  "elapsed_s": 395.86282367107924,
+  "evaluation_elapsed_s": 5.381764648947865,
+  "id": "railway-v1-restart-20261015-chi-N-mini-swe-agent",
+  "limit_usd": 2,
+  "new_failing_check_commands": [],
+  "request_count": 29,
+  "retry_of": null,
+  "stage": "measured",
+  "system": "mini-swe-agent",
+  "task_id": "chi-N",
+  "termination": "completed",
+  "upstream_check_failures": [],
+  "verification": {
+    "errors": [],
+    "pass": false,
+    "reason": "invalid_answer"
+  },
+  "watchdog_s": null
+}

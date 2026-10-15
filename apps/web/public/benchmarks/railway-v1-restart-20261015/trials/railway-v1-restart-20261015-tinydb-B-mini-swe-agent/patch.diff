@@ -1,0 +1,147 @@
+diff --git a/benchmark_tests/test_query_cache_invalidation.py b/benchmark_tests/test_query_cache_invalidation.py
+new file mode 100644
+index 0000000..91c1d92
+--- /dev/null
++++ b/benchmark_tests/test_query_cache_invalidation.py
+@@ -0,0 +1,131 @@
++"""Regression tests for query-cache invalidation after successful mutations.
++
++These tests ensure that TinyDB invalidates the cached results for the
++mutated table while keeping the cached results for unaffected tables.
++"""
++
++import pytest
++
++from tinydb import TinyDB, where
++from tinydb.storages import MemoryStorage
++from tinydb.table import Document
++
++
++@pytest.fixture
++def table():
++    """A fresh table with two matching documents plus one non-matching one."""
++    db = TinyDB(storage=MemoryStorage)
++    tbl = db.table('items')
++    tbl.insert_multiple([
++        {'kind': 'match', 'value': 1},
++        {'kind': 'match', 'value': 2},
++        {'kind': 'other', 'value': 3},
++    ])
++    return tbl
++
++
++def _cache_query(tbl, query):
++    """Run a query once and verify that its results have been cached."""
++    tbl.search(query)
++    assert query in tbl._query_cache
++
++
++def test_update_invalidates_cached_query(table):
++    query = where('kind') == 'match'
++    _cache_query(table, query)
++
++    table.update({'kind': 'done'}, query)
++
++    # The cached result for the old query is gone...
++    assert query not in table._query_cache
++    # ... and repeating the query returns the new state instead of the
++    # previously cached matching documents.
++    assert table.search(query) == []
++
++
++def test_remove_invalidates_cached_query(table):
++    query = where('kind') == 'match'
++    _cache_query(table, query)
++
++    table.remove(query)
++
++    assert query not in table._query_cache
++    assert table.search(query) == []
++
++
++@pytest.mark.parametrize('mutate', [
++    lambda table: table.insert({'kind': 'extra'}),
++    lambda table: table.insert_multiple([{'kind': 'extra'}]),
++    lambda table: table.update({'kind': 'done'}),
++    lambda table: table.update({'kind': 'done'}, where('kind') == 'match'),
++    lambda table: table.update({'kind': 'done'}, doc_ids=[1, 2]),
++    lambda table: table.update_multiple([
++        ({'kind': 'done'}, where('kind') == 'match')
++    ]),
++    lambda table: table.upsert({'kind': 'match'}, where('kind') == 'missing'),
++    lambda table: table.upsert({'kind': 'done'}, where('kind') == 'other'),
++    lambda table: table.remove(where('kind') == 'other'),
++    lambda table: table.remove(doc_ids=[3]),
++    lambda table: table.truncate(),
++])
++def test_successful_mutations_clear_query_cache(table, mutate):
++    query = where('value') >= 1
++    _cache_query(table, query)
++
++    mutate(table)
++
++    assert query not in table._query_cache
++
++
++def test_failed_mutation_preserves_query_cache(table):
++    query = where('kind') == 'match'
++    _cache_query(table, query)
++
++    with pytest.raises(ValueError):
++        table.insert(Document({'kind': 'match'}, doc_id=1))
++
++    assert query in table._query_cache
++
++
++def test_copy_on_search_after_invalidation(table):
++    query = where('kind') == 'match'
++    _cache_query(table, query)
++
++    # Invalidate the cache by changing unrelated data.
++    table.insert({'kind': 'other', 'value': 4})
++
++    results1 = table.search(query)
++    assert results1 == [
++        {'kind': 'match', 'value': 1},
++        {'kind': 'match', 'value': 2},
++    ]
++
++    # Each search returns a fresh list copy, so mutating it must not poison
++    # subsequent cached searches.
++    results1.append({'kind': 'fake'})
++    assert table.search(query) == [
++        {'kind': 'match', 'value': 1},
++        {'kind': 'match', 'value': 2},
++    ]
++
++
++def test_mutation_only_clears_affected_table_cache():
++    db = TinyDB(storage=MemoryStorage)
++    table1 = db.table('table1')
++    table2 = db.table('table2')
++    query1 = where('kind') == 'match'
++    query2 = where('kind') == 'match'
++
++    table1.insert({'kind': 'match'})
++    table2.insert({'kind': 'match'})
++
++    _cache_query(table1, query1)
++    _cache_query(table2, query2)
++
++    table1.insert({'kind': 'other'})
++
++    assert query1 not in table1._query_cache
++    # The other table was not affected, so its cached result remains both
++    # present and valid.
++    assert query2 in table2._query_cache
++    assert table2.search(query2) == [{'kind': 'match'}]
+diff --git a/tinydb/table.py b/tinydb/table.py
+index 43dfe88..600ad21 100644
+--- a/tinydb/table.py
++++ b/tinydb/table.py
+@@ -851,4 +851,4 @@ class Table:
+         self._storage.write(tables)
+ 
+         # Clear the query cache, as the table contents have changed
+-        pass
++        self._query_cache.clear()

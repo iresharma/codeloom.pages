@@ -1,0 +1,467 @@
+{
+  "budget_policy": "actual-spend",
+  "call_limit_multiplier": 3,
+  "controller_termination": "completed",
+  "cost_is_conservative": false,
+  "cost_usd": 0.011281,
+  "elapsed_s": 211.59439802495763,
+  "evaluation_elapsed_s": 54.05489029502496,
+  "id": "railway-v1-restart-20261015-dotenv-T-mini-swe-agent",
+  "limit_usd": 1,
+  "new_failing_check_commands": [],
+  "request_count": 15,
+  "retry_of": null,
+  "stage": "measured",
+  "system": "mini-swe-agent",
+  "task_id": "dotenv-T",
+  "termination": "completed",
+  "upstream_check_failures": [],
+  "verification": {
+    "checks": [
+      {
+        "command": "python -m pytest -q tests",
+        "kind": "trusted",
+        "output": "........................................................................ [ 25%]\n........................................................................ [ 50%]\n........................................................................ [ 76%]\n....................................................................     [100%]\n=============================== warnings summary ===============================\ntests/test_cli.py: 32 warnings\n  /task/tests/conftest.py:8: DeprecationWarning: 'isolated_filesystem' is deprecated and will be removed in Click 9.0. Use 'tempfile.TemporaryDirectory' or pytest's 'tmp_path' fixture with absolute paths instead.\n    with runner.isolated_filesystem():\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n284 passed, 1 skipped, 32 warnings in 10.97s\n",
+        "repeat": 0,
+        "returncode": 0
+      }
+    ],
+    "correct_runs": [
+      {
+        "assertion_signature": null,
+        "executed_tests": 12,
+        "output": "............                                                             [100%]\n12 passed in 0.09s\n",
+        "returncode": 0
+      },
+      {
+        "assertion_signature": null,
+        "executed_tests": 12,
+        "output": "............                                                             [100%]\n12 passed in 0.04s\n",
+        "returncode": 0
+      },
+      {
+        "assertion_signature": null,
+        "executed_tests": 12,
+        "output": "............                                                             [100%]\n12 passed in 0.04s\n",
+        "returncode": 0
+      }
+    ],
+    "mutation_score": 1.0,
+    "mutations": [
+      {
+        "index": 0,
+        "killed": true,
+        "runs": [
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_omits_none_values",
+                31
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values",
+                15
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names",
+                52
+              ]
+            ],
+            "executed_tests": 12,
+            "output": "F.F.F.......                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_returns_requested_non_none_values ____________\n\n    def test_selected_values_returns_requested_non_none_values() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\", \"D\": \"4\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"C\", \"D\"])\n    \n>       assert result == {\"A\": \"1\", \"C\": \"\", \"D\": \"4\"}\nE       AssertionError: assert {'A': '1', 'B... '', 'D': '4'} == {'A': '1', 'C': '', 'D': '4'}\nE         \nE         Omitting 3 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:15: AssertionError\n____________________ test_selected_values_omits_none_values ____________________\n\n    def test_selected_values_omits_none_values() -> None:\n        values = {\"NONE\": None, \"ALSO_NONE\": None}\n    \n        result = selected_values(values, [\"NONE\", \"ALSO_NONE\"])\n    \n>       assert result == {}\nE       AssertionError: assert {'ALSO_NONE':... 'NONE': None} == {}\nE         \nE         Left contains 2 more items:\nE         {'ALSO_NONE': None, 'NONE': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:31: AssertionError\n______________ test_selected_values_supports_a_generator_of_names ______________\n\n    def test_selected_values_supports_a_generator_of_names() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\"}\n    \n        def names():\n            yield \"B\"\n            yield \"C\"\n            yield \"A\"\n    \n        result = selected_values(values, names())\n    \n>       assert result == {\"C\": \"\", \"A\": \"1\"}\nE       AssertionError: assert {'A': '1', 'B': None, 'C': ''} == {'A': '1', 'C': ''}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:52: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_omits_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names\n3 failed, 9 passed in 0.08s\n",
+            "returncode": 1
+          },
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_omits_none_values",
+                31
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values",
+                15
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names",
+                52
+              ]
+            ],
+            "executed_tests": 12,
+            "output": "F.F.F.......                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_returns_requested_non_none_values ____________\n\n    def test_selected_values_returns_requested_non_none_values() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\", \"D\": \"4\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"C\", \"D\"])\n    \n>       assert result == {\"A\": \"1\", \"C\": \"\", \"D\": \"4\"}\nE       AssertionError: assert {'A': '1', 'B... '', 'D': '4'} == {'A': '1', 'C': '', 'D': '4'}\nE         \nE         Omitting 3 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:15: AssertionError\n____________________ test_selected_values_omits_none_values ____________________\n\n    def test_selected_values_omits_none_values() -> None:\n        values = {\"NONE\": None, \"ALSO_NONE\": None}\n    \n        result = selected_values(values, [\"NONE\", \"ALSO_NONE\"])\n    \n>       assert result == {}\nE       AssertionError: assert {'ALSO_NONE':... 'NONE': None} == {}\nE         \nE         Left contains 2 more items:\nE         {'ALSO_NONE': None, 'NONE': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:31: AssertionError\n______________ test_selected_values_supports_a_generator_of_names ______________\n\n    def test_selected_values_supports_a_generator_of_names() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\"}\n    \n        def names():\n            yield \"B\"\n            yield \"C\"\n            yield \"A\"\n    \n        result = selected_values(values, names())\n    \n>       assert result == {\"C\": \"\", \"A\": \"1\"}\nE       AssertionError: assert {'A': '1', 'B': None, 'C': ''} == {'A': '1', 'C': ''}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:52: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_omits_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names\n3 failed, 9 passed in 0.04s\n",
+            "returncode": 1
+          },
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_omits_none_values",
+                31
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values",
+                15
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names",
+                52
+              ]
+            ],
+            "executed_tests": 12,
+            "output": "F.F.F.......                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_returns_requested_non_none_values ____________\n\n    def test_selected_values_returns_requested_non_none_values() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\", \"D\": \"4\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"C\", \"D\"])\n    \n>       assert result == {\"A\": \"1\", \"C\": \"\", \"D\": \"4\"}\nE       AssertionError: assert {'A': '1', 'B... '', 'D': '4'} == {'A': '1', 'C': '', 'D': '4'}\nE         \nE         Omitting 3 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:15: AssertionError\n____________________ test_selected_values_omits_none_values ____________________\n\n    def test_selected_values_omits_none_values() -> None:\n        values = {\"NONE\": None, \"ALSO_NONE\": None}\n    \n        result = selected_values(values, [\"NONE\", \"ALSO_NONE\"])\n    \n>       assert result == {}\nE       AssertionError: assert {'ALSO_NONE':... 'NONE': None} == {}\nE         \nE         Left contains 2 more items:\nE         {'ALSO_NONE': None, 'NONE': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:31: AssertionError\n______________ test_selected_values_supports_a_generator_of_names ______________\n\n    def test_selected_values_supports_a_generator_of_names() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\"}\n    \n        def names():\n            yield \"B\"\n            yield \"C\"\n            yield \"A\"\n    \n        result = selected_values(values, names())\n    \n>       assert result == {\"C\": \"\", \"A\": \"1\"}\nE       AssertionError: assert {'A': '1', 'B': None, 'C': ''} == {'A': '1', 'C': ''}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:52: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_omits_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names\n3 failed, 9 passed in 0.06s\n",
+            "returncode": 1
+          }
+        ]
+      },
+      {
+        "index": 1,
+        "killed": true,
+        "runs": [
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_preserves_empty_strings",
+                23
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values",
+                15
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names",
+                52
+              ]
+            ],
+            "executed_tests": 12,
+            "output": "FF..F.......                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_returns_requested_non_none_values ____________\n\n    def test_selected_values_returns_requested_non_none_values() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\", \"D\": \"4\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"C\", \"D\"])\n    \n>       assert result == {\"A\": \"1\", \"C\": \"\", \"D\": \"4\"}\nE       AssertionError: assert {'A': '1', 'D': '4'} == {'A': '1', 'C': '', 'D': '4'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Right contains 1 more item:\nE         {'C': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:15: AssertionError\n_________________ test_selected_values_preserves_empty_strings _________________\n\n    def test_selected_values_preserves_empty_strings() -> None:\n        values = {\"EMPTY\": \"\", \"BLANK\": \"\"}\n    \n        result = selected_values(values, [\"EMPTY\", \"BLANK\"])\n    \n>       assert result == {\"EMPTY\": \"\", \"BLANK\": \"\"}\nE       AssertionError: assert {} == {'BLANK': '', 'EMPTY': ''}\nE         \nE         Right contains 2 more items:\nE         {'BLANK': '', 'EMPTY': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:23: AssertionError\n______________ test_selected_values_supports_a_generator_of_names ______________\n\n    def test_selected_values_supports_a_generator_of_names() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\"}\n    \n        def names():\n            yield \"B\"\n            yield \"C\"\n            yield \"A\"\n    \n        result = selected_values(values, names())\n    \n>       assert result == {\"C\": \"\", \"A\": \"1\"}\nE       AssertionError: assert {'A': '1'} == {'A': '1', 'C': ''}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Right contains 1 more item:\nE         {'C': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:52: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names\n3 failed, 9 passed in 0.09s\n",
+            "returncode": 1
+          },
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_preserves_empty_strings",
+                23
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values",
+                15
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names",
+                52
+              ]
+            ],
+            "executed_tests": 12,
+            "output": "FF..F.......                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_returns_requested_non_none_values ____________\n\n    def test_selected_values_returns_requested_non_none_values() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\", \"D\": \"4\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"C\", \"D\"])\n    \n>       assert result == {\"A\": \"1\", \"C\": \"\", \"D\": \"4\"}\nE       AssertionError: assert {'A': '1', 'D': '4'} == {'A': '1', 'C': '', 'D': '4'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Right contains 1 more item:\nE         {'C': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:15: AssertionError\n_________________ test_selected_values_preserves_empty_strings _________________\n\n    def test_selected_values_preserves_empty_strings() -> None:\n        values = {\"EMPTY\": \"\", \"BLANK\": \"\"}\n    \n        result = selected_values(values, [\"EMPTY\", \"BLANK\"])\n    \n>       assert result == {\"EMPTY\": \"\", \"BLANK\": \"\"}\nE       AssertionError: assert {} == {'BLANK': '', 'EMPTY': ''}\nE         \nE         Right contains 2 more items:\nE         {'BLANK': '', 'EMPTY': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:23: AssertionError\n______________ test_selected_values_supports_a_generator_of_names ______________\n\n    def test_selected_values_supports_a_generator_of_names() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\"}\n    \n        def names():\n            yield \"B\"\n            yield \"C\"\n            yield \"A\"\n    \n        result = selected_values(values, names())\n    \n>       assert result == {\"C\": \"\", \"A\": \"1\"}\nE       AssertionError: assert {'A': '1'} == {'A': '1', 'C': ''}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Right contains 1 more item:\nE         {'C': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:52: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names\n3 failed, 9 passed in 0.06s\n",
+            "returncode": 1
+          },
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_preserves_empty_strings",
+                23
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values",
+                15
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names",
+                52
+              ]
+            ],
+            "executed_tests": 12,
+            "output": "FF..F.......                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_returns_requested_non_none_values ____________\n\n    def test_selected_values_returns_requested_non_none_values() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\", \"D\": \"4\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"C\", \"D\"])\n    \n>       assert result == {\"A\": \"1\", \"C\": \"\", \"D\": \"4\"}\nE       AssertionError: assert {'A': '1', 'D': '4'} == {'A': '1', 'C': '', 'D': '4'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Right contains 1 more item:\nE         {'C': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:15: AssertionError\n_________________ test_selected_values_preserves_empty_strings _________________\n\n    def test_selected_values_preserves_empty_strings() -> None:\n        values = {\"EMPTY\": \"\", \"BLANK\": \"\"}\n    \n        result = selected_values(values, [\"EMPTY\", \"BLANK\"])\n    \n>       assert result == {\"EMPTY\": \"\", \"BLANK\": \"\"}\nE       AssertionError: assert {} == {'BLANK': '', 'EMPTY': ''}\nE         \nE         Right contains 2 more items:\nE         {'BLANK': '', 'EMPTY': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:23: AssertionError\n______________ test_selected_values_supports_a_generator_of_names ______________\n\n    def test_selected_values_supports_a_generator_of_names() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\"}\n    \n        def names():\n            yield \"B\"\n            yield \"C\"\n            yield \"A\"\n    \n        result = selected_values(values, names())\n    \n>       assert result == {\"C\": \"\", \"A\": \"1\"}\nE       AssertionError: assert {'A': '1'} == {'A': '1', 'C': ''}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Right contains 1 more item:\nE         {'C': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:52: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names\n3 failed, 9 passed in 0.04s\n",
+            "returncode": 1
+          }
+        ]
+      },
+      {
+        "index": 2,
+        "killed": true,
+        "runs": [
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_raises_keyerror_for_each_missing_name",
+                101
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_raises_keyerror_for_missing_name",
+                94
+              ]
+            ],
+            "executed_tests": 12,
+            "output": ".........FF.                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_raises_keyerror_for_missing_name _____________\n\n    def test_selected_values_raises_keyerror_for_missing_name() -> None:\n        values = {\"A\": \"1\"}\n    \n>       with pytest.raises(KeyError):\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:94: Failed\n__________ test_selected_values_raises_keyerror_for_each_missing_name __________\n\n    def test_selected_values_raises_keyerror_for_each_missing_name() -> None:\n        values = {}\n    \n>       with pytest.raises(KeyError):\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:101: Failed\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_raises_keyerror_for_missing_name\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_raises_keyerror_for_each_missing_name\n2 failed, 10 passed in 0.04s\n",
+            "returncode": 1
+          },
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_raises_keyerror_for_each_missing_name",
+                101
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_raises_keyerror_for_missing_name",
+                94
+              ]
+            ],
+            "executed_tests": 12,
+            "output": ".........FF.                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_raises_keyerror_for_missing_name _____________\n\n    def test_selected_values_raises_keyerror_for_missing_name() -> None:\n        values = {\"A\": \"1\"}\n    \n>       with pytest.raises(KeyError):\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:94: Failed\n__________ test_selected_values_raises_keyerror_for_each_missing_name __________\n\n    def test_selected_values_raises_keyerror_for_each_missing_name() -> None:\n        values = {}\n    \n>       with pytest.raises(KeyError):\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:101: Failed\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_raises_keyerror_for_missing_name\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_raises_keyerror_for_each_missing_name\n2 failed, 10 passed in 0.06s\n",
+            "returncode": 1
+          },
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_raises_keyerror_for_each_missing_name",
+                101
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_raises_keyerror_for_missing_name",
+                94
+              ]
+            ],
+            "executed_tests": 12,
+            "output": ".........FF.                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_raises_keyerror_for_missing_name _____________\n\n    def test_selected_values_raises_keyerror_for_missing_name() -> None:\n        values = {\"A\": \"1\"}\n    \n>       with pytest.raises(KeyError):\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:94: Failed\n__________ test_selected_values_raises_keyerror_for_each_missing_name __________\n\n    def test_selected_values_raises_keyerror_for_each_missing_name() -> None:\n        values = {}\n    \n>       with pytest.raises(KeyError):\n             ^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'KeyError'>\n\nbenchmark_tests/test_selected_values.py:101: Failed\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_raises_keyerror_for_missing_name\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_raises_keyerror_for_each_missing_name\n2 failed, 10 passed in 0.05s\n",
+            "returncode": 1
+          }
+        ]
+      },
+      {
+        "index": 3,
+        "killed": true,
+        "runs": [
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_accepts_any_input_mapping",
+                68
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_is_detached_from_later_input_changes",
+                88
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_preserves_empty_strings",
+                23
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_a_detached_mapping",
+                79
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values",
+                15
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_selects_only_requested_names",
+                39
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names",
+                52
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_repeated_names",
+                60
+              ]
+            ],
+            "executed_tests": 12,
+            "output": "FF.FFFFFF...                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_returns_requested_non_none_values ____________\n\n    def test_selected_values_returns_requested_non_none_values() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\", \"D\": \"4\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"C\", \"D\"])\n    \n>       assert result == {\"A\": \"1\", \"C\": \"\", \"D\": \"4\"}\nE       AssertionError: assert {'A': 'A', 'C': 'C', 'D': 'D'} == {'A': '1', 'C': '', 'D': '4'}\nE         \nE         Differing items:\nE         {'A': 'A'} != {'A': '1'}\nE         {'C': 'C'} != {'C': ''}\nE         {'D': 'D'} != {'D': '4'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:15: AssertionError\n_________________ test_selected_values_preserves_empty_strings _________________\n\n    def test_selected_values_preserves_empty_strings() -> None:\n        values = {\"EMPTY\": \"\", \"BLANK\": \"\"}\n    \n        result = selected_values(values, [\"EMPTY\", \"BLANK\"])\n    \n>       assert result == {\"EMPTY\": \"\", \"BLANK\": \"\"}\nE       AssertionError: assert {'BLANK': 'BL...PTY': 'EMPTY'} == {'BLANK': '', 'EMPTY': ''}\nE         \nE         Differing items:\nE         {'BLANK': 'BLANK'} != {'BLANK': ''}\nE         {'EMPTY': 'EMPTY'} != {'EMPTY': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:23: AssertionError\n______________ test_selected_values_selects_only_requested_names _______________\n\n    def test_selected_values_selects_only_requested_names() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\", \"C\": \"3\"}\n    \n        result = selected_values(values, [\"C\", \"A\"])\n    \n>       assert result == {\"C\": \"3\", \"A\": \"1\"}\nE       AssertionError: assert {'A': 'A', 'C': 'C'} == {'A': '1', 'C': '3'}\nE         \nE         Differing items:\nE         {'C': 'C'} != {'C': '3'}\nE         {'A': 'A'} != {'A': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:39: AssertionError\n______________ test_selected_values_supports_a_generator_of_names ______________\n\n    def test_selected_values_supports_a_generator_of_names() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\"}\n    \n        def names():\n            yield \"B\"\n            yield \"C\"\n            yield \"A\"\n    \n        result = selected_values(values, names())\n    \n>       assert result == {\"C\": \"\", \"A\": \"1\"}\nE       AssertionError: assert {'A': 'A', 'C': 'C'} == {'A': '1', 'C': ''}\nE         \nE         Differing items:\nE         {'C': 'C'} != {'C': ''}\nE         {'A': 'A'} != {'A': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:52: AssertionError\n_________________ test_selected_values_supports_repeated_names _________________\n\n    def test_selected_values_supports_repeated_names() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"A\"])\n    \n>       assert result == {\"A\": \"1\", \"B\": \"2\"}\nE       AssertionError: assert {'A': 'A', 'B': 'B'} == {'A': '1', 'B': '2'}\nE         \nE         Differing items:\nE         {'B': 'B'} != {'B': '2'}\nE         {'A': 'A'} != {'A': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:60: AssertionError\n________________ test_selected_values_accepts_any_input_mapping ________________\n\n    def test_selected_values_accepts_any_input_mapping() -> None:\n        values = ChainMap({\"A\": \"old\"}, {\"A\": \"new\", \"B\": \"2\"})\n    \n        result = selected_values(values, [\"A\", \"B\"])\n    \n>       assert result == {\"A\": \"old\", \"B\": \"2\"}\nE       AssertionError: assert {'A': 'A', 'B': 'B'} == {'A': 'old', 'B': '2'}\nE         \nE         Differing items:\nE         {'B': 'B'} != {'B': '2'}\nE         {'A': 'A'} != {'A': 'old'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:68: AssertionError\n_______________ test_selected_values_returns_a_detached_mapping ________________\n\n    def test_selected_values_returns_a_detached_mapping() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\"}\n    \n        result = selected_values(values, [\"A\", \"B\"])\n        result[\"A\"] = \"changed\"\n        result[\"C\"] = \"added\"\n    \n        assert values == {\"A\": \"1\", \"B\": \"2\"}\n>       assert result == {\"A\": \"changed\", \"B\": \"2\", \"C\": \"added\"}\nE       AssertionError: assert {'A': 'change... 'C': 'added'} == {'A': 'change... 'C': 'added'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Differing items:\nE         {'B': 'B'} != {'B': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:79: AssertionError\n__________ test_selected_values_is_detached_from_later_input_changes ___________\n\n    def test_selected_values_is_detached_from_later_input_changes() -> None:\n        values = {\"A\": \"1\"}\n    \n        result = selected_values(values, [\"A\"])\n        values[\"A\"] = \"changed\"\n    \n>       assert result == {\"A\": \"1\"}\nE       AssertionError: assert {'A': 'A'} == {'A': '1'}\nE         \nE         Differing items:\nE         {'A': 'A'} != {'A': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:88: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_selects_only_requested_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_repeated_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_accepts_any_input_mapping\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_a_detached_mapping\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_is_detached_from_later_input_changes\n8 failed, 4 passed in 0.07s\n",
+            "returncode": 1
+          },
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_accepts_any_input_mapping",
+                68
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_is_detached_from_later_input_changes",
+                88
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_preserves_empty_strings",
+                23
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_a_detached_mapping",
+                79
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values",
+                15
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_selects_only_requested_names",
+                39
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names",
+                52
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_repeated_names",
+                60
+              ]
+            ],
+            "executed_tests": 12,
+            "output": "FF.FFFFFF...                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_returns_requested_non_none_values ____________\n\n    def test_selected_values_returns_requested_non_none_values() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\", \"D\": \"4\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"C\", \"D\"])\n    \n>       assert result == {\"A\": \"1\", \"C\": \"\", \"D\": \"4\"}\nE       AssertionError: assert {'A': 'A', 'C': 'C', 'D': 'D'} == {'A': '1', 'C': '', 'D': '4'}\nE         \nE         Differing items:\nE         {'C': 'C'} != {'C': ''}\nE         {'A': 'A'} != {'A': '1'}\nE         {'D': 'D'} != {'D': '4'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:15: AssertionError\n_________________ test_selected_values_preserves_empty_strings _________________\n\n    def test_selected_values_preserves_empty_strings() -> None:\n        values = {\"EMPTY\": \"\", \"BLANK\": \"\"}\n    \n        result = selected_values(values, [\"EMPTY\", \"BLANK\"])\n    \n>       assert result == {\"EMPTY\": \"\", \"BLANK\": \"\"}\nE       AssertionError: assert {'BLANK': 'BL...PTY': 'EMPTY'} == {'BLANK': '', 'EMPTY': ''}\nE         \nE         Differing items:\nE         {'BLANK': 'BLANK'} != {'BLANK': ''}\nE         {'EMPTY': 'EMPTY'} != {'EMPTY': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:23: AssertionError\n______________ test_selected_values_selects_only_requested_names _______________\n\n    def test_selected_values_selects_only_requested_names() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\", \"C\": \"3\"}\n    \n        result = selected_values(values, [\"C\", \"A\"])\n    \n>       assert result == {\"C\": \"3\", \"A\": \"1\"}\nE       AssertionError: assert {'A': 'A', 'C': 'C'} == {'A': '1', 'C': '3'}\nE         \nE         Differing items:\nE         {'C': 'C'} != {'C': '3'}\nE         {'A': 'A'} != {'A': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:39: AssertionError\n______________ test_selected_values_supports_a_generator_of_names ______________\n\n    def test_selected_values_supports_a_generator_of_names() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\"}\n    \n        def names():\n            yield \"B\"\n            yield \"C\"\n            yield \"A\"\n    \n        result = selected_values(values, names())\n    \n>       assert result == {\"C\": \"\", \"A\": \"1\"}\nE       AssertionError: assert {'A': 'A', 'C': 'C'} == {'A': '1', 'C': ''}\nE         \nE         Differing items:\nE         {'C': 'C'} != {'C': ''}\nE         {'A': 'A'} != {'A': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:52: AssertionError\n_________________ test_selected_values_supports_repeated_names _________________\n\n    def test_selected_values_supports_repeated_names() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"A\"])\n    \n>       assert result == {\"A\": \"1\", \"B\": \"2\"}\nE       AssertionError: assert {'A': 'A', 'B': 'B'} == {'A': '1', 'B': '2'}\nE         \nE         Differing items:\nE         {'A': 'A'} != {'A': '1'}\nE         {'B': 'B'} != {'B': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:60: AssertionError\n________________ test_selected_values_accepts_any_input_mapping ________________\n\n    def test_selected_values_accepts_any_input_mapping() -> None:\n        values = ChainMap({\"A\": \"old\"}, {\"A\": \"new\", \"B\": \"2\"})\n    \n        result = selected_values(values, [\"A\", \"B\"])\n    \n>       assert result == {\"A\": \"old\", \"B\": \"2\"}\nE       AssertionError: assert {'A': 'A', 'B': 'B'} == {'A': 'old', 'B': '2'}\nE         \nE         Differing items:\nE         {'A': 'A'} != {'A': 'old'}\nE         {'B': 'B'} != {'B': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:68: AssertionError\n_______________ test_selected_values_returns_a_detached_mapping ________________\n\n    def test_selected_values_returns_a_detached_mapping() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\"}\n    \n        result = selected_values(values, [\"A\", \"B\"])\n        result[\"A\"] = \"changed\"\n        result[\"C\"] = \"added\"\n    \n        assert values == {\"A\": \"1\", \"B\": \"2\"}\n>       assert result == {\"A\": \"changed\", \"B\": \"2\", \"C\": \"added\"}\nE       AssertionError: assert {'A': 'change... 'C': 'added'} == {'A': 'change... 'C': 'added'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Differing items:\nE         {'B': 'B'} != {'B': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:79: AssertionError\n__________ test_selected_values_is_detached_from_later_input_changes ___________\n\n    def test_selected_values_is_detached_from_later_input_changes() -> None:\n        values = {\"A\": \"1\"}\n    \n        result = selected_values(values, [\"A\"])\n        values[\"A\"] = \"changed\"\n    \n>       assert result == {\"A\": \"1\"}\nE       AssertionError: assert {'A': 'A'} == {'A': '1'}\nE         \nE         Differing items:\nE         {'A': 'A'} != {'A': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:88: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_selects_only_requested_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_repeated_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_accepts_any_input_mapping\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_a_detached_mapping\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_is_detached_from_later_input_changes\n8 failed, 4 passed in 0.05s\n",
+            "returncode": 1
+          },
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_accepts_any_input_mapping",
+                68
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_is_detached_from_later_input_changes",
+                88
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_preserves_empty_strings",
+                23
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_a_detached_mapping",
+                79
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values",
+                15
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_selects_only_requested_names",
+                39
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names",
+                52
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_repeated_names",
+                60
+              ]
+            ],
+            "executed_tests": 12,
+            "output": "FF.FFFFFF...                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_returns_requested_non_none_values ____________\n\n    def test_selected_values_returns_requested_non_none_values() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\", \"D\": \"4\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"C\", \"D\"])\n    \n>       assert result == {\"A\": \"1\", \"C\": \"\", \"D\": \"4\"}\nE       AssertionError: assert {'A': 'A', 'C': 'C', 'D': 'D'} == {'A': '1', 'C': '', 'D': '4'}\nE         \nE         Differing items:\nE         {'D': 'D'} != {'D': '4'}\nE         {'A': 'A'} != {'A': '1'}\nE         {'C': 'C'} != {'C': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:15: AssertionError\n_________________ test_selected_values_preserves_empty_strings _________________\n\n    def test_selected_values_preserves_empty_strings() -> None:\n        values = {\"EMPTY\": \"\", \"BLANK\": \"\"}\n    \n        result = selected_values(values, [\"EMPTY\", \"BLANK\"])\n    \n>       assert result == {\"EMPTY\": \"\", \"BLANK\": \"\"}\nE       AssertionError: assert {'BLANK': 'BL...PTY': 'EMPTY'} == {'BLANK': '', 'EMPTY': ''}\nE         \nE         Differing items:\nE         {'BLANK': 'BLANK'} != {'BLANK': ''}\nE         {'EMPTY': 'EMPTY'} != {'EMPTY': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:23: AssertionError\n______________ test_selected_values_selects_only_requested_names _______________\n\n    def test_selected_values_selects_only_requested_names() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\", \"C\": \"3\"}\n    \n        result = selected_values(values, [\"C\", \"A\"])\n    \n>       assert result == {\"C\": \"3\", \"A\": \"1\"}\nE       AssertionError: assert {'A': 'A', 'C': 'C'} == {'A': '1', 'C': '3'}\nE         \nE         Differing items:\nE         {'A': 'A'} != {'A': '1'}\nE         {'C': 'C'} != {'C': '3'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:39: AssertionError\n______________ test_selected_values_supports_a_generator_of_names ______________\n\n    def test_selected_values_supports_a_generator_of_names() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\"}\n    \n        def names():\n            yield \"B\"\n            yield \"C\"\n            yield \"A\"\n    \n        result = selected_values(values, names())\n    \n>       assert result == {\"C\": \"\", \"A\": \"1\"}\nE       AssertionError: assert {'A': 'A', 'C': 'C'} == {'A': '1', 'C': ''}\nE         \nE         Differing items:\nE         {'A': 'A'} != {'A': '1'}\nE         {'C': 'C'} != {'C': ''}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:52: AssertionError\n_________________ test_selected_values_supports_repeated_names _________________\n\n    def test_selected_values_supports_repeated_names() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"A\"])\n    \n>       assert result == {\"A\": \"1\", \"B\": \"2\"}\nE       AssertionError: assert {'A': 'A', 'B': 'B'} == {'A': '1', 'B': '2'}\nE         \nE         Differing items:\nE         {'A': 'A'} != {'A': '1'}\nE         {'B': 'B'} != {'B': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:60: AssertionError\n________________ test_selected_values_accepts_any_input_mapping ________________\n\n    def test_selected_values_accepts_any_input_mapping() -> None:\n        values = ChainMap({\"A\": \"old\"}, {\"A\": \"new\", \"B\": \"2\"})\n    \n        result = selected_values(values, [\"A\", \"B\"])\n    \n>       assert result == {\"A\": \"old\", \"B\": \"2\"}\nE       AssertionError: assert {'A': 'A', 'B': 'B'} == {'A': 'old', 'B': '2'}\nE         \nE         Differing items:\nE         {'A': 'A'} != {'A': 'old'}\nE         {'B': 'B'} != {'B': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:68: AssertionError\n_______________ test_selected_values_returns_a_detached_mapping ________________\n\n    def test_selected_values_returns_a_detached_mapping() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\"}\n    \n        result = selected_values(values, [\"A\", \"B\"])\n        result[\"A\"] = \"changed\"\n        result[\"C\"] = \"added\"\n    \n        assert values == {\"A\": \"1\", \"B\": \"2\"}\n>       assert result == {\"A\": \"changed\", \"B\": \"2\", \"C\": \"added\"}\nE       AssertionError: assert {'A': 'change... 'C': 'added'} == {'A': 'change... 'C': 'added'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Differing items:\nE         {'B': 'B'} != {'B': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:79: AssertionError\n__________ test_selected_values_is_detached_from_later_input_changes ___________\n\n    def test_selected_values_is_detached_from_later_input_changes() -> None:\n        values = {\"A\": \"1\"}\n    \n        result = selected_values(values, [\"A\"])\n        values[\"A\"] = \"changed\"\n    \n>       assert result == {\"A\": \"1\"}\nE       AssertionError: assert {'A': 'A'} == {'A': '1'}\nE         \nE         Differing items:\nE         {'A': 'A'} != {'A': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:88: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_preserves_empty_strings\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_selects_only_requested_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_repeated_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_accepts_any_input_mapping\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_a_detached_mapping\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_is_detached_from_later_input_changes\n8 failed, 4 passed in 0.11s\n",
+            "returncode": 1
+          }
+        ]
+      },
+      {
+        "index": 4,
+        "killed": true,
+        "runs": [
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_accepts_an_empty_names_iterable",
+                110
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_is_detached_from_later_input_changes",
+                88
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_omits_none_values",
+                31
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_a_detached_mapping",
+                78
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values",
+                15
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_selects_only_requested_names",
+                39
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names",
+                52
+              ]
+            ],
+            "executed_tests": 12,
+            "output": "F.FFF..FF..F                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_returns_requested_non_none_values ____________\n\n    def test_selected_values_returns_requested_non_none_values() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\", \"D\": \"4\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"C\", \"D\"])\n    \n>       assert result == {\"A\": \"1\", \"C\": \"\", \"D\": \"4\"}\nE       AssertionError: assert {'A': '1', 'B... '', 'D': '4'} == {'A': '1', 'C': '', 'D': '4'}\nE         \nE         Omitting 3 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:15: AssertionError\n____________________ test_selected_values_omits_none_values ____________________\n\n    def test_selected_values_omits_none_values() -> None:\n        values = {\"NONE\": None, \"ALSO_NONE\": None}\n    \n        result = selected_values(values, [\"NONE\", \"ALSO_NONE\"])\n    \n>       assert result == {}\nE       AssertionError: assert {'ALSO_NONE':... 'NONE': None} == {}\nE         \nE         Left contains 2 more items:\nE         {'ALSO_NONE': None, 'NONE': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:31: AssertionError\n______________ test_selected_values_selects_only_requested_names _______________\n\n    def test_selected_values_selects_only_requested_names() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\", \"C\": \"3\"}\n    \n        result = selected_values(values, [\"C\", \"A\"])\n    \n>       assert result == {\"C\": \"3\", \"A\": \"1\"}\nE       AssertionError: assert {'A': '1', 'B': '2', 'C': '3'} == {'A': '1', 'C': '3'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:39: AssertionError\n______________ test_selected_values_supports_a_generator_of_names ______________\n\n    def test_selected_values_supports_a_generator_of_names() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\"}\n    \n        def names():\n            yield \"B\"\n            yield \"C\"\n            yield \"A\"\n    \n        result = selected_values(values, names())\n    \n>       assert result == {\"C\": \"\", \"A\": \"1\"}\nE       AssertionError: assert {'A': '1', 'B': None, 'C': ''} == {'A': '1', 'C': ''}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:52: AssertionError\n_______________ test_selected_values_returns_a_detached_mapping ________________\n\n    def test_selected_values_returns_a_detached_mapping() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\"}\n    \n        result = selected_values(values, [\"A\", \"B\"])\n        result[\"A\"] = \"changed\"\n        result[\"C\"] = \"added\"\n    \n>       assert values == {\"A\": \"1\", \"B\": \"2\"}\nE       AssertionError: assert {'A': 'change... 'C': 'added'} == {'A': '1', 'B': '2'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'A': 'changed'} != {'A': '1'}\nE         Left contains 1 more item:\nE         {'C': 'added'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:78: AssertionError\n__________ test_selected_values_is_detached_from_later_input_changes ___________\n\n    def test_selected_values_is_detached_from_later_input_changes() -> None:\n        values = {\"A\": \"1\"}\n    \n        result = selected_values(values, [\"A\"])\n        values[\"A\"] = \"changed\"\n    \n>       assert result == {\"A\": \"1\"}\nE       AssertionError: assert {'A': 'changed'} == {'A': '1'}\nE         \nE         Differing items:\nE         {'A': 'changed'} != {'A': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:88: AssertionError\n_____________ test_selected_values_accepts_an_empty_names_iterable _____________\n\n    def test_selected_values_accepts_an_empty_names_iterable() -> None:\n        values = {\"A\": \"1\", \"B\": None}\n    \n        result = selected_values(values, [])\n    \n>       assert result == {}\nE       AssertionError: assert {'A': '1', 'B': None} == {}\nE         \nE         Left contains 2 more items:\nE         {'A': '1', 'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:110: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_omits_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_selects_only_requested_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_a_detached_mapping\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_is_detached_from_later_input_changes\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_accepts_an_empty_names_iterable\n7 failed, 5 passed in 0.05s\n",
+            "returncode": 1
+          },
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_accepts_an_empty_names_iterable",
+                110
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_is_detached_from_later_input_changes",
+                88
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_omits_none_values",
+                31
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_a_detached_mapping",
+                78
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values",
+                15
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_selects_only_requested_names",
+                39
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names",
+                52
+              ]
+            ],
+            "executed_tests": 12,
+            "output": "F.FFF..FF..F                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_returns_requested_non_none_values ____________\n\n    def test_selected_values_returns_requested_non_none_values() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\", \"D\": \"4\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"C\", \"D\"])\n    \n>       assert result == {\"A\": \"1\", \"C\": \"\", \"D\": \"4\"}\nE       AssertionError: assert {'A': '1', 'B... '', 'D': '4'} == {'A': '1', 'C': '', 'D': '4'}\nE         \nE         Omitting 3 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:15: AssertionError\n____________________ test_selected_values_omits_none_values ____________________\n\n    def test_selected_values_omits_none_values() -> None:\n        values = {\"NONE\": None, \"ALSO_NONE\": None}\n    \n        result = selected_values(values, [\"NONE\", \"ALSO_NONE\"])\n    \n>       assert result == {}\nE       AssertionError: assert {'ALSO_NONE':... 'NONE': None} == {}\nE         \nE         Left contains 2 more items:\nE         {'ALSO_NONE': None, 'NONE': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:31: AssertionError\n______________ test_selected_values_selects_only_requested_names _______________\n\n    def test_selected_values_selects_only_requested_names() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\", \"C\": \"3\"}\n    \n        result = selected_values(values, [\"C\", \"A\"])\n    \n>       assert result == {\"C\": \"3\", \"A\": \"1\"}\nE       AssertionError: assert {'A': '1', 'B': '2', 'C': '3'} == {'A': '1', 'C': '3'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:39: AssertionError\n______________ test_selected_values_supports_a_generator_of_names ______________\n\n    def test_selected_values_supports_a_generator_of_names() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\"}\n    \n        def names():\n            yield \"B\"\n            yield \"C\"\n            yield \"A\"\n    \n        result = selected_values(values, names())\n    \n>       assert result == {\"C\": \"\", \"A\": \"1\"}\nE       AssertionError: assert {'A': '1', 'B': None, 'C': ''} == {'A': '1', 'C': ''}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:52: AssertionError\n_______________ test_selected_values_returns_a_detached_mapping ________________\n\n    def test_selected_values_returns_a_detached_mapping() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\"}\n    \n        result = selected_values(values, [\"A\", \"B\"])\n        result[\"A\"] = \"changed\"\n        result[\"C\"] = \"added\"\n    \n>       assert values == {\"A\": \"1\", \"B\": \"2\"}\nE       AssertionError: assert {'A': 'change... 'C': 'added'} == {'A': '1', 'B': '2'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'A': 'changed'} != {'A': '1'}\nE         Left contains 1 more item:\nE         {'C': 'added'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:78: AssertionError\n__________ test_selected_values_is_detached_from_later_input_changes ___________\n\n    def test_selected_values_is_detached_from_later_input_changes() -> None:\n        values = {\"A\": \"1\"}\n    \n        result = selected_values(values, [\"A\"])\n        values[\"A\"] = \"changed\"\n    \n>       assert result == {\"A\": \"1\"}\nE       AssertionError: assert {'A': 'changed'} == {'A': '1'}\nE         \nE         Differing items:\nE         {'A': 'changed'} != {'A': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:88: AssertionError\n_____________ test_selected_values_accepts_an_empty_names_iterable _____________\n\n    def test_selected_values_accepts_an_empty_names_iterable() -> None:\n        values = {\"A\": \"1\", \"B\": None}\n    \n        result = selected_values(values, [])\n    \n>       assert result == {}\nE       AssertionError: assert {'A': '1', 'B': None} == {}\nE         \nE         Left contains 2 more items:\nE         {'A': '1', 'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:110: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_omits_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_selects_only_requested_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_a_detached_mapping\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_is_detached_from_later_input_changes\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_accepts_an_empty_names_iterable\n7 failed, 5 passed in 0.07s\n",
+            "returncode": 1
+          },
+          {
+            "assertion_signature": [
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_accepts_an_empty_names_iterable",
+                110
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_is_detached_from_later_input_changes",
+                88
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_omits_none_values",
+                31
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_a_detached_mapping",
+                78
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values",
+                15
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_selects_only_requested_names",
+                39
+              ],
+              [
+                "benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names",
+                52
+              ]
+            ],
+            "executed_tests": 12,
+            "output": "F.FFF..FF..F                                                             [100%]\n=================================== FAILURES ===================================\n____________ test_selected_values_returns_requested_non_none_values ____________\n\n    def test_selected_values_returns_requested_non_none_values() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\", \"D\": \"4\"}\n    \n        result = selected_values(values, [\"A\", \"B\", \"C\", \"D\"])\n    \n>       assert result == {\"A\": \"1\", \"C\": \"\", \"D\": \"4\"}\nE       AssertionError: assert {'A': '1', 'B... '', 'D': '4'} == {'A': '1', 'C': '', 'D': '4'}\nE         \nE         Omitting 3 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:15: AssertionError\n____________________ test_selected_values_omits_none_values ____________________\n\n    def test_selected_values_omits_none_values() -> None:\n        values = {\"NONE\": None, \"ALSO_NONE\": None}\n    \n        result = selected_values(values, [\"NONE\", \"ALSO_NONE\"])\n    \n>       assert result == {}\nE       AssertionError: assert {'ALSO_NONE':... 'NONE': None} == {}\nE         \nE         Left contains 2 more items:\nE         {'ALSO_NONE': None, 'NONE': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:31: AssertionError\n______________ test_selected_values_selects_only_requested_names _______________\n\n    def test_selected_values_selects_only_requested_names() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\", \"C\": \"3\"}\n    \n        result = selected_values(values, [\"C\", \"A\"])\n    \n>       assert result == {\"C\": \"3\", \"A\": \"1\"}\nE       AssertionError: assert {'A': '1', 'B': '2', 'C': '3'} == {'A': '1', 'C': '3'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': '2'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:39: AssertionError\n______________ test_selected_values_supports_a_generator_of_names ______________\n\n    def test_selected_values_supports_a_generator_of_names() -> None:\n        values = {\"A\": \"1\", \"B\": None, \"C\": \"\"}\n    \n        def names():\n            yield \"B\"\n            yield \"C\"\n            yield \"A\"\n    \n        result = selected_values(values, names())\n    \n>       assert result == {\"C\": \"\", \"A\": \"1\"}\nE       AssertionError: assert {'A': '1', 'B': None, 'C': ''} == {'A': '1', 'C': ''}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Left contains 1 more item:\nE         {'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:52: AssertionError\n_______________ test_selected_values_returns_a_detached_mapping ________________\n\n    def test_selected_values_returns_a_detached_mapping() -> None:\n        values = {\"A\": \"1\", \"B\": \"2\"}\n    \n        result = selected_values(values, [\"A\", \"B\"])\n        result[\"A\"] = \"changed\"\n        result[\"C\"] = \"added\"\n    \n>       assert values == {\"A\": \"1\", \"B\": \"2\"}\nE       AssertionError: assert {'A': 'change... 'C': 'added'} == {'A': '1', 'B': '2'}\nE         \nE         Omitting 1 identical items, use -vv to show\nE         Differing items:\nE         {'A': 'changed'} != {'A': '1'}\nE         Left contains 1 more item:\nE         {'C': 'added'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:78: AssertionError\n__________ test_selected_values_is_detached_from_later_input_changes ___________\n\n    def test_selected_values_is_detached_from_later_input_changes() -> None:\n        values = {\"A\": \"1\"}\n    \n        result = selected_values(values, [\"A\"])\n        values[\"A\"] = \"changed\"\n    \n>       assert result == {\"A\": \"1\"}\nE       AssertionError: assert {'A': 'changed'} == {'A': '1'}\nE         \nE         Differing items:\nE         {'A': 'changed'} != {'A': '1'}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:88: AssertionError\n_____________ test_selected_values_accepts_an_empty_names_iterable _____________\n\n    def test_selected_values_accepts_an_empty_names_iterable() -> None:\n        values = {\"A\": \"1\", \"B\": None}\n    \n        result = selected_values(values, [])\n    \n>       assert result == {}\nE       AssertionError: assert {'A': '1', 'B': None} == {}\nE         \nE         Left contains 2 more items:\nE         {'A': '1', 'B': None}\nE         Use -v to get more diff\n\nbenchmark_tests/test_selected_values.py:110: AssertionError\n=========================== short test summary info ============================\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_requested_non_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_omits_none_values\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_selects_only_requested_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_supports_a_generator_of_names\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_returns_a_detached_mapping\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_is_detached_from_later_input_changes\nFAILED benchmark_tests/test_selected_values.py::test_selected_values_accepts_an_empty_names_iterable\n7 failed, 5 passed in 0.07s\n",
+            "returncode": 1
+          }
+        ]
+      }
+    ],
+    "pass": true,
+    "reason": "verification"
+  },
+  "watchdog_s": null
+}

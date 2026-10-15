@@ -1,0 +1,91 @@
+{
+  "budget": [
+    {
+      "label": "Calibration",
+      "value": 8
+    },
+    {
+      "label": "Measurement",
+      "value": 32
+    },
+    {
+      "label": "Recovery",
+      "value": 5
+    },
+    {
+      "label": "Fees / buffer",
+      "value": 5
+    }
+  ],
+  "calibration_policy": null,
+  "calibration_source_commit": null,
+  "calibration_status": "not_run",
+  "certification_status": "certified",
+  "certified_tasks": 9,
+  "compatibility_checks": {
+    "engine-core_wire_preserves_required_reasoning": true,
+    "engine_history_retains_reasoning_details": true,
+    "engine_stream_retains_reasoning_details": true,
+    "mini-swe-agent_wire_preserves_required_reasoning": true,
+    "native_effort_matches": true
+  },
+  "compatibility_status": "passed",
+  "pricing_status": "passed",
+  "published_attempts": 18,
+  "tasks": [
+    {
+      "audit": "pass",
+      "id": "tinydb-B",
+      "mutation_score": null,
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
+      "id": "chi-B",
+      "mutation_score": null,
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
+      "id": "dotenv-T",
+      "mutation_score": 1.0,
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
+      "id": "chi-N",
+      "mutation_score": null,
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
+      "id": "tinydb-X",
+      "mutation_score": null,
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
+      "id": "pqueue-B",
+      "mutation_score": null,
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
+      "id": "dotenv-X",
+      "mutation_score": null,
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
+      "id": "pqueue-X",
+      "mutation_score": null,
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
+      "id": "chi-X",
+      "mutation_score": null,
+      "status": "certified"
+    }
+  ]
+}

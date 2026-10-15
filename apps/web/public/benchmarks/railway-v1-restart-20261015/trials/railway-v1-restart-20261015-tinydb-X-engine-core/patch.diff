@@ -1,0 +1,112 @@
+diff --git a/benchmark_tests/test_flush.py b/benchmark_tests/test_flush.py
+new file mode 100644
+index 0000000..d377c0f
+--- /dev/null
++++ b/benchmark_tests/test_flush.py
+@@ -0,0 +1,56 @@
++"""Tests for TinyDB.flush and Storage.flush."""
++
++from typing import cast
++
++import pytest
++
++from tinydb import TinyDB
++from tinydb.middlewares import CachingMiddleware
++from tinydb.storages import JSONStorage, MemoryStorage
++
++
++def test_flush_memory_storage() -> None:
++    db = TinyDB(storage=MemoryStorage)
++    db.insert({'value': 42})
++
++    assert db.flush() is None
++    assert db.all()[0]['value'] == 42
++
++
++def test_flush_caching_middleware_persists_cache() -> None:
++    db = TinyDB(storage=CachingMiddleware(MemoryStorage))
++    middleware = cast(CachingMiddleware, db._storage)
++    middleware.WRITE_CACHE_SIZE = 1000
++
++    db.insert({'value': 42})
++
++    # The write is still cached in the middleware, not persisted.
++    memory = cast(MemoryStorage, middleware.storage)
++    assert memory.memory is None
++
++    db.flush()
++
++    assert memory.memory is not None
++    assert memory.memory['_default']['1']['value'] == 42
++
++
++def test_flush_closed_caching_middleware_raises() -> None:
++    db = TinyDB(storage=CachingMiddleware(MemoryStorage))
++    db.insert({'value': 42})
++    db.close()
++
++    with pytest.raises(ValueError, match='closed'):
++        db.flush()
++
++
++def test_flush_json_storage_persists(tmp_path) -> None:
++    path = str(tmp_path / 'x.json')
++
++    db = TinyDB(path, storage=JSONStorage)
++    db.insert({'value': 42})
++    db.flush()
++    db.close()
++
++    reopened = TinyDB(path, storage=JSONStorage)
++    assert reopened.all()[0]['value'] == 42
++    reopened.close()
+diff --git a/docs/api.rst b/docs/api.rst
+index e6c6f5f..001e727 100644
+--- a/docs/api.rst
++++ b/docs/api.rst
+@@ -128,6 +128,10 @@ details.
+ 
+             Optional: Close open file handles, etc.
+ 
++        .. method:: flush()
++
++            Optional: Flush cached data to disk.
++
+ ``tinydb.middlewares``
+ ----------------------
+ 
+diff --git a/tinydb/database.py b/tinydb/database.py
+index 0cd2b7e..f707c3c 100644
+--- a/tinydb/database.py
++++ b/tinydb/database.py
+@@ -229,6 +229,12 @@ class TinyDB(TableBase):
+         self._opened = False
+         self.storage.close()
+ 
++    def flush(self) -> None:
++        """
++        Flush any cached data to the underlying storage.
++        """
++        self.storage.flush()
++
+     def __enter__(self):
+         """
+         Use the database as a context manager.
+diff --git a/tinydb/storages.py b/tinydb/storages.py
+index 59337a1..371e976 100644
+--- a/tinydb/storages.py
++++ b/tinydb/storages.py
+@@ -75,6 +75,13 @@ class Storage(ABC):
+ 
+         pass
+ 
++    def flush(self) -> None:
++        """
++        Optional: Flush cached data to disk.
++        """
++
++        pass
++
+ 
+ class JSONStorage(Storage):
+     """

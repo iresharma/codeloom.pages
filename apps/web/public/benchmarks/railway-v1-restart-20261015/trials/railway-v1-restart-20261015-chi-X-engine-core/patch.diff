@@ -1,0 +1,214 @@
+diff --git a/middleware/content_type.go b/middleware/content_type.go
+index cdfc21e..7300bd2 100644
+--- a/middleware/content_type.go
++++ b/middleware/content_type.go
+@@ -7,12 +7,7 @@ import (
+ 
+ // SetHeader is a convenience handler to set a response header key/value
+ func SetHeader(key, value string) func(http.Handler) http.Handler {
+-	return func(next http.Handler) http.Handler {
+-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+-			w.Header().Set(key, value)
+-			next.ServeHTTP(w, r)
+-		})
+-	}
++	return SetHeaders(http.Header{key: []string{value}})
+ }
+ 
+ // AllowContentType enforces a whitelist of request Content-Types otherwise responds
+diff --git a/middleware/set_headers.go b/middleware/set_headers.go
+new file mode 100644
+index 0000000..7e2a4b6
+--- /dev/null
++++ b/middleware/set_headers.go
+@@ -0,0 +1,33 @@
++package middleware
++
++import "net/http"
++
++// SetHeaders is a convenience handler to set response headers from an
++// http.Header. The supplied headers are snapshotted when SetHeaders is called:
++// names are canonicalized and the map and every value slice are copied. On
++// each request the configured headers replace any response headers with the
++// same name (unlisted headers are left untouched) before the next handler
++// runs, and the response receives its own copy of the values so later
++// mutation cannot affect subsequent requests.
++func SetHeaders(headers http.Header) func(http.Handler) http.Handler {
++	if len(headers) == 0 {
++		return func(next http.Handler) http.Handler {
++			return next
++		}
++	}
++
++	cfg := make(http.Header, len(headers))
++	for name, values := range headers {
++		cfg[http.CanonicalHeaderKey(name)] = append([]string(nil), values...)
++	}
++
++	return func(next http.Handler) http.Handler {
++		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++			h := w.Header()
++			for name, values := range cfg {
++				h[name] = append([]string(nil), values...)
++			}
++			next.ServeHTTP(w, r)
++		})
++	}
++}
+diff --git a/middleware/set_headers_test.go b/middleware/set_headers_test.go
+new file mode 100644
+index 0000000..daef2ad
+--- /dev/null
++++ b/middleware/set_headers_test.go
+@@ -0,0 +1,151 @@
++package middleware
++
++import (
++	"net/http"
++	"net/http/httptest"
++	"reflect"
++	"testing"
++)
++
++func TestSetHeadersEmptyHeaderReturnsNext(t *testing.T) {
++	t.Parallel()
++
++	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
++
++	tests := []struct {
++		name    string
++		headers http.Header
++	}{
++		{"nil", nil},
++		{"empty", http.Header{}},
++	}
++
++	for _, tt := range tests {
++		t.Run(tt.name, func(t *testing.T) {
++			t.Parallel()
++
++			got := SetHeaders(tt.headers)(next)
++			if reflect.ValueOf(got).Pointer() != reflect.ValueOf(next).Pointer() {
++				t.Fatalf("SetHeaders(%v)(next) returned a different handler, want the original next handler", tt.headers)
++			}
++		})
++	}
++}
++
++func TestSetHeadersSnapshotAndReplacement(t *testing.T) {
++	t.Parallel()
++
++	lowerMulti := "x-multi"
++	lowerSingle := "x-single"
++
++	source := http.Header{}
++	source[lowerMulti] = []string{"one", "two"}
++	source[lowerSingle] = []string{"value"}
++
++	mw := SetHeaders(source)
++
++	// Mutate the caller's map and value slice after SetHeaders is created.
++	// SetHeaders snapshotted both, so these changes must not leak through.
++	source[lowerMulti][0] = "mutated"
++	source["X-Late"] = []string{"late"}
++
++	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		w.Header().Set("X-Downstream", "kept")
++	})
++
++	recorder := httptest.NewRecorder()
++	recorder.Header().Set("X-Multi", "replaced")
++	recorder.Header().Set("X-Keep", "before")
++
++	mw(next).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/", nil))
++
++	if got, want := recorder.Header().Values("X-Multi"), []string{"one", "two"}; !reflect.DeepEqual(got, want) {
++		t.Errorf("X-Multi = %v, want %v", got, want)
++	}
++	if got, want := recorder.Header().Get("X-Single"), "value"; got != want {
++		t.Errorf("X-Single = %q, want %q", got, want)
++	}
++	if got := recorder.Header().Get("X-Late"); got != "" {
++		t.Errorf("X-Late = %q, want it to be unset (source mutated after snapshot)", got)
++	}
++	if got, want := recorder.Header().Get("X-Keep"), "before"; got != want {
++		t.Errorf("X-Keep = %q, want %q (unlisted headers must be untouched)", got, want)
++	}
++	if got, want := recorder.Header().Get("X-Downstream"), "kept"; got != want {
++		t.Errorf("X-Downstream = %q, want %q", got, want)
++	}
++}
++
++func TestSetHeadersFreshValueSlices(t *testing.T) {
++	t.Parallel()
++
++	var firstValues []string
++	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		if firstValues == nil {
++			firstValues = w.Header()["X-Multi"]
++		}
++	})
++
++	mw := SetHeaders(http.Header{"X-Multi": {"one", "two"}})
++
++	first := httptest.NewRecorder()
++	mw(next).ServeHTTP(first, httptest.NewRequest(http.MethodGet, "/", nil))
++
++	if firstValues == nil {
++		t.Fatal("first request did not receive the configured X-Multi header")
++	}
++	firstValues[0] = "tampered"
++
++	second := httptest.NewRecorder()
++	mw(next).ServeHTTP(second, httptest.NewRequest(http.MethodGet, "/", nil))
++
++	if got, want := second.Header().Values("X-Multi"), []string{"one", "two"}; !reflect.DeepEqual(got, want) {
++		t.Errorf("X-Multi on second request = %v, want %v (value slices must not be shared)", got, want)
++	}
++}
++
++func TestSetHeaderDelegatesToSetHeaders(t *testing.T) {
++	t.Parallel()
++
++	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
++
++	recorder := httptest.NewRecorder()
++	recorder.Header().Set("X-Test", "old")
++
++	SetHeader("X-Test", "new")(next).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/", nil))
++
++	if got, want := recorder.Header().Get("X-Test"), "new"; got != want {
++		t.Errorf("X-Test = %q, want %q", got, want)
++	}
++}
++
++func TestSetHeadersCanonicalization(t *testing.T) {
++	t.Parallel()
++
++	// Test that various case-folded versions of the same header name all resolve to canonical form
++	// and replace the response headers correctly, proving canonicalization works.
++	source := http.Header{}
++	source["x-custom"] = []string{"value1"}
++	source["Content-Type"] = []string{"application/json"}
++	source["x-MIXED-case"] = []string{"mixed"}
++
++	mw := SetHeaders(source)
++
++	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		// Handler does nothing; middleware should have already set headers
++	})
++
++	recorder := httptest.NewRecorder()
++	mw(next).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/", nil))
++
++	// Verify the canonical forms are present in the response
++	if got, want := recorder.Header().Get("X-Custom"), "value1"; got != want {
++		t.Errorf("X-Custom = %q, want %q (canonicalization failed)", got, want)
++	}
++	if got, want := recorder.Header().Get("Content-Type"), "application/json"; got != want {
++		t.Errorf("Content-Type = %q, want %q (canonicalization failed)", got, want)
++	}
++	if got, want := recorder.Header().Get("X-Mixed-Case"), "mixed"; got != want {
++		t.Errorf("X-Mixed-Case = %q, want %q (canonicalization failed)", got, want)
++	}
++}

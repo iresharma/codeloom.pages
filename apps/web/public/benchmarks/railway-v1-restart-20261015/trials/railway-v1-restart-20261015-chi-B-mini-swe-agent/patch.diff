@@ -1,0 +1,81 @@
+diff --git a/benchmark_tests/context_reset_test.go b/benchmark_tests/context_reset_test.go
+new file mode 100644
+index 0000000..81ea835
+--- /dev/null
++++ b/benchmark_tests/context_reset_test.go
+@@ -0,0 +1,61 @@
++package benchmark_tests
++
++import (
++	"testing"
++
++	chi "github.com/go-chi/chi/v5"
++)
++
++func TestContextResetClearsURLParams(t *testing.T) {
++	rctx := chi.NewRouteContext()
++	rctx.Routes = chi.NewRouter()
++	rctx.RoutePath = "/old"
++	rctx.RouteMethod = "GET"
++	rctx.RoutePatterns = append(rctx.RoutePatterns, "/old")
++
++	// Simulate accumulated URL params from a previous request.
++	rctx.URLParams.Add("id", "outer")
++	rctx.URLParams.Add("id", "inner")
++
++	// Nested parameter precedence: the latest (innermost) duplicate key wins.
++	if got, want := rctx.URLParam("id"), "inner"; got != want {
++		t.Fatalf("URLParam precedence before reset: got %q, want %q", got, want)
++	}
++
++	oldKeysCap := cap(rctx.URLParams.Keys)
++	oldValuesCap := cap(rctx.URLParams.Values)
++
++	rctx.Reset()
++
++	if len(rctx.URLParams.Keys) != 0 {
++		t.Fatalf("Reset left URLParams.Keys behind: %#v", rctx.URLParams.Keys)
++	}
++	if len(rctx.URLParams.Values) != 0 {
++		t.Fatalf("Reset left URLParams.Values behind: %#v", rctx.URLParams.Values)
++	}
++	if got := rctx.URLParam("id"); got != "" {
++		t.Fatalf("Reset left URLParam(%q) available: %q", "id", got)
++	}
++
++	// Reset must reuse the already allocated backing arrays.
++	if cap(rctx.URLParams.Keys) != oldKeysCap {
++		t.Fatalf("URLParams.Keys capacity changed across Reset: got %d, want %d", cap(rctx.URLParams.Keys), oldKeysCap)
++	}
++	if cap(rctx.URLParams.Values) != oldValuesCap {
++		t.Fatalf("URLParams.Values capacity changed across Reset: got %d, want %d", cap(rctx.URLParams.Values), oldValuesCap)
++	}
++
++	// Other reset semantics should remain intact.
++	if rctx.Routes != nil {
++		t.Fatal("Reset did not nil Routes")
++	}
++	if rctx.RoutePath != "" {
++		t.Fatalf("Reset left RoutePath behind: %q", rctx.RoutePath)
++	}
++	if rctx.RouteMethod != "" {
++		t.Fatalf("Reset left RouteMethod behind: %q", rctx.RouteMethod)
++	}
++	if len(rctx.RoutePatterns) != 0 {
++		t.Fatalf("Reset left RoutePatterns behind: %#v", rctx.RoutePatterns)
++	}
++}
+diff --git a/context.go b/context.go
+index f6d51bf..c5c9a74 100644
+--- a/context.go
++++ b/context.go
+@@ -84,7 +84,8 @@ func (x *Context) Reset() {
+ 	x.RoutePath = ""
+ 	x.RouteMethod = ""
+ 	x.RoutePatterns = x.RoutePatterns[:0]
+-	// Regression: accumulated URLParams were not cleared.
++	x.URLParams.Keys = x.URLParams.Keys[:0]
++	x.URLParams.Values = x.URLParams.Values[:0]
+ 
+ 	x.routePattern = ""
+ 	x.routeParams.Keys = x.routeParams.Keys[:0]

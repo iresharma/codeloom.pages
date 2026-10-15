@@ -1,0 +1,288 @@
+diff --git a/benchmark_tests/test_strict.py b/benchmark_tests/test_strict.py
+new file mode 100644
+index 0000000..46b1b2d
+--- /dev/null
++++ b/benchmark_tests/test_strict.py
+@@ -0,0 +1,101 @@
++import io
++import os
++
++import dotenv
++import pytest
++from dotenv.main import DotEnv, DotEnvParseError
++
++
++def test_strict_stream_raises_dotenv_parse_error_with_line_and_none_path():
++    with pytest.raises(DotEnvParseError) as exc_info:
++        dotenv.dotenv_values(stream=io.StringIO("a=b\na: b\nc=d"), strict=True)
++
++    assert exc_info.value.line == 2
++    assert exc_info.value.path is None
++
++
++def test_lenient_stream_skips_invalid_lines():
++    assert dotenv.dotenv_values(stream=io.StringIO("a=b\na: b\nc=d")) == {
++        "a": "b",
++        "c": "d",
++    }
++
++
++def test_strict_path_raises_before_setting_environment(tmp_path, monkeypatch):
++    env_path = tmp_path / ".env"
++    env_path.write_text("A=set by file\nmalformed line\nB=also set by file\n")
++
++    with pytest.raises(DotEnvParseError) as exc_info:
++        dotenv.load_dotenv(env_path, strict=True)
++
++    assert exc_info.value.line == 2
++    assert exc_info.value.path == env_path
++    assert "A" not in os.environ
++    assert "B" not in os.environ
++
++
++def test_strict_pathlib_value(tmp_path):
++    env_path = tmp_path / ".env"
++    env_path.write_text("a: b\n")
++
++    with pytest.raises(DotEnvParseError) as exc_info:
++        dotenv.dotenv_values(env_path, strict=True)
++
++    assert exc_info.value.line == 1
++    assert exc_info.value.path == env_path
++    assert isinstance(exc_info.value, ValueError)
++
++
++def test_dotenv_class_strict_parameter(tmp_path):
++    env_path = tmp_path / ".env"
++    env_path.write_text("good=value\nbad: line\n")
++
++    with pytest.raises(DotEnvParseError) as exc_info:
++        DotEnv(env_path, strict=True).dict()
++
++    assert exc_info.value.line == 2
++    assert exc_info.value.path == env_path
++
++
++def run_dotenv_cli(args, env=None):
++    import subprocess
++    import sys
++
++    return subprocess.run(
++        [sys.executable, "-m", "dotenv", *args],
++        capture_output=True,
++        text=True,
++        env={**os.environ, **(env or {})},
++    )
++
++
++def test_cli_run_strict_rejects_malformed_file(tmp_path):
++    env_path = tmp_path / ".env"
++    env_path.write_text("A=x\nbad: line\n")
++
++    result = run_dotenv_cli(["--file", str(env_path), "run", "--strict", "printenv", "A"])
++
++    assert result.returncode != 0
++    assert "Invalid dotenv file" in result.stderr
++
++
++def test_cli_run_strict_accepts_valid_file(tmp_path):
++    import sys
++
++    env_path = tmp_path / ".env"
++    env_path.write_text("A=x\n")
++
++    result = run_dotenv_cli(
++        [
++            "--file",
++            str(env_path),
++            "run",
++            "--strict",
++            sys.executable,
++            "-c",
++            "import os; print(os.environ['A'])",
++        ]
++    )
++
++    assert result.returncode == 0
++    assert result.stdout == "x\n"
+diff --git a/src/dotenv/__init__.py b/src/dotenv/__init__.py
+index dde24a0..65d93d5 100644
+--- a/src/dotenv/__init__.py
++++ b/src/dotenv/__init__.py
+@@ -1,6 +1,6 @@
+ from typing import Any, Optional
+ 
+-from .main import dotenv_values, find_dotenv, get_key, load_dotenv, set_key, unset_key
++from .main import DotEnvParseError, dotenv_values, find_dotenv, get_key, load_dotenv, set_key, unset_key
+ 
+ 
+ def load_ipython_extension(ipython: Any) -> None:
+@@ -43,6 +43,7 @@ __all__ = [
+     "get_cli_string",
+     "load_dotenv",
+     "dotenv_values",
++    "DotEnvParseError",
+     "get_key",
+     "set_key",
+     "unset_key",
+diff --git a/src/dotenv/cli.py b/src/dotenv/cli.py
+index c06c706..4db609a 100644
+--- a/src/dotenv/cli.py
++++ b/src/dotenv/cli.py
+@@ -17,7 +17,7 @@ except ImportError:
+     )
+     sys.exit(1)
+ 
+-from .main import DotEnv, dotenv_values, set_key, unset_key
++from .main import DotEnv, DotEnvParseError, dotenv_values, set_key, unset_key
+ from .version import __version__
+ 
+ 
+@@ -189,19 +189,34 @@ def unset(ctx: click.Context, key: Any) -> None:
+     default=True,
+     help="Override variables from the environment file with those from the .env file.",
+ )
++@click.option(
++    "--strict",
++    is_flag=True,
++    default=False,
++    help="Fail if the .env file contains malformed lines.",
++)
+ @click.argument("commandline", nargs=-1, type=click.UNPROCESSED)
+-def run(ctx: click.Context, override: bool, commandline: tuple[str, ...]) -> None:
++def run(ctx: click.Context, override: bool, strict: bool, commandline: tuple[str, ...]) -> None:
+     """Run command with environment variables present."""
+     file = ctx.obj["FILE"]
+     if not os.path.isfile(file):
+         raise click.BadParameter(
+             f"Invalid value for '-f' \"{file}\" does not exist.", ctx=ctx
+         )
+-    dotenv_as_dict = {
+-        k: v
+-        for (k, v) in DotEnv(file, override=override, encoding="utf-8").dict().items()
+-        if v is not None and (override or k not in os.environ)
+-    }
++    try:
++        dotenv_as_dict = {
++            k: v
++            for (k, v) in DotEnv(
++                file, override=override, encoding="utf-8", strict=strict
++            )
++            .dict()
++            .items()
++            if v is not None and (override or k not in os.environ)
++        }
++    except DotEnvParseError as exc:
++        raise click.ClickException(
++            f"Invalid dotenv file {exc.path or ''} on line {exc.line}"
++        ) from exc
+ 
+     if not commandline:
+         click.echo("No command given.")
+diff --git a/src/dotenv/main.py b/src/dotenv/main.py
+index 5faa7f0..72f63f3 100644
+--- a/src/dotenv/main.py
++++ b/src/dotenv/main.py
+@@ -16,6 +16,17 @@ from .variables import parse_variables
+ # These paths may flow to `open()` and `os.replace()`.
+ StrPath = Union[str, "os.PathLike[str]"]
+ 
++
++class DotEnvParseError(ValueError):
++    """Raised when a malformed line is found in a dotenv file in strict mode."""
++
++    def __init__(self, line: int, path: Optional[StrPath]) -> None:
++        self.line = line
++        self.path = path
++        location = f" in {path}" if path is not None else ""
++        super().__init__(f"Invalid dotenv file on line {line}{location}")
++
++
+ logger = logging.getLogger(__name__)
+ 
+ 
+@@ -48,6 +59,7 @@ class DotEnv:
+         encoding: Optional[str] = None,
+         interpolate: bool = True,
+         override: bool = True,
++        strict: bool = False,
+     ) -> None:
+         self.dotenv_path: Optional[StrPath] = dotenv_path
+         if isinstance(dotenv_path, str):
+@@ -60,6 +72,7 @@ class DotEnv:
+         self.encoding: Optional[str] = encoding
+         self.interpolate: bool = interpolate
+         self.override: bool = override
++        self.strict: bool = strict
+ 
+     @contextmanager
+     def _get_stream(self) -> Iterator[IO[str]]:
+@@ -94,8 +107,18 @@ class DotEnv:
+ 
+     def parse(self) -> Iterator[Tuple[str, Optional[str]]]:
+         with self._get_stream() as stream:
+-            for mapping in with_warn_for_invalid_lines(parse_stream(stream)):
+-                if mapping.key is not None:
++            for mapping in parse_stream(stream):
++                if mapping.error:
++                    if self.strict:
++                        raise DotEnvParseError(
++                            line=mapping.original.line,
++                            path=self.dotenv_path if self.stream is None else None,
++                        )
++                    logger.warning(
++                        "python-dotenv could not parse statement starting at line %s",
++                        mapping.original.line,
++                    )
++                elif mapping.key is not None:
+                     yield mapping.key, mapping.value
+ 
+     def set_as_environment_variables(self) -> bool:
+@@ -435,6 +458,7 @@ def load_dotenv(
+     override: bool = False,
+     interpolate: bool = True,
+     encoding: Optional[str] = "utf-8",
++    strict: bool = False,
+ ) -> bool:
+     """Parse a .env file and then load all the variables found as environment variables.
+ 
+@@ -448,6 +472,8 @@ def load_dotenv(
+             from the `.env` file.
+         interpolate: Whether to interpolate variables using POSIX variable expansion.
+         encoding: Encoding to be used to read the file.
++        strict: Whether to raise an error for malformed lines instead of
++            skipping them.
+     Returns:
+         Bool: True if at least one environment variable is set else False
+ 
+@@ -475,6 +501,7 @@ def load_dotenv(
+         interpolate=interpolate,
+         override=override,
+         encoding=encoding,
++        strict=strict,
+     )
+     return dotenv.set_as_environment_variables()
+ 
+@@ -485,6 +512,7 @@ def dotenv_values(
+     verbose: bool = False,
+     interpolate: bool = True,
+     encoding: Optional[str] = "utf-8",
++    strict: bool = False,
+ ) -> Dict[str, Optional[str]]:
+     """
+     Parse a .env file and return its content as a dict.
+@@ -500,6 +528,8 @@ def dotenv_values(
+         verbose: Whether to output a warning if the .env file is missing.
+         interpolate: Whether to interpolate variables using POSIX variable expansion.
+         encoding: Encoding to be used to read the file.
++        strict: Whether to raise an error for malformed lines instead of
++            skipping them.
+ 
+     If both `dotenv_path` and `stream` are `None`, `find_dotenv()` is used to find the
+     .env file.
+@@ -514,6 +544,7 @@ def dotenv_values(
+         interpolate=interpolate,
+         override=True,
+         encoding=encoding,
++        strict=strict,
+     ).dict()

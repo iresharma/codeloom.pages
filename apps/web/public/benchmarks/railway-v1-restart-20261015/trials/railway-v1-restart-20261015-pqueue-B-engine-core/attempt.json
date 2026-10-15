@@ -1,0 +1,13 @@
+{
+  "budget_policy": "actual-spend",
+  "call_limit_multiplier": 3,
+  "difficulty": "medium",
+  "id": "railway-v1-restart-20261015-pqueue-B-engine-core",
+  "limit_usd": 2,
+  "retry_of": null,
+  "stage": "measured",
+  "started_at": 1792080115.5822527,
+  "system": "engine-core",
+  "task_id": "pqueue-B",
+  "watchdog_s": null
+}

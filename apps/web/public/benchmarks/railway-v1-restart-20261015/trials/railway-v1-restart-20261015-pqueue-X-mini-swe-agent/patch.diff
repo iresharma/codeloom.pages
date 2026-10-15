@@ -1,0 +1,285 @@
+diff --git a/benchmark_tests/setPriorities.test.ts b/benchmark_tests/setPriorities.test.ts
+new file mode 100644
+index 0000000..b0b4d44
+--- /dev/null
++++ b/benchmark_tests/setPriorities.test.ts
+@@ -0,0 +1,158 @@
++/* eslint-disable unicorn/filename-case -- The task requires this directory name. */
++import {test} from 'node:test';
++import assert from 'node:assert/strict';
++import pDefer from 'p-defer';
++import PQueue, {type Queue, type QueueAddOptions, type RunFunction} from '../source/index.js';
++import PriorityQueue from '../source/priority-queue.js';
++
++// A custom queue that intentionally lacks the bulk method.
++class FifoQueueWithoutBulk implements Queue<RunFunction, QueueAddOptions> {
++	readonly #items: Array<{run: RunFunction; id: string | undefined}> = [];
++
++	get size() {
++		return this.#items.length;
++	}
++
++	enqueue(run: RunFunction, options?: Partial<QueueAddOptions>) {
++		this.#items.push({run, id: options?.id});
++	}
++
++	dequeue() {
++		return this.#items.shift()?.run;
++	}
++
++	filter() {
++		return this.#items.map(({run}) => run);
++	}
++
++	setPriority() {
++		// Bulk updates are validated by PQueue before this fallback.
++	}
++
++	remove(id: string) {
++		const index = this.#items.findIndex(item => item.id === id);
++		if (index !== -1) {
++			this.#items.splice(index, 1);
++		}
++	}
++}
++
++test('setPriorities is a no-op for an empty batch', async () => {
++	const queue = new PQueue({concurrency: 1, autoStart: false});
++	queue.add(async () => 1, {id: 'a'});
++	assert.equal(queue.size, 1);
++	queue.setPriorities([]);
++	assert.equal(queue.size, 1);
++	queue.start();
++	await queue.onIdle();
++});
++
++test('setPriorities validates the whole batch before mutating', async () => {
++	const queue = new PQueue({concurrency: 1, autoStart: false});
++	const order: string[] = [];
++	const task = (name: string) => () => {
++		order.push(name);
++	};
++
++	queue.add(task('a'), {id: 'a', priority: 1});
++	queue.add(task('b'), {id: 'b', priority: 2});
++
++	assert.throws(() => {
++		queue.setPriorities([{id: 'a', priority: 10}, {id: 'b', priority: NaN}]);
++	}, {name: 'TypeError'});
++
++	assert.throws(() => {
++		queue.setPriorities([{id: 'a', priority: 10}, {id: 'missing', priority: 5}]);
++	}, {name: 'ReferenceError'});
++
++	queue.start();
++	await queue.onIdle();
++	assert.deepEqual(order, ['b', 'a']);
++});
++
++test('setPriorities keeps waiting-task metadata consistent', async () => {
++	const queue = new PQueue({concurrency: 1});
++	const {promise, resolve} = pDefer();
++
++	let priorityWhileRunning: number | undefined;
++	queue.add(async () => promise);
++	queue.add(() => {
++		priorityWhileRunning = queue.runningTasks.find(({id}) => id === 'task')?.priority;
++	}, {id: 'task', priority: 1});
++	queue.setPriorities([{id: 'task', priority: 5}, {id: 'task', priority: -2}]);
++	resolve();
++	await queue.onIdle();
++	assert.equal(priorityWhileRunning, -2);
++});
++
++test('setPriorities duplicate IDs apply in order and last wins', async () => {
++	const queue = new PQueue({concurrency: 1, autoStart: false});
++	const order: string[] = [];
++	const task = (name: string) => () => {
++		order.push(name);
++	};
++
++	queue.add(task('low'), {id: 'low', priority: 0});
++	queue.add(task('movable'), {id: 'movable', priority: 1});
++	queue.add(task('high'), {id: 'high', priority: 2});
++
++	queue.setPriorities([
++		{id: 'movable', priority: 10},
++		{id: 'movable', priority: 3},
++	]);
++
++	queue.start();
++	await queue.onIdle();
++	assert.deepEqual(order, ['movable', 'high', 'low']);
++});
++
++test('setPriorities falls back to validated single updates for custom queues without bulk', async () => {
++	const instances: FifoQueueWithoutBulk[] = [];
++	class RecordingFifoQueue extends FifoQueueWithoutBulk {
++		readonly calls: Array<[id: string, priority: number]> = [];
++
++		constructor() {
++			super();
++			instances.push(this);
++		}
++
++		override setPriority(id: string, priority: number) {
++			this.calls.push([id, priority]);
++		}
++	}
++
++	const queue = new PQueue({concurrency: 1, autoStart: false, queueClass: RecordingFifoQueue});
++	const order: string[] = [];
++	const task = (name: string) => () => {
++		order.push(name);
++	};
++
++	queue.add(task('first'), {id: 'first'});
++	queue.add(task('second'), {id: 'second'});
++
++	assert.throws(() => {
++		queue.setPriorities([{id: 'first', priority: 1}, {id: 'second', priority: Infinity}]);
++	}, {name: 'TypeError'});
++	assert.deepEqual(instances[0]!.calls, []);
++
++	queue.setPriorities([{id: 'second', priority: 9}, {id: 'first', priority: 4}]);
++	queue.start();
++	await queue.onIdle();
++	assert.deepEqual(instances[0]!.calls, [['second', 9], ['first', 4]]);
++	assert.deepEqual(order, ['first', 'second']);
++});
++
++test('PriorityQueue.setPriorities applies bulk updates with single-update ordering', () => {
++	const queue = new PriorityQueue();
++	const a = async () => 'a';
++	const b = async () => 'b';
++	const c = async () => 'c';
++	queue.enqueue(a, {id: 'a', priority: 0});
++	queue.enqueue(b, {id: 'b', priority: 1});
++	queue.enqueue(c, {id: 'c', priority: 2});
++
++	queue.setPriorities([{id: 'a', priority: 5}, {id: 'c', priority: 3}]);
++	assert.equal(queue.dequeue(), a);
++	assert.equal(queue.dequeue(), c);
++	assert.equal(queue.dequeue(), b);
++});
+diff --git a/source/index.ts b/source/index.ts
+index 2b9b9e5..3f7c274 100644
+--- a/source/index.ts
++++ b/source/index.ts
+@@ -610,6 +610,16 @@ export default class PQueue<QueueType extends Queue<RunFunction, EnqueueOptionsT
+ 		}
+ 	}
+ 
++	#findWaitingTask(id: string): WaitingTask | undefined {
++		for (const waitingTask of this.#waitingTasks) {
++			if (waitingTask.id === id) {
++				return waitingTask;
++			}
++		}
++
++		return undefined;
++	}
++
+ 	async #add<TaskResultType>(function_: Task<TaskResultType>, options: Partial<EnqueueOptionsType>, waitingTask: WaitingTask): Promise<Awaited<TaskResultType>> {
+ 		// Assign unique ID if not provided
+ 		const id = options.id ?? (this.#idAssigner++).toString();
+@@ -840,17 +850,51 @@ export default class PQueue<QueueType extends Queue<RunFunction, EnqueueOptionsT
+ 		}
+ 
+ 		// Checked here, not only in `PriorityQueue`, so that it also throws with a custom queue class.
+-		for (const waitingTask of this.#waitingTasks) {
+-			if (waitingTask.id === id) {
+-				this.#queue.setPriority(id, priority);
+-				waitingTask.priority = priority;
+-				return;
+-			}
++		const waitingTask = this.#findWaitingTask(id);
++		if (waitingTask) {
++			this.#queue.setPriority(id, priority);
++			waitingTask.priority = priority;
++			return;
+ 		}
+ 
+ 		throw new ReferenceError(`No promise function with the id "${id}" exists in the queue.`);
+ 	}
+ 
++	setPriorities(updates: ReadonlyArray<{id: string; priority: number}>): void {
++		if (updates.length === 0) {
++			return;
++		}
++
++		// Validate the entire batch before the first change, so a rejected batch leaves the queue as it was.
++		for (const {id, priority} of updates) {
++			if (typeof priority !== 'number' || !Number.isFinite(priority)) {
++				throw new TypeError(`Expected \`priority\` to be a finite number, got \`${priority}\` (${typeof priority})`);
++			}
++
++			if (this.#findWaitingTask(id) === undefined) {
++				throw new ReferenceError(`No promise function with the id "${id}" exists in the queue.`);
++			}
++		}
++
++		if (typeof this.#queue.setPriorities === 'function') {
++			this.#queue.setPriorities(updates);
++
++			for (const {id, priority} of updates) {
++				const waitingTask = this.#findWaitingTask(id);
++				if (waitingTask) {
++					waitingTask.priority = priority;
++				}
++			}
++
++			return;
++		}
++
++		// Custom queues without the bulk method still get fully validated updates.
++		for (const {id, priority} of updates) {
++			this.setPriority(id, priority);
++		}
++	}
++
+ 	/**
+ 	Adds a sync or async task to the queue.
+ 
+diff --git a/source/priority-queue.ts b/source/priority-queue.ts
+index c0c8642..5077c46 100644
+--- a/source/priority-queue.ts
++++ b/source/priority-queue.ts
+@@ -104,6 +104,26 @@ export default class PriorityQueue implements Queue<RunFunction, PriorityQueueOp
+ 		this.enqueue(item!.run, {priority, id});
+ 	}
+ 
++	setPriorities(updates: ReadonlyArray<{id: string; priority: number}>): void {
++		if (updates.length === 0) {
++			return;
++		}
++
++		for (const {id, priority} of updates) {
++			if (typeof priority !== 'number' || !Number.isFinite(priority)) {
++				throw new TypeError(`Expected \`priority\` to be a finite number, got \`${priority}\` (${typeof priority})`);
++			}
++
++			if (this.#findIndex(element => element.id === id) === -1) {
++				throw new ReferenceError(`No promise function with the id "${id}" exists in the queue.`);
++			}
++		}
++
++		for (const {id, priority} of updates) {
++			this.setPriority(id, priority);
++		}
++	}
++
+ 	remove(id: string): void;
+ 	remove(run: RunFunction): void;
+ 	remove(idOrRun: string | RunFunction): void {
+diff --git a/source/queue.ts b/source/queue.ts
+index b1c256a..58c1610 100644
+--- a/source/queue.ts
++++ b/source/queue.ts
+@@ -6,5 +6,6 @@ export type Queue<Element, Options> = {
+ 	dequeue: () => Element | undefined;
+ 	enqueue: (run: Element, options?: Partial<Options>) => void;
+ 	setPriority: (id: string, priority: number) => void;
++	setPriorities?: (updates: ReadonlyArray<{id: string; priority: number}>) => void;
+ 	remove: (id: string) => void;
+ };

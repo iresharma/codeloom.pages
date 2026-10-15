@@ -17,8 +17,11 @@
       "value": 5
     }
   ],
-  "certification_status": "stale",
-  "certified_tasks": 0,
+  "calibration_policy": null,
+  "calibration_source_commit": null,
+  "calibration_status": "not_run",
+  "certification_status": "certified",
+  "certified_tasks": 9,
   "compatibility_checks": {
     "engine-core_wire_preserves_required_reasoning": true,
     "engine_history_retains_reasoning_details": true,
@@ -28,67 +31,61 @@
   },
   "compatibility_status": "passed",
   "pricing_status": "passed",
-  "published_attempts": 0,
+  "published_attempts": 18,
   "tasks": [
     {
-      "audit": "unknown",
-      "id": "chi-B",
-      "mutation_score": null,
-      "status": "stale"
-    },
-    {
-      "audit": "unknown",
-      "id": "chi-N",
-      "mutation_score": null,
-      "status": "stale"
-    },
-    {
-      "audit": "unknown",
-      "id": "chi-X",
-      "mutation_score": null,
-      "status": "stale"
-    },
-    {
-      "audit": "unknown",
-      "id": "dotenv-T",
-      "mutation_score": null,
-      "status": "stale"
-    },
-    {
-      "audit": "unknown",
-      "id": "dotenv-X",
-      "mutation_score": null,
-      "status": "stale"
-    },
-    {
-      "audit": "unknown",
-      "id": "pqueue-B",
-      "mutation_score": null,
-      "status": "stale"
-    },
-    {
-      "audit": "unknown",
-      "id": "pqueue-T",
-      "mutation_score": null,
-      "status": "stale"
-    },
-    {
-      "audit": "unknown",
-      "id": "pqueue-X",
-      "mutation_score": null,
-      "status": "stale"
-    },
-    {
-      "audit": "unknown",
+      "audit": "pass",
       "id": "tinydb-B",
       "mutation_score": null,
-      "status": "stale"
+      "status": "certified"
     },
     {
-      "audit": "unknown",
+      "audit": "pass",
+      "id": "chi-B",
+      "mutation_score": null,
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
+      "id": "dotenv-T",
+      "mutation_score": 1.0,
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
+      "id": "chi-N",
+      "mutation_score": null,
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
       "id": "tinydb-X",
       "mutation_score": null,
-      "status": "stale"
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
+      "id": "pqueue-B",
+      "mutation_score": null,
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
+      "id": "dotenv-X",
+      "mutation_score": null,
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
+      "id": "pqueue-X",
+      "mutation_score": null,
+      "status": "certified"
+    },
+    {
+      "audit": "pass",
+      "id": "chi-X",
+      "mutation_score": null,
+      "status": "certified"
     }
   ]
 }

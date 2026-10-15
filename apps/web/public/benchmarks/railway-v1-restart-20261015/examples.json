@@ -1,0 +1,33 @@
+{
+  "examples": [
+    {
+      "artifact_path": "trials/railway-v1-restart-20261015-tinydb-B-mini-swe-agent/",
+      "attempt_id": "railway-v1-restart-20261015-tinydb-B-mini-swe-agent",
+      "outcome": "pass",
+      "system": "mini-swe-agent",
+      "task_id": "tinydb-B"
+    },
+    {
+      "artifact_path": "trials/railway-v1-restart-20261015-chi-N-mini-swe-agent/",
+      "attempt_id": "railway-v1-restart-20261015-chi-N-mini-swe-agent",
+      "outcome": "fail",
+      "system": "mini-swe-agent",
+      "task_id": "chi-N"
+    },
+    {
+      "artifact_path": "trials/railway-v1-restart-20261015-tinydb-B-engine-core/",
+      "attempt_id": "railway-v1-restart-20261015-tinydb-B-engine-core",
+      "outcome": "pass",
+      "system": "engine-core",
+      "task_id": "tinydb-B"
+    },
+    {
+      "artifact_path": "trials/railway-v1-restart-20261015-chi-N-engine-core/",
+      "attempt_id": "railway-v1-restart-20261015-chi-N-engine-core",
+      "outcome": "fail",
+      "system": "engine-core",
+      "task_id": "chi-N"
+    }
+  ],
+  "selection": "First pass/fail per system by sorted task ID; all attempts remain downloadable"
+}

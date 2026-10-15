@@ -1,0 +1,110 @@
+diff --git a/benchmark_tests/test_selected_values.py b/benchmark_tests/test_selected_values.py
+new file mode 100644
+index 0000000..b4f8569
+--- /dev/null
++++ b/benchmark_tests/test_selected_values.py
+@@ -0,0 +1,104 @@
++"""Tests for dotenv.main.selected_values."""
++
++from types import MappingProxyType
++
++import pytest
++
++from dotenv.main import selected_values
++
++
++@pytest.mark.parametrize(
++    ("values", "names", "expected"),
++    [
++        ({"a": "1", "b": "2", "c": "3"}, ["c", "a"], {"c": "3", "a": "1"}),
++        ({"a": "1", "b": "2"}, ["b", "a"], {"b": "2", "a": "1"}),
++        ({"a": "1"}, [], {}),
++        ({}, [], {}),
++    ],
++)
++def test_selects_requested_names_in_order(values, names, expected):
++    result = selected_values(values, names)
++
++    assert result == expected
++    assert list(result) == list(expected)
++
++
++def test_omits_none_values():
++    result = selected_values(
++        {"a": None, "b": "2", "c": None, "d": "4"},
++        ["a", "b", "c", "d"],
++    )
++
++    assert result == {"b": "2", "d": "4"}
++    assert "a" not in result
++    assert "c" not in result
++
++
++def test_preserves_empty_strings():
++    result = selected_values({"empty": "", "none": None}, ["empty", "none"])
++
++    assert result == {"empty": ""}
++
++
++@pytest.mark.parametrize("value", ["0", "false"])
++def test_preserves_other_falsy_non_none_values(value):
++    result = selected_values({"key": value}, ["key"])
++
++    assert result == {"key": value}
++
++
++def test_supports_repeated_names():
++    result = selected_values(
++        {"a": "1", "b": "2"},
++        ["a", "a", "b", "a", "b"],
++    )
++
++    assert result == {"a": "1", "b": "2"}
++    assert list(result) == ["a", "b"]
++
++
++def test_supports_generator_names():
++    result = selected_values(
++        {"a": "1", "b": "2", "c": "3"},
++        (name for name in ["a", "c"]),
++    )
++
++    assert result == {"a": "1", "c": "3"}
++    assert list(result) == ["a", "c"]
++
++
++def test_returns_detached_mapping():
++    values = {"a": "1"}
++    result = selected_values(values, ["a"])
++
++    assert result is not values
++    assert type(result) is dict
++
++    result["b"] = "2"
++    assert values == {"a": "1"}
++
++    values["c"] = "3"
++    assert result == {"a": "1", "b": "2"}
++
++
++def test_accepts_any_mapping():
++    values = MappingProxyType({"a": "1", "b": None})
++
++    result = selected_values(values, ["a", "b"])
++
++    assert result == {"a": "1"}
++
++
++@pytest.mark.parametrize(
++    ("values", "names", "missing"),
++    [
++        ({}, ["missing"], "missing"),
++        ({"a": "1"}, ["a", "missing"], "missing"),
++        ({"a": None}, ["a", "missing"], "missing"),
++    ],
++)
++def test_raises_keyerror_for_missing_name(values, names, missing):
++    with pytest.raises(KeyError) as exc_info:
++        selected_values(values, names)
++
++    assert exc_info.value.args == (missing,)

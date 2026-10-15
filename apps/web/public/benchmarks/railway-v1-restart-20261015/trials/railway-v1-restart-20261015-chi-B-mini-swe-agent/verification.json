@@ -1,0 +1,20 @@
+{
+  "checks": [
+    {
+      "command": "go test ./...",
+      "kind": "trusted",
+      "output": "ok  \tgithub.com/go-chi/chi/v5\t6.941s\nok  \tgithub.com/go-chi/chi/v5/benchmark_tests\t0.014s\nok  \tgithub.com/go-chi/chi/v5/middleware\t26.306s\n",
+      "repeat": 0,
+      "returncode": 0
+    },
+    {
+      "command": "go test -count=1 -run TestBenchmarkReset .",
+      "kind": "hidden",
+      "output": "ok  \tgithub.com/go-chi/chi/v5\t0.004s\n",
+      "repeat": 0,
+      "returncode": 0
+    }
+  ],
+  "pass": true,
+  "reason": "verification"
+}

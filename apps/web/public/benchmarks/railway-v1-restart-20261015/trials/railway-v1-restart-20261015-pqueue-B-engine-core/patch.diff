@@ -1,0 +1,42 @@
+diff --git a/source/priority-queue.ts b/source/priority-queue.ts
+index 5251e14..c0c8642 100644
+--- a/source/priority-queue.ts
++++ b/source/priority-queue.ts
+@@ -90,7 +90,7 @@ export default class PriorityQueue implements Queue<RunFunction, PriorityQueueOp
+ 	}
+ 
+ 	setPriority(id: string, priority: number) {
+-		const index = this.#findIndex(element => element.id !== id);
++		const index = this.#findIndex(element => element.id === id);
+ 		if (index === -1) {
+ 			throw new ReferenceError(`No promise function with the id "${id}" exists in the queue.`);
+ 		}
+diff --git a/test/priority-queue-set-priority.ts b/test/priority-queue-set-priority.ts
+new file mode 100644
+index 0000000..fc7dfdc
+--- /dev/null
++++ b/test/priority-queue-set-priority.ts
+@@ -0,0 +1,23 @@
++import {test} from 'node:test';
++import assert from 'node:assert/strict';
++import PriorityQueue from '../source/priority-queue.js';
++
++const createRun = (value: string) => async () => value;
++
++test('PriorityQueue setPriority matches the requested id, not the first other id', () => {
++	const matchingQueue = new PriorityQueue();
++	const firstBackgroundRun = createRun('first');
++	const secondTargetRun = createRun('second');
++	const thirdBackgroundRun = createRun('third');
++
++	matchingQueue.enqueue(firstBackgroundRun, {id: 'first'});
++	matchingQueue.enqueue(secondTargetRun, {id: 'second'});
++	matchingQueue.enqueue(thirdBackgroundRun, {id: 'third'});
++
++	matchingQueue.setPriority('second', 1);
++
++	assert.deepEqual(
++		[matchingQueue.dequeue(), matchingQueue.dequeue(), matchingQueue.dequeue()],
++		[secondTargetRun, firstBackgroundRun, thirdBackgroundRun],
++	);
++});

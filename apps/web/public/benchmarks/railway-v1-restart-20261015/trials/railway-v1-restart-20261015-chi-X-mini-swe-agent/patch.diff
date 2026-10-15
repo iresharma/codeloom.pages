@@ -1,0 +1,72 @@
+diff --git a/middleware/content_type.go b/middleware/content_type.go
+index cdfc21e..7300bd2 100644
+--- a/middleware/content_type.go
++++ b/middleware/content_type.go
+@@ -7,12 +7,7 @@ import (
+ 
+ // SetHeader is a convenience handler to set a response header key/value
+ func SetHeader(key, value string) func(http.Handler) http.Handler {
+-	return func(next http.Handler) http.Handler {
+-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+-			w.Header().Set(key, value)
+-			next.ServeHTTP(w, r)
+-		})
+-	}
++	return SetHeaders(http.Header{key: []string{value}})
+ }
+ 
+ // AllowContentType enforces a whitelist of request Content-Types otherwise responds
+diff --git a/middleware/set_headers.go b/middleware/set_headers.go
+new file mode 100644
+index 0000000..12e08cf
+--- /dev/null
++++ b/middleware/set_headers.go
+@@ -0,0 +1,48 @@
++package middleware
++
++import "net/http"
++
++// SetHeaders is a middleware that replaces a set of response headers with the
++// supplied values before calling the next handler.
++//
++// The supplied header map and all value slices are snapshotted when the
++// middleware is created, so later mutation of the input cannot affect
++// requests. Header names are canonicalized using net/http semantics, headers
++// not listed in the input are left untouched, and the values are copied onto
++// each response so a handler mutating one response's headers cannot affect
++// later requests.
++//
++// A nil or empty header map is a no-op.
++func SetHeaders(headers http.Header) func(next http.Handler) http.Handler {
++	if len(headers) == 0 {
++		return func(next http.Handler) http.Handler {
++			return next
++		}
++	}
++
++	setHeaders := make(http.Header, len(headers))
++	for key, values := range headers {
++		setHeaders[http.CanonicalHeaderKey(key)] = cloneHeaderValues(values)
++	}
++
++	return func(next http.Handler) http.Handler {
++		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++			h := w.Header()
++			for key, values := range setHeaders {
++				h[key] = cloneHeaderValues(values)
++			}
++			next.ServeHTTP(w, r)
++		})
++	}
++}
++
++// cloneHeaderValues returns a copy of values, preserving whether values is nil.
++func cloneHeaderValues(values []string) []string {
++	if values == nil {
++		return nil
++	}
++
++	copied := make([]string, len(values))
++	copy(copied, values)
++	return copied
++}

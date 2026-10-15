@@ -1,0 +1,13 @@
+{
+  "budget_policy": "actual-spend",
+  "call_limit_multiplier": 3,
+  "difficulty": "light",
+  "id": "railway-v1-restart-20261015-dotenv-T-mini-swe-agent",
+  "limit_usd": 1,
+  "retry_of": null,
+  "stage": "measured",
+  "started_at": 1792082862.664666,
+  "system": "mini-swe-agent",
+  "task_id": "dotenv-T",
+  "watchdog_s": null
+}

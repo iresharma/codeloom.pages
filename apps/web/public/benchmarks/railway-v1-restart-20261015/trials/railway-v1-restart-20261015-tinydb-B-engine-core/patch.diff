@@ -1,0 +1,231 @@
+diff --git a/benchmark_tests/test_predicate_cache_invalidation.py b/benchmark_tests/test_predicate_cache_invalidation.py
+new file mode 100644
+index 0000000..265aad7
+--- /dev/null
++++ b/benchmark_tests/test_predicate_cache_invalidation.py
+@@ -0,0 +1,215 @@
++"""Predicate-cache invalidation tests for ``Table._update_table``.
++
++These tests cover every successful mutation path through ``_update_table`` and
++the failure/copy-on-search semantics of ``Table.search``. They are
++self-contained on purpose: the table fixture below does not rely on
++``tests/conftest.py``.
++"""
++
++import pytest
++
++from tinydb import TinyDB, where
++from tinydb.storages import MemoryStorage
++from tinydb.table import Document
++
++
++@pytest.fixture
++def table():
++    db = TinyDB(storage=MemoryStorage)
++    table = db.table('_default')
++
++    table.insert({'int': 1, 'char': 'a'})
++    table.insert({'int': 1, 'char': 'b'})
++    table.insert({'int': 2, 'char': 'c'})
++
++    return table
++
++
++def test_insert_invalidates_cache(table):
++    query = where('char') == 'a'
++
++    assert len(table.search(query)) == 1
++    assert len(table._query_cache) == 1
++
++    table.insert({'int': 1, 'char': 'd'})
++
++    assert len(table._query_cache) == 0
++    assert [doc['char'] for doc in table.search(where('int') == 1)] \
++        == ['a', 'b', 'd']
++
++
++def test_insert_multiple_invalidates_cache(table):
++    query = where('int') == 3
++
++    assert table.search(query) == []
++    assert len(table._query_cache) == 1
++
++    table.insert_multiple([
++        {'int': 3, 'char': 'd'},
++        {'int': 3, 'char': 'e'},
++    ])
++
++    assert len(table._query_cache) == 0
++    assert [doc['char'] for doc in table.search(query)] == ['d', 'e']
++
++
++def test_update_with_cond_invalidates_cache(table):
++    query = where('int') == 1
++
++    assert len(table.search(query)) == 2
++    assert len(table._query_cache) == 1
++
++    table.update({'int': 2}, where('int') == 1)
++
++    assert len(table._query_cache) == 0
++    assert table.search(where('int') == 1) == []
++    # The two updated documents now have ``int == 2``, as does the original
++    # third document, so the fresh result contains all three documents.
++    assert len(table.search(where('int') == 2)) == 3
++
++
++def test_update_with_doc_ids_invalidates_cache(table):
++    query = where('char') == 'a'
++
++    assert len(table.search(query)) == 1
++    assert len(table._query_cache) == 1
++
++    table.update({'char': 'z'}, doc_ids=[1])
++
++    assert len(table._query_cache) == 0
++    assert table.search(where('char') == 'a') == []
++    assert len(table.search(where('char') == 'z')) == 1
++
++
++def test_update_unconditional_invalidates_cache(table):
++    query = where('flag') == True
++
++    assert table.search(query) == []
++    assert len(table._query_cache) == 1
++
++    table.update({'flag': True})
++
++    assert len(table._query_cache) == 0
++    assert len(table.search(where('flag') == True)) == 3
++
++
++def test_update_multiple_invalidates_cache(table):
++    query = where('char') == 'a'
++
++    assert len(table.search(query)) == 1
++    assert len(table._query_cache) == 1
++
++    table.update_multiple([({'flag': True}, where('char') == 'a')])
++
++    assert len(table._query_cache) == 0
++    assert len(table.search(where('flag') == True)) == 1
++
++
++def test_upsert_update_path_invalidates_cache(table):
++    query = where('char') == 'a'
++
++    assert len(table.search(query)) == 1
++    assert len(table._query_cache) == 1
++
++    table.upsert({'char': 'a2'}, where('char') == 'a')
++
++    assert len(table._query_cache) == 0
++    assert table.search(where('char') == 'a') == []
++    assert len(table.search(where('char') == 'a2')) == 1
++
++
++def test_upsert_insert_path_invalidates_cache(table):
++    query = where('char') == 'x'
++
++    assert table.search(query) == []
++    assert len(table._query_cache) == 1
++
++    table.upsert({'int': 9, 'char': 'x'}, where('char') == 'x')
++
++    assert len(table._query_cache) == 0
++    assert len(table.search(where('char') == 'x')) == 1
++
++
++def test_remove_with_cond_invalidates_cache(table):
++    query = where('int') == 1
++
++    assert len(table.search(query)) == 2
++    assert len(table._query_cache) == 1
++
++    table.remove(where('int') == 1)
++
++    assert len(table._query_cache) == 0
++    assert table.search(where('int') == 1) == []
++    assert len(table.search(where('int') == 2)) == 1
++
++
++def test_remove_with_doc_ids_invalidates_cache(table):
++    query = where('char') == 'a'
++
++    assert len(table.search(query)) == 1
++    assert len(table._query_cache) == 1
++
++    table.remove(doc_ids=[1])
++
++    assert len(table._query_cache) == 0
++    assert table.search(where('char') == 'a') == []
++    assert len(table.search(where('char') == 'b')) == 1
++
++
++def test_truncate_invalidates_cache(table):
++    query = where('int') == 2
++
++    assert len(table.search(query)) == 1
++    assert len(table._query_cache) == 1
++
++    table.truncate()
++
++    assert len(table._query_cache) == 0
++    assert table.search(where('int') == 2) == []
++
++
++def test_failed_mutation_does_not_invalidate_cache(table):
++    query = where('char') == 'a'
++
++    assert len(table.search(query)) == 1
++    assert len(table._query_cache) == 1
++
++    with pytest.raises(ValueError):
++        table.insert(Document({'int': 9}, doc_id=1))
++
++    # The failed insert never reached `self._storage.write`, so the prior
++    # cache entry must survive and keep serving the same result.
++    assert len(table._query_cache) == 1
++    assert query in table._query_cache
++    assert [doc['char'] for doc in table.search(query)] == ['a']
++
++
++def test_copy_on_search_preserved(table):
++    # ``search`` returns a fresh list every call...
++    r1 = table.search(where('int') == 1)
++    r2 = table.search(where('int') == 1)
++
++    assert r1 is not r2
++    assert r1[0] is r2[0]
++
++    # ...and a caller mutating that list must not corrupt the cached copy.
++    r1.clear()
++    assert [doc['char'] for doc in table.search(where('int') == 1)] \
++        == ['a', 'b']
++
++
++def test_other_tables_cache_is_preserved():
++    db = TinyDB(storage=MemoryStorage)
++    table_a = db.table('a')
++    table_b = db.table('b')
++
++    table_a.insert({'int': 1})
++    table_b.insert({'int': 2})
++
++    assert len(table_a.search(where('int') == 1)) == 1
++    assert len(table_a._query_cache) == 1
++
++    table_b.insert({'int': 2})
++
++    assert len(table_a._query_cache) == 1
++    assert len(table_b._query_cache) == 0
+diff --git a/tinydb/table.py b/tinydb/table.py
+index 43dfe88..600ad21 100644
+--- a/tinydb/table.py
++++ b/tinydb/table.py
+@@ -851,4 +851,4 @@ class Table:
+         self._storage.write(tables)
+ 
+         # Clear the query cache, as the table contents have changed
+-        pass
++        self._query_cache.clear()

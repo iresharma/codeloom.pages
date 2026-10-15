@@ -1,0 +1,40 @@
+{
+  "budget_policy": "actual-spend",
+  "call_limit_multiplier": 3,
+  "controller_termination": "completed",
+  "cost_is_conservative": false,
+  "cost_usd": 0.028358,
+  "elapsed_s": 671.9937968619633,
+  "evaluation_elapsed_s": 47.49902655300684,
+  "id": "railway-v1-restart-20261015-chi-X-mini-swe-agent",
+  "limit_usd": 4,
+  "new_failing_check_commands": [],
+  "request_count": 39,
+  "retry_of": null,
+  "stage": "measured",
+  "system": "mini-swe-agent",
+  "task_id": "chi-X",
+  "termination": "completed",
+  "upstream_check_failures": [],
+  "verification": {
+    "checks": [
+      {
+        "command": "go test ./...",
+        "kind": "trusted",
+        "output": "ok  \tgithub.com/go-chi/chi/v5\t7.297s\nok  \tgithub.com/go-chi/chi/v5/middleware\t26.265s\n",
+        "repeat": 0,
+        "returncode": 0
+      },
+      {
+        "command": "go test -count=1 -run TestBenchmarkReset .",
+        "kind": "hidden",
+        "output": "ok  \tgithub.com/go-chi/chi/v5\t0.010s\n",
+        "repeat": 0,
+        "returncode": 0
+      }
+    ],
+    "pass": true,
+    "reason": "verification"
+  },
+  "watchdog_s": null
+}
