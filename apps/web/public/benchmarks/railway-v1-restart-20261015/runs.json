@@ -218,7 +218,7 @@
   {
     "agent_count": 3,
     "artifact_base": "/benchmarks/railway-v1-restart-20261015/trials/railway-v1-restart-20261015-pqueue-X-engine-core",
-    "cost_usd": null,
+    "cost_usd": 0.092566,
     "elapsed_s": 1858.3482691959944,
     "id": "railway-v1-restart-20261015-pqueue-X-engine-core",
     "passed": true,

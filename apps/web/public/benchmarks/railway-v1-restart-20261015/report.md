@@ -7,7 +7,7 @@ Generator: deepseek/deepseek-v4-pro-0813 / baidu/fp8; classifier off.
 | System | Pass / evaluable | Delivered / scheduled | Cost | Cost / success |
 | --- | --- | --- | --- | --- |
 | mini-swe-agent | 8 / 9 | 8 / 9 | $0.2710 | $0.0339 |
-| engine-core | 8 / 9 | 8 / 9 | Unavailable | Unavailable |
+| engine-core | 8 / 9 | 8 / 9 | $2.4453 | $0.3057 |
 
 Paired outcomes: engine_only: 0; mini_only: 0; both_pass: 8; both_fail: 1; unresolved: 0; unrun: 0
 
@@ -30,3 +30,5 @@ This is a whole-system comparison with no ablations. These observations describe
 - Test-generation features are supplied with their reference tests withheld.
 - Offline report rebuilding is reproducible; model outputs, endpoint availability and prices are not.
 - Owner waived fresh paid calibration and redundant compatibility probes. Historical request timing and existing adapter tests are accepted; the current runtime has not passed a fresh end-to-end calibration. Fixture certification remains required.
+
+Billing correction: [settled ledger reconciliation](cost-reconciliation.json). The HTTP 504 reservation was already settled at zero in the campaign ledger; published costs now reflect that settlement.

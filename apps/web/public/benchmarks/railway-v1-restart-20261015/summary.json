@@ -61,8 +61,8 @@
     {
       "budget_hits": 2,
       "call_cost_limit_hits": 0,
-      "cost_per_success_usd": null,
-      "cost_usd": null,
+      "cost_per_success_usd": 0.305666125,
+      "cost_usd": 2.445329,
       "evaluated": 9,
       "id": "engine-core",
       "max_elapsed_s": 3652.996444926015,
@@ -71,7 +71,7 @@
       "passed": 8,
       "regressions": 0,
       "scheduled": 9,
-      "unknown_costs": 1,
+      "unknown_costs": 0,
       "unresolved": 0,
       "unrun": 0,
       "watchdog_hits": 0
@@ -301,7 +301,7 @@
         "engine-core": {
           "artifact_path": "trials/railway-v1-restart-20261015-pqueue-X-engine-core/",
           "attempt_id": "railway-v1-restart-20261015-pqueue-X-engine-core",
-          "cost_usd": null,
+          "cost_usd": 0.092566,
           "elapsed_s": 1858.3482691959944,
           "regressions": 0,
           "status": "pass",

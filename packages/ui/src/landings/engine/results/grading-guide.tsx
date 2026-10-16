@@ -29,12 +29,18 @@ const grades = [
   },
 ];
 
-export function GradingGuide() {
+export function GradingGuide({ suite = "v1" }: { suite?: "v1" | "v2" }) {
+  const selectedGrades = suite === "v2" ? [
+    grades[0],
+    { icon: FlaskConical, title: "Browser rendering", rule: "Real application + private Playwright checks", threshold: "Correct rendering and observed browser evidence" },
+    { icon: Search, title: "External research", rule: "Successful web search + pinned GitHub source", threshold: "Source-linked findings and correct implementation" },
+    { icon: GitBranch, title: "Terminal workflows", rule: "Real CLI commands, exit codes and file effects", threshold: "Correct behavior and recorded command execution" },
+  ] : grades;
   return (
     <section className="py-6">
       <h2 className={titleClass}>How a run earns a pass</h2>
-      <div className="mt-5 grid gap-3 md:grid-cols-3">
-        {grades.map((g) => (
+      <div className={`mt-5 grid gap-3 ${suite === "v2" ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
+        {selectedGrades.map((g) => (
           <div className={panelClass} key={g.title}>
             <g.icon
               className="mb-4 h-5 w-5 text-[#7eb5d0]"
@@ -56,7 +62,7 @@ export function GradingGuide() {
           "Seal final checkout",
           "Reject forbidden edits",
           "Rebuild in clean evaluator",
-          "Run deterministic graders",
+          suite === "v2" ? "Verify behavior and tool evidence" : "Run deterministic graders",
         ].map((s, i) => (
           <li key={s} className="flex items-center gap-3">
             <span className="border border-white/10 px-3 py-3">

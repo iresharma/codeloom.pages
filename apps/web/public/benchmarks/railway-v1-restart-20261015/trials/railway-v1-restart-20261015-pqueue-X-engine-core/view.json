@@ -126,7 +126,7 @@
       "repeat": 0
     }
   ],
-  "cost_usd": null,
+  "cost_usd": 0.092566,
   "elapsed_s": 1858.3482691959944,
   "grading": {
     "checks": [

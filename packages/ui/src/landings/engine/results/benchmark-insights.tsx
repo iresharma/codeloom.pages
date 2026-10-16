@@ -101,7 +101,7 @@ export function BenchmarkInsights() {
         </p>
         <details className="mt-3 text-xs text-[#9ba6af]">
           <summary className="min-h-11 cursor-pointer py-3 text-[#7eb5d0]">
-            Budget plan · ${data.budget_usd} ceiling
+            Budget plan · ${data.budget_usd} target
           </summary>
           <dl className="space-y-2">
             {setup.budget.map((b) => (

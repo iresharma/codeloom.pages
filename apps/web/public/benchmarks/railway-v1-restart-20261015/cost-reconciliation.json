@@ -1,0 +1,19 @@
+{
+  "cost_usd": 0.092566,
+  "note": "The ledger already settled this HTTP 504 provider_error at zero. The sealed result retained its earlier conservative reservation. OpenRouter logs show no billed generation in the 2026-10-15T15:03:00Z–15:04:00Z window. Only billing fields are corrected; recorded outcomes and traces are retained.",
+  "original": {
+    "cost_is_conservative": true,
+    "cost_usd": 2.496094
+  },
+  "reconciled_call": {
+    "charge_microusd": 0,
+    "id": "8bbe8cb42ba19597dfded48d",
+    "reserved_microusd": 2403528,
+    "status": "provider_error"
+  },
+  "request_count": 60,
+  "run_id": "railway-v1-restart-20261015",
+  "source": "Railway campaign ledger.sqlite, read-only projection on 2026-10-16",
+  "trial_id": "railway-v1-restart-20261015-pqueue-X-engine-core",
+  "unknown_calls": 0
+}

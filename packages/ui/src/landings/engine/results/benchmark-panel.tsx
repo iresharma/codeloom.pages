@@ -5,7 +5,6 @@ import data from "./data/benchmark.json";
 import {
   BenchmarkInsights,
   BenchmarkSetupNotes,
-  RunCatalog,
 } from "./benchmark-insights";
 import { GradingGuide } from "./grading-guide";
 
@@ -17,6 +16,9 @@ type Arm = {
   elapsed_s: number | null;
   attempt_id: string | null;
   artifact_path: string | null;
+  execution_state?: string;
+  functional_pass?: boolean | null;
+  tool_evidence?: { pass: boolean; checks: Record<string, boolean> } | null;
 };
 type System = {
   id: string;
@@ -44,6 +46,7 @@ type Task = {
   systems: Record<string, Arm>;
 };
 type Summary = {
+  schema_version?: number;
   run_id: string;
   status: "not_run" | "partial" | "complete";
   model: string;
@@ -61,6 +64,12 @@ type Summary = {
   calibration_status: string;
   preregistration_commit: string | null;
   blocked_reason?: string | null;
+  concurrency?: { max_parallel_task_pairs: number; max_parallel_attempts: number; evaluation_workers: number };
+  scheduler?: {
+    observed_parallel_attempts?: number;
+    budget?: { actual_spent_usd: number; outstanding_estimate_usd: number };
+    jobs: { id: string; task_id: string; system: string; state: string }[];
+  };
 };
 const benchmark = data as Summary;
 const names: Record<string, string> = {
@@ -72,6 +81,9 @@ const categories: Record<string, string> = {
   "cross-file": "Cross-file feature",
   navigation: "Code navigation",
   "test-generation": "Test generation",
+  browser: "Browser rendering",
+  research: "Research and implementation",
+  terminal: "Terminal workflow",
 };
 const colors: Record<Outcome, string> = {
   pass: "#8ccf9f",
@@ -92,13 +104,25 @@ const download = `/benchmarks/${benchmark.run_id}`;
 
 function Status({ arm }: { arm: Arm }) {
   return (
+    <div>
     <span
       className="font-mono text-xs"
       style={{ color: colors[arm.status] }}
       title={arm.termination ?? undefined}
     >
-      {label[arm.status]}
+      {arm.status === "unrun" && arm.execution_state ? arm.execution_state.replaceAll("_", " ") : label[arm.status]}
     </span>
+    {arm.tool_evidence && (
+      <details className="mt-1 text-xs text-[#9ba6af]">
+        <summary className="min-h-11 cursor-pointer py-3">Verification evidence</summary>
+        <p>Functionality: {arm.functional_pass ? "pass" : "fail"}</p>
+        <p>Required tools: {arm.tool_evidence.pass ? "pass" : "fail"}</p>
+        <ul className="mt-2 space-y-1">{Object.entries(arm.tool_evidence.checks).map(([check, passed]) => (
+          <li key={check}>{check.replaceAll("_", " ")}: {passed ? "pass" : "missing"}</li>
+        ))}</ul>
+      </details>
+    )}
+    </div>
   );
 }
 
@@ -119,19 +143,29 @@ export function BenchmarkPanel() {
   );
   useEffect(() => {
     const target = window.location.hash.slice(1);
-    if (["grading", "task-explorer", "system-results"].includes(target)) {
+    if (["grading", "task-explorer"].includes(target)) {
       const element = document.getElementById(target);
       if (element instanceof HTMLDetailsElement) element.open = true;
     }
   }, []);
   const measured = benchmark.status !== "not_run";
-  const pairs = [
-    { key: "engine_only", title: "Engine only", color: "#ff5c33" },
-    { key: "mini_only", title: "mini only", color: "#7eb5d0" },
-    { key: "both_pass", title: "Both passed", color: "#8ccf9f" },
-    { key: "both_fail", title: "Both failed", color: "#f28c79" },
-  ];
-  const pairTotal = pairs.reduce((n, p) => n + benchmark.pairs[p.key], 0);
+  const totals = benchmark.systems.map(({ id }) => {
+    const arms = rows.map((task) => task.systems[id]);
+    return {
+      id,
+      passed: arms.filter((arm) => arm.status === "pass").length,
+      recorded: arms.filter((arm) => arm.status !== "unrun").length,
+      cost: arms.some((arm) => arm.status !== "unrun" && arm.cost_usd === null)
+        ? null
+        : arms.reduce((sum, arm) => sum + (arm.cost_usd ?? 0), 0),
+      elapsed: arms.some((arm) => arm.status !== "unrun" && arm.elapsed_s === null)
+        ? null
+        : arms.reduce((sum, arm) => sum + (arm.elapsed_s ?? 0), 0),
+    };
+  });
+  const totalCost = totals.some((total) => total.cost === null)
+    ? null
+    : totals.reduce((sum, total) => sum + (total.cost ?? 0), 0);
   const selectClass =
     "min-h-11 border border-white/15 bg-[#13191f] px-3 font-mono text-xs text-[#d5dde3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff5c33]";
   return (
@@ -167,7 +201,6 @@ export function BenchmarkPanel() {
         <div className="mt-5 flex flex-wrap gap-3 text-xs text-[#7eb5d0]">
           {[
             ["#task-explorer", "Explore tasks"],
-            ["#runs", "Inspect runs"],
             ["#grading", "Grading rules"],
           ].map(([href, text]) => (
             <a
@@ -188,7 +221,7 @@ export function BenchmarkPanel() {
             ["Tasks", benchmark.task_count],
             ["Repositories", benchmark.repo_count],
             ["Scheduled attempts", benchmark.task_count * 2],
-            ["Total budget ceiling", `$${benchmark.budget_usd}`],
+            ["Campaign spending target", `$${benchmark.budget_usd}`],
           ].map(([name, value]) => (
             <div key={name} className="bg-[#0c1014] p-5">
               <dt className="text-xs text-[#9ba6af]">{name}</dt>
@@ -198,6 +231,28 @@ export function BenchmarkPanel() {
             </div>
           ))}
         </dl>
+        {benchmark.schema_version === 2 && (
+          <div className="mt-6 border border-white/10 p-5 text-sm text-[#c3cbd1]">
+            <p>
+              Up to {benchmark.concurrency?.max_parallel_task_pairs ?? 3} task pairs · {benchmark.concurrency?.max_parallel_attempts ?? 6} agent attempts · {benchmark.concurrency?.evaluation_workers ?? 2} evaluators
+            </p>
+            <p className="mt-2 text-xs text-[#9ba6af]">
+              Actual inference spending: {money(benchmark.scheduler?.budget?.actual_spent_usd ?? null)} · Outstanding estimates: {money(benchmark.scheduler?.budget?.outstanding_estimate_usd ?? null)}.
+              Final concurrent calls may exceed the spending target. Unrun tasks remain visible.
+            </p>
+            {benchmark.scheduler && (
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <caption className="pb-2 text-left text-[#9ba6af]">Campaign execution states</caption>
+                  <thead><tr><th scope="col" className="py-2">Task</th><th scope="col">System</th><th scope="col">State</th></tr></thead>
+                  <tbody>{benchmark.scheduler.jobs.map(job => (
+                    <tr key={job.id}><td className="py-2 pr-4">{job.task_id}</td><td className="pr-4">{names[job.system] ?? job.system}</td><td>{job.state.replaceAll("_", " ")}</td></tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
         {!measured && (
           <div className="mt-6 border-l-2 border-[#e2bd6b] bg-[#e2bd6b]/5 px-5 py-4 text-sm leading-6 text-[#c3cbd1]">
             <strong className="font-medium">
@@ -227,141 +282,11 @@ export function BenchmarkPanel() {
 
       <BenchmarkInsights />
 
-      {measured && (
-        <section
-          className="border-b border-white/10 py-8"
-          aria-label="Paired benchmark outcomes"
-        >
-          <div>
-            <h2 className="font-mono text-sm font-semibold text-[#d5dde3]">
-              Where the systems disagree
-            </h2>
-            <p className="mt-2 text-xs leading-6 text-[#9ba6af]">
-              Paired outcomes lead the comparison. One vote per task.
-            </p>
-            <div
-              className="mt-5 space-y-3"
-              role="img"
-              aria-label={
-                measured
-                  ? pairs
-                      .map((p) => `${p.title}: ${benchmark.pairs[p.key]}`)
-                      .join(", ")
-                  : "Paired outcomes unavailable. No measured attempts."
-              }
-            >
-              {pairs.map((p) => (
-                <div
-                  key={p.key}
-                  className="grid grid-cols-[105px_1fr_24px] items-center gap-3 text-xs"
-                >
-                  <span className="text-[#9ba6af]">{p.title}</span>
-                  <span className="h-3 bg-white/5">
-                    <span
-                      className="block h-full"
-                      style={{
-                        width: `${pairTotal ? (benchmark.pairs[p.key] / pairTotal) * 100 : 0}%`,
-                        background: p.color,
-                      }}
-                    />
-                  </span>
-                  <span className="text-right font-mono text-[#d5dde3]">
-                    {measured ? benchmark.pairs[p.key] : "—"}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-4 text-xs text-[#9ba6af]">
-              {measured
-                ? `${benchmark.pairs.unresolved} unresolved pairs · ${benchmark.pairs.unrun} unrun pairs`
-                : "Awaiting scored task pairs"}
-            </p>
-          </div>
-        </section>
-      )}
-
-      <details
-        className="border-b border-white/10 py-3"
-        id="system-results"
-        open={measured}
-      >
-        <summary className="min-h-11 cursor-pointer py-3 font-mono text-sm text-[#d5dde3]">
-          Comparison metrics
-          {!measured && (
-            <span className="ml-3 text-xs text-[#9ba6af]">
-              Awaiting measured runs
-            </span>
-          )}
-        </summary>
-        <div className="mt-5 overflow-x-auto">
-          <table className="w-full min-w-[850px] text-left text-xs">
-            <caption className="sr-only">
-              Comparison results. A dash means no measurement is available.
-            </caption>
-            <thead className="border-b border-white/15 font-mono text-[11px] text-[#9ba6af]">
-              <tr>
-                {[
-                  "System",
-                  "Pass / evaluated",
-                  "Pass / scheduled",
-                  "Total cost",
-                  "Cost / success",
-                  "Median elapsed",
-                  "Regressions",
-                ].map((h) => (
-                  <th key={h} className="px-3 py-3 font-normal first:pl-0">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {benchmark.systems.map((s) => (
-                <tr
-                  key={s.id}
-                  className="border-b border-white/5 text-[#d5dde3]"
-                >
-                  <th scope="row" className="py-4 pr-3 font-mono font-normal">
-                    {names[s.id]}
-                  </th>
-                  <td className="px-3">
-                    {measured ? `${s.passed} / ${s.evaluated}` : "—"}
-                  </td>
-                  <td className="px-3">
-                    {measured
-                      ? `${s.passed} / ${s.scheduled}`
-                      : `Pending / ${s.scheduled}`}
-                  </td>
-                  <td className="px-3">{money(s.cost_usd)}</td>
-                  <td className="px-3">{money(s.cost_per_success_usd)}</td>
-                  <td className="px-3">{time(s.median_elapsed_s)}</td>
-                  <td className="px-3">{measured ? s.regressions : "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <details className="mt-4 max-w-3xl text-xs leading-6 text-[#9ba6af]">
-          <summary className="min-h-11 cursor-pointer py-3 text-[#7eb5d0]">
-            Denominators, retries and regressions
-          </summary>
-          Pass / scheduled keeps infrastructure outcomes in the denominator.
-          Infrastructure failures follow a fixed retry policy. Both attempts
-          count toward cost and elapsed time; unresolved failures leave the
-          evaluated denominator and remain in delivery coverage. Agent failures,
-          budget stops and regressions count as failures. Individual attempt maxima
-          total $50 but share a $32 measurement envelope; remaining pairs can stay
-          unrun when that envelope is exhausted. Regression counts
-          track newly failing upstream check commands; failures already present
-          in the starting snapshot are excluded.
-        </details>
-      </details>
-
-      <details className="border-b border-white/10 py-3" id="task-explorer">
+      <details className="scroll-mt-24 border-b border-white/10 py-3" id="task-explorer" open>
         <summary className="min-h-11 cursor-pointer py-3 font-mono text-sm text-[#d5dde3]">
           Task list{" "}
           <span className="ml-3 text-xs text-[#9ba6af]">
-            {benchmark.task_count} planned tasks
+            {benchmark.task_count} tasks
           </span>
         </summary>
         <p className="mt-3 text-xs text-[#9ba6af]" aria-live="polite">
@@ -415,14 +340,19 @@ export function BenchmarkPanel() {
             </select>
           </label>
         </div>
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[670px] text-left text-xs">
+        <div
+          className="mt-6 h-[34rem] max-h-[75vh] scroll-pt-12 scroll-pb-24 overflow-auto border border-white/10 focus-visible:outline-2 focus-visible:outline-[#ff5c33]"
+          role="region"
+          aria-label="Task results, scroll to view all tasks"
+          tabIndex={0}
+        >
+          <table className="h-full w-full min-w-[740px] border-separate border-spacing-0 text-left text-xs [&_tbody_td]:border-b [&_tbody_th]:border-b [&_tbody_td]:border-white/5 [&_tbody_th]:border-white/5">
             <caption className="sr-only">
               Task results including all failures and unrun tasks
             </caption>
-            <thead className="border-b border-white/15 text-[#9ba6af]">
+            <thead className="sticky top-0 z-10 bg-[#0c1014] text-[#9ba6af] [&_th]:border-b [&_th]:border-white/15">
               <tr>
-                <th className="py-3 font-normal">Task / category</th>
+                <th className="px-4 py-3 font-normal">Task / category</th>
                 <th className="px-3 font-normal">mini-SWE-agent</th>
                 <th className="px-3 font-normal">Engine core</th>
                 <th className="px-3 font-normal">Evidence</th>
@@ -431,7 +361,7 @@ export function BenchmarkPanel() {
             <tbody>
               {rows.map((t) => (
                 <tr key={t.id} className="border-b border-white/5">
-                  <th scope="row" className="max-w-sm py-4 pr-4 font-normal">
+                  <th scope="row" className="max-w-sm px-4 py-4 font-normal">
                     <span className="font-mono text-[#d5dde3]">{t.id}</span>
                     <span className="ml-3 text-[#9ba6af]">
                       {categories[t.category]}
@@ -481,22 +411,48 @@ export function BenchmarkPanel() {
                   </td>
                 </tr>
               ))}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-sm text-[#9ba6af]">
+                    No tasks match these filters.
+                  </td>
+                </tr>
+              )}
             </tbody>
+            <tfoot className="sticky bottom-0 z-10 bg-[#13191f] text-[#d5dde3] [&_th]:border-t [&_td]:border-t [&_th]:border-white/15 [&_td]:border-white/15">
+              <tr aria-live="polite">
+                <th scope="row" className="px-4 py-4 font-normal">
+                  <span className="font-mono">Totals · {rows.length} tasks</span>
+                  <span className="mt-1 block text-[#9ba6af]">
+                    {rows.length === benchmark.task_count ? "All tasks" : "Filtered tasks"}
+                  </span>
+                </th>
+                {totals.map((total) => (
+                  <td key={total.id} className="px-3 py-4">
+                    <span className="block font-mono">{money(total.cost)}</span>
+                    <span className="mt-1 block text-[#9ba6af]">
+                      {total.passed} passed / {total.recorded} recorded
+                    </span>
+                    <span className="mt-1 block text-[#9ba6af]">
+                      {time(total.elapsed)} total
+                    </span>
+                  </td>
+                ))}
+                <td className="px-3 py-4">
+                  <span className="block text-[#9ba6af]">Total cost</span>
+                  <span className="mt-1 block font-mono text-sm">{money(totalCost)}</span>
+                </td>
+              </tr>
+            </tfoot>
           </table>
-          {rows.length === 0 && (
-            <p className="py-8 text-sm text-[#9ba6af]">
-              No tasks match these filters.
-            </p>
-          )}
         </div>
       </details>
 
-      <RunCatalog />
       <details id="grading" className="border-b border-white/10 py-3">
         <summary className="min-h-11 cursor-pointer py-3 text-xs text-[#7eb5d0]">
           Grading rules & comparison method
         </summary>
-        <GradingGuide />
+          <GradingGuide suite={benchmark.schema_version === 2 ? "v2" : "v1"} />
       </details>
       <BenchmarkSetupNotes />
 
