@@ -40,6 +40,20 @@ export function EngineResultsIndexLanding() {
             Runs from the previous harness. Separate tasks and conditions;
             excluded from this benchmark.
           </p>
+          <details className="mt-4 text-xs leading-6 text-[#9ba6af]">
+            <summary className="min-h-11 cursor-pointer py-3 text-[#7eb5d0]">
+              How the old-harness runs were reviewed
+            </summary>
+            <p className="font-mono text-[13px] font-bold text-[#d5dde3]">
+              How these were graded.
+            </p>
+            <p className="mt-2 max-w-xl text-[13px] leading-6 text-[#7a848c]">
+              Two independent reviews per run: a code quality pass over the
+              actual diff, and a process pass over the full agent trace —
+              tool calls, navigation, judge flags, read-before-edit
+              discipline. Neither review sees the other's verdict.
+            </p>
+          </details>
         </section>
 
         <section className="divide-y divide-white/10 border-b border-white/10">
@@ -82,21 +96,6 @@ export function EngineResultsIndexLanding() {
             );
           })}
         </section>
-
-        <details className="py-6 text-xs leading-6 text-[#9ba6af]">
-          <summary className="min-h-11 cursor-pointer py-3 text-[#7eb5d0]">
-            How the old-harness runs were reviewed
-          </summary>
-          <p className="font-mono text-[13px] font-bold text-[#d5dde3]">
-            How these were graded.
-          </p>
-          <p className="mt-2 max-w-xl text-[13px] leading-6 text-[#7a848c]">
-            Two independent reviews per run: a code quality pass over the actual
-            diff, and a process pass over the full agent trace — tool calls,
-            navigation, judge flags, read-before-edit discipline. Neither review
-            sees the other's verdict.
-          </p>
-        </details>
       </main>
 
       <SiteFooter product={product} />

@@ -1,68 +1,348 @@
 {
-  "budget_usd": 50,
-  "classifier": "off",
-  "difficulty_mix": {
-    "heavy": 15
-  },
-  "limitations": [
-    "Author-designed corpus; no independent review.",
-    "One run per task; no reliability, interaction, or component-effect claims.",
-    "Realistic tasks add browser, terminal and research evidence on top of hidden checks.",
-    "Live research results can change between runs.",
-    "Host ARM64 runs Linux AMD64 through emulation.",
-    "Offline report rebuilding is reproducible; model outputs, endpoint availability and prices are not."
-  ],
+  "run_id": "realistic",
+  "suite": "v1+v2",
+  "schema_version": 2,
+  "status": "complete",
   "model": "deepseek/deepseek-v4-pro-0813",
+  "provider": "baidu/fp8",
+  "platform": "linux/amd64",
+  "classifier": "off",
+  "reasoning_effort": "high",
+  "thinking_enabled": true,
+  "budget_usd": 50,
+  "repo_count": 8,
+  "task_count": 24,
+  "difficulty_mix": {
+    "heavy": 18,
+    "light": 3,
+    "medium": 3
+  },
   "pairs": {
-    "both_fail": 0,
-    "both_pass": 9,
+    "both_fail": 1,
+    "both_pass": 17,
     "engine_only": 5,
     "mini_only": 1,
     "unresolved": 0,
     "unrun": 0
   },
-  "platform": "linux/amd64",
-  "provider": "baidu/fp8",
-  "reasoning_effort": "high",
-  "repo_count": 7,
-  "run_id": "realistic",
-  "schema_version": 2,
-  "status": "complete",
-  "suite": "v2",
+  "limitations": [
+    "Author-designed corpus; no independent review.",
+    "One run per task; no reliability, interaction, or component-effect claims.",
+    "Synthetic bugs keep upstream tests, which can reveal the regression.",
+    "Test-generation features are supplied with their reference tests withheld.",
+    "Offline report rebuilding is reproducible; model outputs, endpoint availability and prices are not.",
+    "Owner waived fresh paid calibration and redundant compatibility probes. Historical request timing and existing adapter tests are accepted; the current runtime has not passed a fresh end-to-end calibration. Fixture certification remains required.",
+    "Realistic tasks add browser, terminal and research evidence on top of hidden checks.",
+    "Live research results can change between runs.",
+    "Host ARM64 runs Linux AMD64 through emulation."
+  ],
   "systems": [
     {
-      "budget_hits": 0,
-      "cost_per_success_usd": 0.1561553743584,
-      "cost_usd": 1.561553743584,
-      "evaluated": 15,
       "id": "mini-swe-agent",
-      "max_elapsed_s": 1652.4350672080182,
-      "median_elapsed_s": 889.448092665989,
-      "min_elapsed_s": 357.66294391604606,
-      "passed": 10,
-      "scheduled": 15,
-      "unknown_costs": 0,
+      "passed": 18,
+      "evaluated": 24,
+      "scheduled": 24,
       "unresolved": 0,
-      "unrun": 0
+      "unrun": 0,
+      "budget_hits": 0,
+      "unknown_costs": 0,
+      "watchdog_hits": 0,
+      "regressions": 0,
+      "cost_usd": 1.832568743584,
+      "cost_per_success_usd": 0.10180937464355555,
+      "min_elapsed_s": 211.59439802495763,
+      "max_elapsed_s": 1652.4350672080182,
+      "median_elapsed_s": 681.4937874519965
     },
     {
-      "budget_hits": 0,
-      "cost_per_success_usd": 0.47839214128400015,
-      "cost_usd": 6.697489977976002,
-      "evaluated": 15,
       "id": "engine-core",
-      "max_elapsed_s": 4413.501139542088,
-      "median_elapsed_s": 2142.4543507500784,
-      "min_elapsed_s": 994.5017633748939,
-      "passed": 14,
-      "scheduled": 15,
-      "unknown_costs": 0,
+      "passed": 22,
+      "evaluated": 24,
+      "scheduled": 24,
       "unresolved": 0,
-      "unrun": 0
+      "unrun": 0,
+      "budget_hits": 2,
+      "unknown_costs": 1,
+      "watchdog_hits": 0,
+      "regressions": 0,
+      "cost_usd": null,
+      "cost_per_success_usd": null,
+      "min_elapsed_s": 820.6673728709575,
+      "max_elapsed_s": 4413.501139542088,
+      "median_elapsed_s": 1626.2276812710334
     }
   ],
-  "task_count": 15,
   "tasks": [
+    {
+      "attempt_limit_usd": 1,
+      "category": "bug",
+      "difficulty": "light",
+      "id": "tinydb-B",
+      "language": "python",
+      "provenance": "fabricated",
+      "repo": "tinydb",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-tinydb-B-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-tinydb-B-engine-core",
+          "cost_usd": 0.249979,
+          "elapsed_s": 944.0109471590258,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-tinydb-B-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-tinydb-B-mini-swe-agent",
+          "cost_usd": 0.025651,
+          "elapsed_s": 241.26318743394222,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Query cache survives writes"
+    },
+    {
+      "attempt_limit_usd": 1,
+      "category": "bug",
+      "difficulty": "light",
+      "id": "chi-B",
+      "language": "go",
+      "provenance": "fabricated",
+      "repo": "chi",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-chi-B-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-chi-B-engine-core",
+          "cost_usd": 0.250957,
+          "elapsed_s": 1163.7998264469206,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-chi-B-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-chi-B-mini-swe-agent",
+          "cost_usd": 0.012096,
+          "elapsed_s": 273.1807059010025,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Pooled context leaks URL params"
+    },
+    {
+      "attempt_limit_usd": 1,
+      "category": "test-generation",
+      "difficulty": "light",
+      "id": "dotenv-T",
+      "language": "python",
+      "provenance": "new_feature",
+      "repo": "dotenv",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-dotenv-T-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-dotenv-T-engine-core",
+          "cost_usd": 0.17604,
+          "elapsed_s": 832.4813027488999,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-dotenv-T-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-dotenv-T-mini-swe-agent",
+          "cost_usd": 0.011281,
+          "elapsed_s": 211.59439802495763,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Test selection of assigned dotenv values"
+    },
+    {
+      "attempt_limit_usd": 2,
+      "category": "navigation",
+      "difficulty": "medium",
+      "id": "chi-N",
+      "language": "go",
+      "provenance": "navigation",
+      "repo": "chi",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-chi-N-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-chi-N-engine-core",
+          "cost_usd": 0.13375,
+          "elapsed_s": 820.6673728709575,
+          "regressions": 0,
+          "status": "fail",
+          "termination": "completed"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-chi-N-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-chi-N-mini-swe-agent",
+          "cost_usd": 0.029127,
+          "elapsed_s": 395.86282367107924,
+          "regressions": 0,
+          "status": "fail",
+          "termination": "completed"
+        }
+      },
+      "title": "Code path and lifecycle navigation"
+    },
+    {
+      "attempt_limit_usd": 2,
+      "category": "cross-file",
+      "difficulty": "medium",
+      "id": "tinydb-X",
+      "language": "python",
+      "provenance": "cross-file",
+      "repo": "tinydb",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-tinydb-X-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-tinydb-X-engine-core",
+          "cost_usd": 0.240428,
+          "elapsed_s": 1010.6262777650263,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-tinydb-X-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-tinydb-X-mini-swe-agent",
+          "cost_usd": 0.016143,
+          "elapsed_s": 224.92265336506534,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Public storage flush contract"
+    },
+    {
+      "attempt_limit_usd": 2,
+      "category": "bug",
+      "difficulty": "medium",
+      "id": "pqueue-B",
+      "language": "typescript",
+      "provenance": "fabricated",
+      "repo": "pqueue",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-pqueue-B-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-pqueue-B-engine-core",
+          "cost_usd": 0.43546,
+          "elapsed_s": 2559.265746093006,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-pqueue-B-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-pqueue-B-mini-swe-agent",
+          "cost_usd": 0.017978,
+          "elapsed_s": 472.74331982200965,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Priority updates target the wrong queued task"
+    },
+    {
+      "attempt_limit_usd": 4,
+      "category": "cross-file",
+      "difficulty": "heavy",
+      "id": "dotenv-X",
+      "language": "python",
+      "provenance": "cross-file",
+      "repo": "dotenv",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-dotenv-X-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-dotenv-X-engine-core",
+          "cost_usd": 0.727761,
+          "elapsed_s": 3652.996444926015,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "budget_exhausted"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-dotenv-X-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-dotenv-X-mini-swe-agent",
+          "cost_usd": 0.066469,
+          "elapsed_s": 691.1743199250195,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Strict dotenv loading API and CLI"
+    },
+    {
+      "attempt_limit_usd": 4,
+      "category": "cross-file",
+      "difficulty": "heavy",
+      "id": "pqueue-X",
+      "language": "typescript",
+      "provenance": "cross-file",
+      "repo": "pqueue",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-pqueue-X-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-pqueue-X-engine-core",
+          "cost_usd": null,
+          "elapsed_s": 1858.3482691959944,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "budget_exhausted"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-pqueue-X-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-pqueue-X-mini-swe-agent",
+          "cost_usd": 0.063912,
+          "elapsed_s": 1265.3785058540525,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Atomic bulk queue priority updates"
+    },
+    {
+      "attempt_limit_usd": 4,
+      "category": "cross-file",
+      "difficulty": "heavy",
+      "id": "chi-X",
+      "language": "go",
+      "provenance": "new_feature",
+      "repo": "chi",
+      "systems": {
+        "engine-core": {
+          "artifact_path": "trials/railway-v1-restart-20261015-chi-X-engine-core/",
+          "attempt_id": "railway-v1-restart-20261015-chi-X-engine-core",
+          "cost_usd": 0.138388,
+          "elapsed_s": 1555.3553792439634,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        },
+        "mini-swe-agent": {
+          "artifact_path": "trials/railway-v1-restart-20261015-chi-X-mini-swe-agent/",
+          "attempt_id": "railway-v1-restart-20261015-chi-X-mini-swe-agent",
+          "cost_usd": 0.028358,
+          "elapsed_s": 671.9937968619633,
+          "regressions": 0,
+          "status": "pass",
+          "termination": "completed"
+        }
+      },
+      "title": "Immutable bulk response-header middleware"
+    },
     {
       "attempt_limit_usd": 4,
       "category": "browser",
@@ -693,6 +973,5 @@
       },
       "title": "Atomic database snapshot import and export"
     }
-  ],
-  "thinking_enabled": true
+  ]
 }

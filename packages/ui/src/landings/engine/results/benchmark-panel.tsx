@@ -2,10 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import data from "./data/benchmark.json";
-import {
-  BenchmarkInsights,
-  BenchmarkSetupNotes,
-} from "./benchmark-insights";
+import { BenchmarkInsights } from "./benchmark-insights";
 import { GradingGuide } from "./grading-guide";
 
 type Outcome = "pass" | "fail" | "unresolved" | "unrun";
@@ -169,23 +166,13 @@ export function BenchmarkPanel() {
     "min-h-11 border border-white/15 bg-[#13191f] px-3 font-mono text-xs text-[#d5dde3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff5c33]";
   return (
     <>
-      <a href="https://benchmark-monitor-production.up.railway.app" className="mt-6 inline-flex min-h-11 items-center border border-white/15 px-4 text-xs text-[#7eb5d0] hover:border-[#ff5c33] focus-visible:outline-2 focus-visible:outline-[#ff5c33]">Live Railway monitor · unscored smoke test and campaign status ↗</a>
       <section
         className="border-b border-white/10 py-8 md:py-10"
         aria-labelledby="benchmark-title"
       >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="font-mono text-xs tracking-widest text-[#7a848c] uppercase">
-            05 · Results / paired benchmark
-          </p>
-          <span className="border border-white/15 px-3 py-1.5 font-mono text-[11px] text-[#e2bd6b]">
-            {benchmark.status === "not_run"
-              ? "Setup validation · not scored"
-              : benchmark.status === "partial"
-                ? "Partial run"
-                : "Completed run"}
-          </span>
-        </div>
+        <p className="font-mono text-xs tracking-widest text-[#7a848c] uppercase">
+          05 · Results / paired benchmark
+        </p>
         <h1
           id="benchmark-title"
           className="mt-5 max-w-3xl font-mono text-3xl leading-tight font-semibold text-[#d5dde3] md:text-4xl"
@@ -230,7 +217,7 @@ export function BenchmarkPanel() {
             </div>
           ))}
         </dl>
-        {benchmark.schema_version === 2 && (
+        {benchmark.schema_version === 2 && benchmark.scheduler && (
           <div className="mt-6 border border-white/10 p-5 text-sm text-[#c3cbd1]">
             <p>
               Up to {benchmark.concurrency?.max_parallel_task_pairs ?? 3} task pairs · {benchmark.concurrency?.max_parallel_attempts ?? 6} agent attempts · {benchmark.concurrency?.evaluation_workers ?? 2} evaluators
@@ -239,17 +226,15 @@ export function BenchmarkPanel() {
               Actual inference spending: {money(benchmark.scheduler?.budget?.actual_spent_usd ?? null)} · Outstanding estimates: {money(benchmark.scheduler?.budget?.outstanding_estimate_usd ?? null)}.
               Final concurrent calls may exceed the spending target. Unrun tasks remain visible.
             </p>
-            {benchmark.scheduler && (
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <caption className="pb-2 text-left text-[#9ba6af]">Campaign execution states</caption>
-                  <thead><tr><th scope="col" className="py-2">Task</th><th scope="col">System</th><th scope="col">State</th></tr></thead>
-                  <tbody>{benchmark.scheduler.jobs.map(job => (
-                    <tr key={job.id}><td className="py-2 pr-4">{job.task_id}</td><td className="pr-4">{names[job.system] ?? job.system}</td><td>{job.state.replaceAll("_", " ")}</td></tr>
-                  ))}</tbody>
-                </table>
-              </div>
-            )}
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <caption className="pb-2 text-left text-[#9ba6af]">Campaign execution states</caption>
+                <thead><tr><th scope="col" className="py-2">Task</th><th scope="col">System</th><th scope="col">State</th></tr></thead>
+                <tbody>{benchmark.scheduler.jobs.map(job => (
+                  <tr key={job.id}><td className="py-2 pr-4">{job.task_id}</td><td className="pr-4">{names[job.system] ?? job.system}</td><td>{job.state.replaceAll("_", " ")}</td></tr>
+                ))}</tbody>
+              </table>
+            </div>
           </div>
         )}
         {!measured && (
@@ -451,9 +436,12 @@ export function BenchmarkPanel() {
         <summary className="min-h-11 cursor-pointer py-3 text-xs text-[#7eb5d0]">
           Grading rules & comparison method
         </summary>
-          <GradingGuide suite={benchmark.schema_version === 2 ? "v2" : "v1"} />
+        <p className="mt-3 max-w-2xl text-xs leading-6 text-[#9ba6af]">
+          How each task is scored, and how the two systems' results are
+          compared against each other once scored.
+        </p>
+        <GradingGuide suite={benchmark.schema_version === 2 ? "v2" : "v1"} />
       </details>
-      <BenchmarkSetupNotes />
 
       <section
         className="grid gap-8 border-b border-white/10 py-10 md:grid-cols-2"
@@ -484,7 +472,6 @@ export function BenchmarkPanel() {
               ["summary.json", "Results JSON"],
               ["attempts.jsonl", "All attempts"],
               ["runs.json", "Run index"],
-              ["evidence.zip", "Evidence ZIP"],
             ].map(([file, title]) => (
               <a
                 key={file}
