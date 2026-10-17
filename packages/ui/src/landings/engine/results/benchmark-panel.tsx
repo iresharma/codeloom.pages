@@ -31,8 +31,8 @@ type System = {
   cost_per_success_usd: number | null;
   median_elapsed_s: number | null;
   budget_hits: number;
-  watchdog_hits: number;
-  regressions: number;
+  watchdog_hits?: number;
+  regressions?: number;
 };
 type Task = {
   id: string;
@@ -61,7 +61,7 @@ type Summary = {
   systems: System[];
   tasks: Task[];
   limitations: string[];
-  preregistration_commit: string | null;
+  preregistration_commit?: string | null;
   blocked_reason?: string | null;
   concurrency?: { max_parallel_task_pairs: number; max_parallel_attempts: number; evaluation_workers: number };
   scheduler?: {
