@@ -1,0 +1,17 @@
+{
+  "arguments": {
+    "args": [
+      "api",
+      "repos/encode/httpx/contents/httpx/_transports/__init__.py?ref=26d48e0634e6ee9cdc0533996db289ce4b430177",
+      "-H",
+      "Accept: application/vnd.github.raw"
+    ]
+  },
+  "commit": "26d48e0634e6ee9cdc0533996db289ce4b430177",
+  "ok": true,
+  "operation": "github",
+  "retrieved_at": 1792234058.581014,
+  "sha256": "19b52805200ea7bcfe97ef63e5884c851dc3308727e8554b863d3bd8edcd9e7a",
+  "text": "from .asgi import *\nfrom .base import *\nfrom .default import *\nfrom .mock import *\nfrom .wsgi import *\n\n__all__ = [\n    \"ASGITransport\",\n    \"AsyncBaseTransport\",\n    \"BaseTransport\",\n    \"AsyncHTTPTransport\",\n    \"HTTPTransport\",\n    \"MockTransport\",\n    \"WSGITransport\",\n]\n",
+  "url": "https://api.github.com/repos/encode/httpx/contents/httpx/_transports/__init__.py?ref=26d48e0634e6ee9cdc0533996db289ce4b430177"
+}

@@ -1,0 +1,17 @@
+{
+  "arguments": {
+    "args": [
+      "api",
+      "repos/encode/httpx/contents/httpx/_urlparse.py?ref=26d48e0634e6ee9cdc0533996db289ce4b430177",
+      "-H",
+      "Accept: application/vnd.github.raw"
+    ]
+  },
+  "commit": null,
+  "ok": false,
+  "operation": "github",
+  "retrieved_at": 1792234091.429824,
+  "sha256": "0b8903cfcc7f41331dbd43bd537e1836307a93d26bc4fff89a1456b04d8d0878",
+  "text": "error: Source returned HTTP 403",
+  "url": null
+}

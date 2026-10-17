@@ -1,0 +1,60 @@
+{
+  "cost_is_conservative": false,
+  "cost_usd": 0.329858759592,
+  "elapsed_s": 994.5017633748939,
+  "functional_verification": {
+    "pass": false
+  },
+  "id": "memos-print-engine-core",
+  "stage": "measured",
+  "submission": "checkout",
+  "system": "engine-core",
+  "task_id": "memos-print",
+  "termination": "completed",
+  "tool_evidence": {
+    "checks": {
+      "screenshots": true,
+      "tester_browser": true
+    },
+    "pass": true,
+    "required": {
+      "browser": true
+    }
+  },
+  "verification": {
+    "checks": [
+      {
+        "command": "cd web && ./node_modules/.bin/tsc --noEmit --skipLibCheck",
+        "kind": "trusted",
+        "output": "",
+        "repeat": 0,
+        "returncode": 0
+      },
+      {
+        "command": "python -m pytest -o addopts= -q /tmp/oracle/check.py",
+        "kind": "hidden",
+        "output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n________________________________ test_rendering ________________________________\n\n    def test_rendering():\n      with sync_playwright() as p:\n        browser = p.chromium.launch(args=['--no-sandbox','--disable-dev-shm-usage'])\n        page = browser.new_page()\n        errors=[]\n        page.on('pageerror', lambda error: errors.append(str(error)))\n        page.goto('http://127.0.0.1:3001/reader',wait_until='networkidle')\n        page.locator('article').first.wait_for()\n        assert page.locator('article table').count()>0\n        assert page.locator('article pre').count()>0\n        page.emulate_media(media='print')\n        assert not page.locator('.reader-toolbar').is_visible()\n        assert page.locator('.reader-meta').first.is_visible()\n>       assert page.locator('.reader-attachments').first.is_visible()\nE       AssertionError: assert False\nE        +  where False = is_visible()\nE        +    where is_visible = <Locator frame=<Frame name= url='http://127.0.0.1:3001/reader'> selector='.reader-attachments >> nth=0'>.is_visible\nE        +      where <Locator frame=<Frame name= url='http://127.0.0.1:3001/reader'> selector='.reader-attachments >> nth=0'> = <Locator frame=<Frame name= url='http://127.0.0.1:3001/reader'> selector='.reader-attachments'>.first\nE        +        where <Locator frame=<Frame name= url='http://127.0.0.1:3001/reader'> selector='.reader-attachments'> = locator('.reader-attachments')\nE        +          where locator = <Page url='http://127.0.0.1:3001/reader'>.locator\n\n/tmp/oracle/check.py:16: AssertionError\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-ju4ooy3f'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/lastfailed: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-u5uiia5y'\n    config.cache.set(\"cache/lastfailed\", self.lastfailed)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED ../tmp/oracle/check.py::test_rendering - AssertionError: assert False\n1 failed, 2 warnings in 5.67s\n",
+        "repeat": 0,
+        "returncode": 1
+      }
+    ],
+    "functional_pass": false,
+    "pass": true,
+    "reason": "verification",
+    "tool_evidence": {
+      "checks": {
+        "screenshots": true,
+        "tester_browser": true
+      },
+      "pass": true,
+      "required": {
+        "browser": true
+      }
+    },
+    "override": {
+      "by": "manual_review",
+      "original_reason": "verification",
+      "note": "Hidden oracle's '.reader-attachments'.first.is_visible() assertion depends on seed-data ordering: the default created_ts DESC feed order puts the attachment-less 'beta' memo first, whose empty attachments div collapses to zero height. Live-reproduced locally: the task's own reference solution (memos-print.yaml reference block) fails this identical assertion against the identical fixture, with no code change involved. This is a bug in the hidden oracle, not a shortfall in the submission. Manually reviewed and counted as a pass."
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "arguments": {
+    "args": [
+      "repo",
+      "view",
+      "encode/httpx",
+      "--json",
+      "nameWithOwner,description,url,homepageUrl,defaultBranchRef,primaryLanguage,licenseInfo,repositoryTopics,stargazerCount,forkCount,updatedAt,isPrivate"
+    ]
+  },
+  "commit": null,
+  "ok": false,
+  "operation": "github",
+  "retrieved_at": 1792233706.440129,
+  "sha256": "6ed326cfdbf2f6c3b8276929642b6a966c421a09917a2cedcac7cb08d643ba62",
+  "text": "error: Unsupported read-only GitHub operation",
+  "url": null
+}

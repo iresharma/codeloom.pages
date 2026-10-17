@@ -1,0 +1,27 @@
+{
+  "cost_is_conservative": false,
+  "cost_usd": 0.120769176528,
+  "elapsed_s": 1137.6099379999796,
+  "functional_verification": {
+    "pass": false
+  },
+  "id": "pqueue-bulk-mini-swe-agent",
+  "stage": "measured",
+  "submission": "checkout",
+  "system": "mini-swe-agent",
+  "task_id": "pqueue-bulk",
+  "termination": "completed",
+  "tool_evidence": null,
+  "verification": {
+    "pass": true,
+    "paths": [
+      "readme.md"
+    ],
+    "reason": "disallowed_edit",
+    "override": {
+      "by": "manual_review",
+      "original_reason": "disallowed_edit",
+      "note": "Disallowed-path edit to readme.md accurately documents the new setPriorities() batch API the task asked for, with a correct usage example. Manually reviewed and counted as a pass despite the automatic allowed_paths violation."
+    }
+  }
+}

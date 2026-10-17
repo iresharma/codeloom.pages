@@ -1,0 +1,8 @@
+{
+  "cap_usd": 4.0,
+  "id": "starlette-middleware-mini-swe-agent",
+  "stage": "measured",
+  "started_at": 1792200937.484587,
+  "system": "mini-swe-agent",
+  "task_id": "starlette-middleware"
+}

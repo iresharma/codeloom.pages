@@ -1,0 +1,26 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpc8rgmd6u/base/httpie/core.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp0up7kxfk/patch/httpie/core.py
+index 52b01ad..d0c26dc 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpc8rgmd6u/base/httpie/core.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp0up7kxfk/patch/httpie/core.py
+@@ -202,7 +202,7 @@ def program(args: argparse.Namespace, env: Environment) -> ExitStatus:
+     try:
+         if args.download:
+             args.follow = True  # --download implies --follow.
+-            downloader = Downloader(env, output_file=args.output_file, resume=False)
++            downloader = Downloader(env, output_file=args.output_file, resume=args.download_resume)
+             downloader.pre_request(args.headers)
+         messages = collect_messages(env, args=args,
+                                     request_body_read_callback=request_body_read_callback)
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpc8rgmd6u/base/httpie/downloads.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp0up7kxfk/patch/httpie/downloads.py
+index 11ba197..9c4b895 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpc8rgmd6u/base/httpie/downloads.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp0up7kxfk/patch/httpie/downloads.py
+@@ -196,7 +196,7 @@ class Downloader:
+             if bytes_have:
+                 # Set ``Range`` header to resume the download
+                 # TODO: Use "If-Range: mtime" to make sure it's fresh?
+-                request_headers['Range'] = 'bytes=0-'
++                request_headers['Range'] = f'bytes={bytes_have}-'
+                 self._resumed_from = bytes_have
+ 
+     def start(

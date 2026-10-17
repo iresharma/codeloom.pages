@@ -1,0 +1,130 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmplgidcg5x/base/tinydb/database.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpdv91cqn6/patch/tinydb/database.py
+index 0cd2b7e..500b775 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmplgidcg5x/base/tinydb/database.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpdv91cqn6/patch/tinydb/database.py
+@@ -2,6 +2,7 @@
+ This module contains the main component of TinyDB: the database.
+ """
+ 
++import json
+ from collections.abc import Iterator
+ 
+ from . import JSONStorage
+@@ -160,6 +161,117 @@ class TinyDB(TableBase):
+ 
+         return set(self.storage.read() or {})
+ 
++    def export_json(self) -> str:
++        """
++        Export the entire database as a JSON string.
++
++        All tables are exported and document IDs are preserved. The returned
++        string is a snapshot: mutating a parsed copy does not affect the
++        database.
++
++        :returns: a JSON string containing all tables and their documents
++        """
++
++        # ``read()`` returns ``None`` when the storage is empty, which would
++        # not be valid JSON. An empty database is represented by an empty
++        # JSON object.
++        return json.dumps(self.storage.read() or {})
++
++    def import_json(self, text: str) -> None:
++        """
++        Replace the entire database with the data from a JSON string.
++
++        The input must be a JSON object whose keys are table names and whose
++        values are objects mapping positive integer-string document IDs to
++        document objects. The complete input is validated before any data is
++        written, and malformed input raises :py:exc:`ValueError`.
++
++        After a successful import, all existing table handles immediately see
++        the imported data; their query caches are cleared and their next-ID
++        allocation is reset.
++
++        :param text: The JSON string to import.
++        """
++
++        # Parse the complete JSON document first. ``json.loads`` raises a
++        # ValueError (JSONDecodeError) for malformed JSON, so no storage write
++        # has happened at that point.
++        data = json.loads(text)
++
++        # Validate the entire object before touching the storage. This way a
++        # malformed import never partially replaces the database.
++        self._validate_import_data(data)
++
++        # Replace the database. If this write fails, we deliberately leave the
++        # existing table caches and next-ID state untouched.
++        self.storage.write(data)
++
++        # Existing Table objects hold caches and allocated next-ID counters.
++        # Reset them so they observe the imported data immediately.
++        for table in self._tables.values():
++            table.clear_cache()
++            table._next_id = None
++
++    def _validate_import_data(self, data) -> dict[str, dict[str, dict]]:
++        """
++        Validate the parsed JSON data for :meth:`import_json`.
++
++        The accepted shape is::
++
++            {
++                'table_name': {
++                    '1': {document...},
++                    '2': {document...},
++                },
++            }
++
++        Document IDs must be canonical, positive integer strings (for example
++        ``"1"``). JSON object keys are always strings, and TinyDB stores
++        document IDs in tables using their ``str()`` representation. Thus
++        non-canonical forms such as ``"01"`` or ``"+1"`` are rejected too.
++        """
++
++        if not isinstance(data, dict):
++            raise ValueError('Imported JSON must be an object')
++
++        for table_name, table_data in data.items():
++            if not isinstance(table_data, dict):
++                raise ValueError(
++                    f'Table {table_name!r} must contain a JSON object '
++                    'mapping document IDs to document objects'
++                )
++
++            for doc_id, document in table_data.items():
++                if not isinstance(doc_id, str):
++                    raise ValueError(
++                        f'Document ID {doc_id!r} in table {table_name!r} '
++                        'must be a string'
++                    )
++
++                # Parse the string key as an integer and enforce the canonical
++                # positive integer-string form.
++                try:
++                    numeric_id = int(doc_id)
++                except (TypeError, ValueError):
++                    raise ValueError(
++                        f'Document ID {doc_id!r} in table {table_name!r} '
++                        'is not a positive integer-string'
++                    ) from None
++
++                if numeric_id <= 0 or str(numeric_id) != doc_id:
++                    raise ValueError(
++                        f'Document ID {doc_id!r} in table {table_name!r} '
++                        'is not a positive integer-string'
++                    )
++
++                if not isinstance(document, dict):
++                    raise ValueError(
++                        f'Document {doc_id!r} in table {table_name!r} '
++                        'must be a JSON object'
++                    )
++
++        return data
++
+     def drop_tables(self) -> None:
+         """
+         Drop all tables from the database. **CANNOT BE REVERSED!**

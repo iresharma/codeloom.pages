@@ -1,0 +1,31 @@
+{
+  "checks": [
+    {
+      "command": "python -m pytest -o addopts= -q tests/test_downloads.py",
+      "kind": "trusted",
+      "output": "................................                                         [100%]\n=============================== warnings summary ===============================\ntests/test_downloads.py::TestDownloads::test_download_with_redirect_original_url_used_for_filename\n  /task/httpie/core.py:100: ResourceWarning: unclosed file <_io.FileIO name='1.json' mode='ab+' closefd=True>\n    exit_status = main_program(\n  Enable tracemalloc to get traceback where the object was allocated.\n  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n32 passed, 1 warning in 8.96s\n",
+      "repeat": 0,
+      "returncode": 0
+    },
+    {
+      "command": "python -m pytest -o addopts= -q /tmp/oracle/check.py",
+      "kind": "hidden",
+      "output": ".                                                                        [100%]\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-f1apqzor'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n1 passed, 1 warning in 1.24s\n",
+      "repeat": 0,
+      "returncode": 0
+    }
+  ],
+  "functional_pass": true,
+  "pass": true,
+  "reason": "verification",
+  "tool_evidence": {
+    "checks": {
+      "terminal_execution": true
+    },
+    "pass": true,
+    "required": {
+      "command_pattern": "python(?:3)?\\s+-m\\s+httpie\\b",
+      "terminal": true
+    }
+  }
+}

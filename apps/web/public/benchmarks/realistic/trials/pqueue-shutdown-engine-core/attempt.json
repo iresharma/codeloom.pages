@@ -1,0 +1,8 @@
+{
+  "cap_usd": 4.0,
+  "id": "pqueue-shutdown-engine-core",
+  "stage": "measured",
+  "started_at": 1792212988.7453928,
+  "system": "engine-core",
+  "task_id": "pqueue-shutdown"
+}

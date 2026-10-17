@@ -1,0 +1,42 @@
+{
+  "cost_is_conservative": false,
+  "cost_usd": 0.21228251385599994,
+  "elapsed_s": 1652.4350672080182,
+  "functional_verification": {
+    "pass": false
+  },
+  "id": "memos-resilience-mini-swe-agent",
+  "stage": "measured",
+  "submission": "checkout",
+  "system": "mini-swe-agent",
+  "task_id": "memos-resilience",
+  "termination": "completed",
+  "tool_evidence": {
+    "checks": {
+      "browser_command": true,
+      "screenshots": false
+    },
+    "pass": false,
+    "required": {
+      "browser": true
+    }
+  },
+  "verification": {
+    "functional_pass": false,
+    "pass": false,
+    "paths": [
+      "web/src/main.tsx"
+    ],
+    "reason": "disallowed_edit",
+    "tool_evidence": {
+      "checks": {
+        "browser_command": true,
+        "screenshots": false
+      },
+      "pass": false,
+      "required": {
+        "browser": true
+      }
+    }
+  }
+}

@@ -1,0 +1,415 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmhsispnl/patch/benchmark_tests/test_session_handling.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmhsispnl/patch/benchmark_tests/test_session_handling.py
+new file mode 100644
+index 0000000..825e703
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmhsispnl/patch/benchmark_tests/test_session_handling.py
+@@ -0,0 +1,199 @@
++"""End-to-end regression tests for HTTPie session handling.
++
++These tests drive the real ``python -m httpie`` and
++``python -m httpie.manager`` entry points from ``subprocess`` so that the
++production argument parsing, session loading/saving, and upgrade paths are
++exercised exactly the way a user would exercise them.
++"""
++
++import hashlib
++import json
++import os
++import shutil
++import subprocess
++import sys
++import threading
++from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
++from pathlib import Path
++
++import pytest
++
++from httpie import __version__ as HTTPIE_VERSION
++
++
++REPO_ROOT = Path(__file__).resolve().parents[1]
++
++
++class Handler(BaseHTTPRequestHandler):
++    def do_GET(self) -> None:
++        self.send_response(200)
++        self.send_header('X-Custom-Header', 'custom-value')
++        self.send_header('Set-Cookie', 'sessionid=abc123; Path=/; HttpOnly')
++        self.end_headers()
++        self.wfile.write(b'ok')
++
++    def log_message(self, format, *args) -> None:
++        # Keep pytest output free of per-request server noise.
++        pass
++
++
++@pytest.fixture
++def http_server():
++    server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
++    thread = threading.Thread(target=server.serve_forever, daemon=True)
++    thread.start()
++    try:
++        yield f'http://127.0.0.1:{server.server_address[1]}'
++    finally:
++        server.shutdown()
++        server.server_close()
++        thread.join(timeout=5)
++
++
++@pytest.fixture
++def config_dir(tmp_path):
++    directory = tmp_path / 'httpie-config'
++    directory.mkdir()
++    return directory
++
++
++def run_cmd(cmd, config_dir):
++    env = os.environ.copy()
++    env['HTTPIE_CONFIG_DIR'] = str(config_dir)
++
++    command_text = ' '.join(cmd)
++    completed = subprocess.run(
++        cmd,
++        cwd=REPO_ROOT,
++        env=env,
++        capture_output=True,
++        text=True,
++        timeout=60,
++    )
++    return command_text, completed
++
++
++def find_session_file(config_dir, session_name):
++    matches = list(config_dir.rglob(f'{session_name}.json'))
++    assert len(matches) == 1, f'expected one session file for {session_name!r}, found {[str(path) for path in matches]}'
++    return matches[0]
++
++
++def test_ordinary_session_save(http_server, config_dir):
++    url = http_server
++    session_name = 'ordinary'
++
++    command_text, result = run_cmd(
++        [
++            sys.executable, '-m', 'httpie',
++            f'--session={session_name}',
++            '--ignore-stdin',
++            '--print=h',
++            'GET',
++            url,
++            'X-Req:hello',
++        ],
++        config_dir,
++    )
++
++    assert result.returncode == 0, (command_text, result.stdout, result.stderr)
++
++    session_path = find_session_file(config_dir, session_name)
++    session_data = json.loads(session_path.read_text())
++
++    assert {'name': 'X-Req', 'value': 'hello'} in session_data['headers']
++    assert any(
++        cookie.get('name') == 'sessionid'
++        for cookie in session_data['cookies']
++    )
++
++
++def test_session_read_only_byte_identity(http_server, config_dir):
++    url = http_server
++    seed_name = 'seed'
++    read_only_name = 'READONLY'
++
++    seed_command, seed_result = run_cmd(
++        [
++            sys.executable, '-m', 'httpie',
++            f'--session={seed_name}',
++            '--ignore-stdin',
++            '--print=h',
++            'GET',
++            url,
++            'X-Req:hello',
++        ],
++        config_dir,
++    )
++    assert seed_result.returncode == 0, (seed_command, seed_result.stdout, seed_result.stderr)
++
++    seed_path = find_session_file(config_dir, seed_name)
++    read_only_path = seed_path.with_name(f'{read_only_name}.json')
++    shutil.copyfile(seed_path, read_only_path)
++
++    before = read_only_path.read_bytes()
++    before_sha256 = hashlib.sha256(before).hexdigest()
++
++    read_only_command, read_only_result = run_cmd(
++        [
++            sys.executable, '-m', 'httpie',
++            f'--session-read-only={read_only_name}',
++            '--ignore-stdin',
++            '--print=h',
++            'GET',
++            url,
++            'X-Readonly:true',
++        ],
++        config_dir,
++    )
++
++    assert read_only_result.returncode == 0, (
++        read_only_command,
++        read_only_result.stdout,
++        read_only_result.stderr,
++    )
++
++    after = read_only_path.read_bytes()
++    after_sha256 = hashlib.sha256(after).hexdigest()
++    assert after == before, (
++        f'{read_only_command} modified the read-only session\n'
++        f'before sha256: {before_sha256}\n'
++        f'after sha256:  {after_sha256}'
++    )
++
++
++def test_legacy_dict_header_upgrade(config_dir):
++    hostname = 'example.com'
++    session_name = 'legacy'
++
++    session_dir = config_dir / 'sessions' / hostname
++    session_dir.mkdir(parents=True)
++    session_path = session_dir / f'{session_name}.json'
++
++    legacy_session = {
++        '__meta__': {'httpie': '3.1.0'},
++        'auth': {'type': None, 'username': None, 'password': None},
++        'cookies': [],
++        'headers': {'X-Legacy': 'v2', 'X-Foo': 'bar'},
++    }
++    session_path.write_text(json.dumps(legacy_session) + '\n')
++
++    command_text, result = run_cmd(
++        [
++            sys.executable, '-m', 'httpie.manager',
++            'cli', 'sessions', 'upgrade',
++            hostname,
++            session_name,
++        ],
++        config_dir,
++    )
++
++    assert result.returncode == 0, (command_text, result.stdout, result.stderr)
++
++    upgraded_session = json.loads(session_path.read_text())
++
++    assert isinstance(upgraded_session['headers'], list)
++    assert upgraded_session['headers'] != []
++    assert {'name': 'X-Legacy', 'value': 'v2'} in upgraded_session['headers']
++    assert {'name': 'X-Foo', 'value': 'bar'} in upgraded_session['headers']
++    assert upgraded_session['__meta__']['httpie'] == HTTPIE_VERSION
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpiom6wf43/base/httpie/client.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmhsispnl/patch/httpie/client.py
+index ed6953f..6a955d0 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpiom6wf43/base/httpie/client.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmhsispnl/patch/httpie/client.py
+@@ -4,7 +4,7 @@ import json
+ import sys
+ from contextlib import contextmanager
+ from time import monotonic
+-from typing import Any, Dict, Callable, Iterable
++from typing import Any, Dict, Callable, Iterable, Optional, cast
+ from urllib.parse import urlparse, urlunparse
+ 
+ import requests
+@@ -43,10 +43,10 @@ IGNORE_CONTENT_LENGTH_METHODS = frozenset([HTTP_OPTIONS])
+ def collect_messages(
+     env: Environment,
+     args: argparse.Namespace,
+-    request_body_read_callback: Callable[[bytes], None] = None,
++    request_body_read_callback: Callable[[bytes], bytes] = lambda chunk: chunk,
+ ) -> Iterable[RequestsMessage]:
+     httpie_session = None
+-    httpie_session_headers = None
++    httpie_session_headers: Optional[HTTPHeadersDict] = None
+     if args.session or args.session_read_only:
+         httpie_session = get_httpie_session(
+             env=env,
+@@ -94,7 +94,7 @@ def collect_messages(
+     if args.path_as_is:
+         prepared_request.url = ensure_path_as_is(
+             orig_url=args.url,
+-            prepped_url=prepared_request.url,
++            prepped_url=cast(str, prepared_request.url),
+         )
+     if args.compress and prepared_request.body:
+         compress_request(
+@@ -134,7 +134,7 @@ def collect_messages(
+         break
+ 
+     if httpie_session:
+-        if True:
++        if not args.session_read_only:
+             httpie_session.cookies = requests_session.cookies
+             httpie_session.remove_cookies(expired_cookies)
+             httpie_session.save()
+@@ -145,27 +145,28 @@ def collect_messages(
+ def max_headers(limit):
+     # <https://github.com/httpie/cli/issues/802>
+     # noinspection PyUnresolvedReferences
+-    orig = http.client._MAXHEADERS
+-    http.client._MAXHEADERS = limit or float('Inf')
++    orig = getattr(http.client, '_MAXHEADERS')
++    setattr(http.client, '_MAXHEADERS', limit or float('Inf'))
+     try:
+         yield
+     finally:
+-        http.client._MAXHEADERS = orig
++        setattr(http.client, '_MAXHEADERS', orig)
+ 
+ 
+ def build_requests_session(
+     verify: bool,
+-    ssl_version: str = None,
+-    ciphers: str = None,
++    ssl_version: Optional[str] = None,
++    ciphers: Optional[str] = None,
+ ) -> requests.Session:
+     requests_session = requests.Session()
+ 
+     # Install our adapter.
+     http_adapter = HTTPieHTTPAdapter()
+     https_adapter = HTTPieHTTPSAdapter(
+-        ciphers=ciphers,
++        ciphers=cast(str, ciphers),
+         verify=verify,
+-        ssl_version=(
++        ssl_version=cast(
++            str,
+             AVAILABLE_SSL_VERSION_ARG_MAPPING[ssl_version]
+             if ssl_version else None
+         ),
+@@ -177,7 +178,7 @@ def build_requests_session(
+     for plugin_cls in plugin_manager.get_transport_plugins():
+         transport_plugin = plugin_cls()
+         requests_session.mount(
+-            prefix=transport_plugin.prefix,
++            prefix=cast(str, transport_plugin.prefix),
+             adapter=transport_plugin.get_adapter(),
+         )
+ 
+@@ -257,7 +258,7 @@ def apply_missing_repeated_headers(
+         new_headers.popone(prepared_name)
+         new_headers.update(zip(original_keys, original_values))
+ 
+-    prepared_request.headers = new_headers
++    prepared_request.headers = cast(Any, new_headers)
+ 
+ 
+ def make_default_headers(args: argparse.Namespace) -> HTTPHeadersDict:
+@@ -312,21 +313,20 @@ def make_send_kwargs_mergeable_from_env(args: argparse.Namespace) -> dict:
+ 
+ 
+ def json_dict_to_request_body(data: Dict[str, Any]) -> str:
+-    data = unwrap_top_level_list_if_needed(data)
+-    if data:
+-        data = json.dumps(data)
++    unwrapped = cast(Dict[str, Any], unwrap_top_level_list_if_needed(data))
++    if unwrapped:
++        return json.dumps(unwrapped)
+     else:
+         # We need to set data to an empty string to prevent requests
+         # from assigning an empty list to `response.request.data`.
+-        data = ''
+-    return data
++        return ''
+ 
+ 
+ def make_request_kwargs(
+     env: Environment,
+     args: argparse.Namespace,
+-    base_headers: HTTPHeadersDict = None,
+-    request_body_read_callback=lambda chunk: chunk
++    base_headers: Optional[HTTPHeadersDict] = None,
++    request_body_read_callback: Callable[[bytes], bytes] = lambda chunk: chunk
+ ) -> dict:
+     """
+     Translate our `args` into `requests.Request` keyword arguments.
+@@ -397,4 +397,4 @@ def ensure_path_as_is(orig_url: str, prepped_url: str) -> str:
+         **parsed_prepped._asdict(),
+         'path': parsed_orig.path,
+     }
+-    return urlunparse(tuple(final_dict.values()))
++    return urlunparse(cast(Any, tuple(final_dict.values())))
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpiom6wf43/base/httpie/legacy/v3_2_0_session_header_format.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmhsispnl/patch/httpie/legacy/v3_2_0_session_header_format.py
+index 5738d1a..939d09e 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpiom6wf43/base/httpie/legacy/v3_2_0_session_header_format.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmhsispnl/patch/httpie/legacy/v3_2_0_session_header_format.py
+@@ -23,7 +23,7 @@ For fixing all named sessions:
+ OLD_HEADER_STORE_LINK = '\nSee $INSERT_LINK for more information.'
+ 
+ 
+-def pre_process(session: 'Session', headers: Any) -> List[Dict[str, Any]]:
++def pre_process(session: 'Session', headers: Any):
+     """Serialize the headers into a unified form and issue a warning if
+     the session file is using the old layout."""
+ 
+@@ -70,4 +70,4 @@ def fix_layout(session: 'Session', *args, **kwargs) -> None:
+     if not isinstance(session['headers'], dict):
+         return None
+ 
+-    session['headers'] = []
++    session['headers'] = materialize_headers(session._headers)
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpiom6wf43/base/httpie/sessions.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmhsispnl/patch/httpie/sessions.py
+index 99dcdba..b3a735b 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpiom6wf43/base/httpie/sessions.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmhsispnl/patch/httpie/sessions.py
+@@ -8,7 +8,7 @@ import re
+ from http.cookies import SimpleCookie
+ from http.cookiejar import Cookie
+ from pathlib import Path
+-from typing import Any, Dict, List, Optional, Union
++from typing import Any, Dict, List, Mapping, Optional, Union, cast
+ 
+ from requests.auth import AuthBase
+ from requests.cookies import RequestsCookieJar, remove_cookie_by_name
+@@ -64,7 +64,7 @@ def materialize_cookie(cookie: Cookie) -> Dict[str, Any]:
+     }
+ 
+     if (
+-        cookie._rest.get('is_explicit_none')
++        getattr(cookie, '_rest', {}).get('is_explicit_none')
+         and materialized_cookie['domain'] == ''
+     ):
+         materialized_cookie['domain'] = None
+@@ -79,13 +79,13 @@ def materialize_cookies(jar: RequestsCookieJar) -> List[Dict[str, Any]]:
+     ]
+ 
+ 
+-def materialize_headers(headers: Dict[str, str]) -> List[Dict[str, Any]]:
++def materialize_headers(headers: Mapping[str, str]) -> List[Dict[str, Any]]:
+     return [
+         {
+             'name': name,
+             'value': value
+         }
+-        for name, value in headers.copy().items()
++        for name, value in headers.items()
+     ]
+ 
+ 
+@@ -214,7 +214,7 @@ class Session(BaseConfigDict):
+                 for cookie_name, morsel in SimpleCookie(value).items():
+                     if not morsel['path']:
+                         morsel['path'] = DEFAULT_COOKIE_PATH
+-                    self.cookie_jar.set(cookie_name, morsel)
++                    self.cookie_jar.set(cookie_name, cast(Any, morsel))
+ 
+                 request_headers.remove_item(name, original_value)
+                 continue
+@@ -296,7 +296,10 @@ class Session(BaseConfigDict):
+                     'password': parsed.value,
+                 }
+ 
+-        return plugin.get_auth(**credentials)
++        return plugin.get_auth(
++            username=cast(str, credentials['username']),
++            password=cast(str, credentials['password']),
++        )
+ 
+     @auth.setter
+     def auth(self, auth: dict):

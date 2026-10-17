@@ -1,0 +1,8 @@
+{
+  "cap_usd": 4.0,
+  "id": "pqueue-bulk-mini-swe-agent",
+  "stage": "measured",
+  "started_at": 1792208568.746062,
+  "system": "mini-swe-agent",
+  "task_id": "pqueue-bulk"
+}

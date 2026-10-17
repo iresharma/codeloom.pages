@@ -1,0 +1,8 @@
+{
+  "cap_usd": 4.0,
+  "id": "starlette-middleware-engine-core",
+  "stage": "measured",
+  "started_at": 1792200937.484606,
+  "system": "engine-core",
+  "task_id": "starlette-middleware"
+}

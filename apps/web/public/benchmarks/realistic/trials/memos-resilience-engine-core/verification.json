@@ -1,0 +1,23 @@
+{
+  "functional_pass": false,
+  "pass": true,
+  "paths": [
+    "web/src/lib/reader.test.mjs"
+  ],
+  "reason": "disallowed_edit",
+  "tool_evidence": {
+    "checks": {
+      "screenshots": true,
+      "tester_browser": true
+    },
+    "pass": true,
+    "required": {
+      "browser": true
+    }
+  },
+  "override": {
+    "by": "manual_review",
+    "original_reason": "disallowed_edit",
+    "note": "Disallowed-path file web/src/lib/reader.test.mjs is a substantive unit test suite covering normalizeMemoName/loadReaderMemos including security-relevant edge cases (path traversal, null bytes) and network-failure handling. Manually reviewed and counted as a pass despite the automatic allowed_paths violation."
+  }
+}

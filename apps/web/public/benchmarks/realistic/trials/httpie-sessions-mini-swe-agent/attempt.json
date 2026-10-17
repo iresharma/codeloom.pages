@@ -1,0 +1,8 @@
+{
+  "cap_usd": 4.0,
+  "id": "httpie-sessions-mini-swe-agent",
+  "stage": "measured",
+  "started_at": 1792217746.585759,
+  "system": "mini-swe-agent",
+  "task_id": "httpie-sessions"
+}

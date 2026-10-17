@@ -1,0 +1,249 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpas6nxqbf/patch/benchmark_tests/test_timeout_propagation.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpas6nxqbf/patch/benchmark_tests/test_timeout_propagation.py
+new file mode 100644
+index 0000000..5a4807a
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpas6nxqbf/patch/benchmark_tests/test_timeout_propagation.py
+@@ -0,0 +1,121 @@
++import asyncio
++
++import httpx
++
++EXPECTED_SCALAR = {"connect": 10.0, "read": 10.0, "write": 10.0, "pool": 10.0}
++
++
++class _CaptureTransport(httpx.BaseTransport):
++    def __init__(self):
++        self.timeout = None
++
++    def handle_request(self, request):
++        self.timeout = request.extensions.get("timeout")
++        return httpx.Response(200)
++
++
++class _CaptureAsyncTransport(httpx.AsyncBaseTransport):
++    def __init__(self):
++        self.timeout = None
++
++    async def handle_async_request(self, request):
++        self.timeout = request.extensions.get("timeout")
++        return httpx.Response(200)
++
++
++def test_timeout_tuple_fields_retain_distinct_values():
++    timeout = httpx.Timeout((None, 5.0, 10.0, 15.0))
++    assert timeout.connect is None
++    assert timeout.read == 5.0
++    assert timeout.write == 10.0
++    assert timeout.pool == 15.0
++
++
++def test_timeout_two_tuple_write_and_pool_none():
++    timeout = httpx.Timeout((1.0, 2.0))  # type: ignore[arg-type]
++    assert timeout.connect == 1.0
++    assert timeout.read == 2.0
++    assert timeout.write is None
++    assert timeout.pool is None
++
++
++def test_timeout_three_tuple_write_and_pool():
++    timeout = httpx.Timeout((1.0, 2.0, 3.0))  # type: ignore[arg-type]
++    assert timeout.connect == 1.0
++    assert timeout.read == 2.0
++    assert timeout.write == 3.0
++    assert timeout.pool is None
++
++
++def test_timeout_none_disables_specified_dimension():
++    timeout = httpx.Timeout(None, read=5.0)
++    assert timeout.connect is None
++    assert timeout.read == 5.0
++    assert timeout.write is None
++    assert timeout.pool is None
++
++
++def test_timeout_default_with_named_pool_none():
++    timeout = httpx.Timeout(5.0, pool=None)
++    assert timeout.connect == 5.0
++    assert timeout.read == 5.0
++    assert timeout.write == 5.0
++    assert timeout.pool is None
++
++
++def test_client_send_raw_request_inherits_client_timeout():
++    transport = _CaptureTransport()
++    with httpx.Client(timeout=10.0, transport=transport) as client:
++        client.send(httpx.Request("GET", "https://example.org"))
++    assert transport.timeout == EXPECTED_SCALAR
++
++
++def test_explicit_request_extension_wins_over_client_default():
++    transport = _CaptureTransport()
++    explicit = httpx.Timeout(None).as_dict()
++    with httpx.Client(timeout=10.0, transport=transport) as client:
++        client.send(
++            httpx.Request(
++                "GET",
++                "https://example.org",
++                extensions={"timeout": explicit},
++            )
++        )
++    assert transport.timeout == {
++        "connect": None,
++        "read": None,
++        "write": None,
++        "pool": None,
++    }
++
++
++def test_async_client_send_raw_request_inherits_client_timeout():
++    async def run():
++        transport = _CaptureAsyncTransport()
++        async with httpx.AsyncClient(timeout=10.0, transport=transport) as client:
++            await client.send(httpx.Request("GET", "https://example.org"))
++        assert transport.timeout == EXPECTED_SCALAR
++
++    asyncio.run(run())
++
++
++def test_async_explicit_request_extension_wins_over_client_default():
++    async def run():
++        transport = _CaptureAsyncTransport()
++        explicit = httpx.Timeout(None).as_dict()
++        async with httpx.AsyncClient(timeout=10.0, transport=transport) as client:
++            await client.send(
++                httpx.Request(
++                    "GET",
++                    "https://example.org",
++                    extensions={"timeout": explicit},
++                )
++            )
++        assert transport.timeout == {
++            "connect": None,
++            "read": None,
++            "write": None,
++            "pool": None,
++        }
++
++    asyncio.run(run())
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp4wnmy3de/base/httpx/_client.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpas6nxqbf/patch/httpx/_client.py
+index e361106..1adbd64 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp4wnmy3de/base/httpx/_client.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpas6nxqbf/patch/httpx/_client.py
+@@ -583,12 +583,7 @@ class BaseClient:
+ 
+     def _set_timeout(self, request: Request) -> None:
+         if "timeout" not in request.extensions:
+-            timeout = (
+-                self.timeout
+-                if isinstance(self.timeout, UseClientDefault)
+-                else Timeout(self.timeout)
+-            )
+-            request.extensions = dict(**request.extensions, timeout=Timeout(None).as_dict())
++            request.extensions = dict(**request.extensions, timeout=self.timeout.as_dict())
+ 
+ 
+ class Client(BaseClient):
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp4wnmy3de/base/httpx/_config.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpas6nxqbf/patch/httpx/_config.py
+index 2ac5c98..467a6c9 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp4wnmy3de/base/httpx/_config.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpas6nxqbf/patch/httpx/_config.py
+@@ -106,7 +106,7 @@ class Timeout:
+             # Passed as a tuple.
+             self.connect = timeout[0]
+             self.read = timeout[1]
+-            self.write = None if len(timeout) < 3 else timeout[1]
++            self.write = None if len(timeout) < 3 else timeout[2]
+             self.pool = None if len(timeout) < 4 else timeout[3]
+         elif not (
+             isinstance(connect, UnsetType)
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpas6nxqbf/patch/research.md b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpas6nxqbf/patch/research.md
+new file mode 100644
+index 0000000..30967a9
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpas6nxqbf/patch/research.md
+@@ -0,0 +1,78 @@
++# Timeout propagation research
++
++## Web research
++
++The web search for "HTTPX timeouts" was fetched via a Bing SERP because the
++`web_search` / Brave tool was unavailable in the environment. Results included:
++
++- https://www.python-httpx.org/
++- https://pypi.org/project/httpx/
++- https://github.com/encode/httpx
++- https://betterstack.com/community/guides/scaling-python/httpx-explained
++
++The top GitHub result, `projectdiscovery/httpx`, is a different project (an HTTP
++probing tool), not python-httpx (the `encode/httpx` Python HTTP client library
++this checkout belongs to).
++
++## Pinned upstream revision
++
++This checkout tracks encode/httpx at pinned commit
++`26d48e0634e6ee9cdc0533996db289ce4b430177`. Upstream sources referenced:
++
++- https://github.com/encode/httpx/blob/26d48e0634e6ee9cdc0533996db289ce4b430177/httpx/_client.py
++- https://github.com/encode/httpx/blob/26d48e0634e6ee9cdc0533996db289ce4b430177/httpx/_config.py
++- https://github.com/encode/httpx/blob/26d48e0634e6ee9cdc0533996db289ce4b430177/httpx/_types.py
++
++## Compatibility contract
++
++- A Timeout value has exactly four independent dimensions: connect, read, write, pool. Each is float | None; None disables that dimension (no timeout), a float is a timeout in seconds, and the four never cross-contaminate.
++- Normalization: Timeout(scalar float) => all four = scalar; Timeout(None) => all four = None; Timeout(scalar, dim=v, ...) => each dimension uses its explicit v when given, else the scalar; Timeout(instance) copies all four fields; Timeout((c, r, w, p)) positional order = connect/read/write/pool (missing trailing => None); Timeout() with no scalar and not all four explicit => ValueError.
++- Precedence: the request-level timeout parameter defaults to the UseClientDefault sentinel (not None). build_request resolves timeout = self.timeout if UseClientDefault else Timeout(timeout), then extensions["timeout"] = timeout.as_dict(). Therefore an explicit per-request timeout (including explicit None) wins over the client timeout; an omitted request timeout inherits the client timeout. send() backfills the client default via _set_timeout only when request.extensions has no "timeout" key.
++- Default: DEFAULT_TIMEOUT_CONFIG = Timeout(5.0) => connect=read=write=pool=5.0.
++
++## Local divergences and fixes
++
++Two local divergences from the pinned upstream behavior were found.
++
++### Fix 1 — tuple normalization in `httpx/_config.py`
++
++`Timeout.__init__` mapped a four-field tuple in the order
++`(connect, read, write, pool)`, but the tuple branch assigned the third field to
++`write` using `timeout[1]` instead of `timeout[2]`, so `write` copied `read` and
++was never independently settable.
++
++Change made:
++
++```python
++# before
++self.write = None if len(timeout) < 3 else timeout[1]
++# after
++self.write = None if len(timeout) < 3 else timeout[2]
++```
++
++`pool` already used `timeout[3]`, so it was left unchanged.
++
++### Fix 2 — `_set_timeout` in `httpx/_client.py`
++
++`BaseClient._set_timeout` is the send-path fallback used when a raw
++`httpx.Request` has no `"timeout"` extension. It computed but discarded the
++client default and stamped the request with `Timeout(None).as_dict()`, disabling
++all timeouts. It also contained a dead `isinstance(self.timeout,
++UseClientDefault)` computation because `self.timeout` is always a `Timeout`
++instance by the time send is reached.
++
++Change made:
++
++```python
++def _set_timeout(self, request: Request) -> None:
++    if "timeout" not in request.extensions:
++        request.extensions = dict(**request.extensions, timeout=self.timeout.as_dict())
++```
++
++This preserves an existing `request.extensions["timeout"]` (so an explicit
++request timeout, including explicit `None`, wins) and otherwise inherits the
++client default `self.timeout`.
++
++`BaseClient.build_request` already implemented the correct precedence — explicit
++request timeout wins, omitted request timeout inherits the client default — and
++was left unchanged.
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpas6nxqbf/patch/test b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpas6nxqbf/patch/test
+new file mode 100644
+index 0000000..a7c01bc
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpas6nxqbf/patch/test
+@@ -0,0 +1 @@
++# TLS secrets log file, generated by OpenSSL / Python

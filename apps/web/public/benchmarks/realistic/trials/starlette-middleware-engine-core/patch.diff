@@ -1,0 +1,108 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp39wccpoq/patch/benchmark_tests/test_regressions.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp39wccpoq/patch/benchmark_tests/test_regressions.py
+new file mode 100644
+index 0000000..9badf2a
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp39wccpoq/patch/benchmark_tests/test_regressions.py
+@@ -0,0 +1,76 @@
++from starlette.applications import Starlette
++from starlette.middleware.gzip import GZipMiddleware
++from starlette.responses import Response, StreamingResponse
++from starlette.routing import Route
++from starlette.testclient import TestClient
++
++
++def test_repeated_set_cookie_preserves_all_cookies() -> None:
++    def homepage(request):
++        response = Response("ok")
++        response.set_cookie("a", "1")
++        response.set_cookie("b", "2")
++        return response
++
++    app = Starlette(routes=[Route("/", homepage)])
++    client = TestClient(app)
++    response = client.get("/")
++
++    cookies = response.headers.get_list("set-cookie")
++    assert len(cookies) >= 2
++    assert any("a=1" in cookie for cookie in cookies)
++    assert any("b=2" in cookie for cookie in cookies)
++
++
++def test_gzip_preserves_each_responses_own_headers() -> None:
++    def large(request):
++        response = Response(content=b"x" * 2000, media_type="application/json")
++        response.headers["X-Test"] = "large"
++        response.set_cookie("kind", "large")
++        return response
++
++    def small(request):
++        response = Response(content=b"tiny", media_type="text/plain")
++        response.headers["X-Test"] = "small"
++        response.set_cookie("kind", "small")
++        return response
++
++    app = Starlette(routes=[Route("/large", large), Route("/small", small)])
++    client = TestClient(GZipMiddleware(app))
++
++    large_response = client.get("/large", headers={"Accept-Encoding": "gzip"})
++    small_response = client.get("/small", headers={"Accept-Encoding": "gzip"})
++
++    assert large_response.headers["content-encoding"] == "gzip"
++    assert "content-encoding" not in small_response.headers
++
++    assert large_response.headers["content-type"] == "application/json"
++    assert small_response.headers["content-type"] == "text/plain; charset=utf-8"
++
++    assert large_response.headers["x-test"] == "large"
++    assert small_response.headers["x-test"] == "small"
++
++    large_cookies = large_response.headers.get_list("set-cookie")
++    small_cookies = small_response.headers.get_list("set-cookie")
++    assert any("kind=large" in cookie for cookie in large_cookies)
++    assert any("kind=small" in cookie for cookie in small_cookies)
++    assert not any("kind=large" in cookie for cookie in small_cookies)
++    assert not any("kind=small" in cookie for cookie in large_cookies)
++
++
++def test_event_stream_is_not_gzip_compressed() -> None:
++    chunks = [b"data: first\n\n", b"data: second\n\n"]
++
++    async def generate():
++        for chunk in chunks:
++            yield chunk
++
++    def events(request):
++        return StreamingResponse(generate(), media_type="text/event-stream")
++
++    app = Starlette(routes=[Route("/events", events)])
++    client = TestClient(GZipMiddleware(app))
++    response = client.get("/events", headers={"Accept-Encoding": "gzip"})
++
++    assert "content-encoding" not in response.headers
++    assert response.content == b"".join(chunks)
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpkek2me85/base/starlette/middleware/gzip.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp39wccpoq/patch/starlette/middleware/gzip.py
+index 4577749..abd898b 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpkek2me85/base/starlette/middleware/gzip.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp39wccpoq/patch/starlette/middleware/gzip.py
+@@ -50,7 +50,7 @@ class IdentityResponder:
+         if message_type == "http.response.start":
+             # Don't send the initial message until we've determined how to
+             # modify the outgoing headers correctly.
+-            self.initial_message = {**message, "headers": []}
++            self.initial_message = message
+             headers = Headers(raw=self.initial_message["headers"])
+             self.content_encoding_set = "content-encoding" in headers
+             self.content_type_is_excluded = headers.get("content-type", "").startswith(DEFAULT_EXCLUDED_CONTENT_TYPES)
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpkek2me85/base/starlette/responses.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp39wccpoq/patch/starlette/responses.py
+index 4fa9c9d..e4a9d71 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpkek2me85/base/starlette/responses.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp39wccpoq/patch/starlette/responses.py
+@@ -131,7 +131,7 @@ class Response:
+             cookie[key]["partitioned"] = True  # pragma: no cover
+ 
+         cookie_val = cookie.output(header="").strip()
+-        self.headers["set-cookie"] = cookie_val
++        self.headers.append("set-cookie", cookie_val)
+ 
+     def delete_cookie(
+         self,

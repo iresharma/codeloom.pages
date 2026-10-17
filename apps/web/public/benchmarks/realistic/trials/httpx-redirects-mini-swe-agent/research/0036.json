@@ -1,0 +1,17 @@
+{
+  "arguments": {
+    "args": [
+      "api",
+      "repos/encode/httpx/contents/httpx/__version__.py?ref=26d48e0634e6ee9cdc0533996db289ce4b430177",
+      "-H",
+      "Accept: application/vnd.github.raw"
+    ]
+  },
+  "commit": "26d48e0634e6ee9cdc0533996db289ce4b430177",
+  "ok": true,
+  "operation": "github",
+  "retrieved_at": 1792234080.815624,
+  "sha256": "2e853261e3974e2786cee3ffeb850bd30c5db718eebbf41b3af13b34e83e22a5",
+  "text": "__title__ = \"httpx\"\n__description__ = \"A next generation HTTP client, for Python 3.\"\n__version__ = \"0.28.1\"\n",
+  "url": "https://api.github.com/repos/encode/httpx/contents/httpx/__version__.py?ref=26d48e0634e6ee9cdc0533996db289ce4b430177"
+}

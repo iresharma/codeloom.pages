@@ -1,0 +1,205 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpxftjp5dt/base/web/src/css/reader.css b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpbx8ypqjg/patch/web/src/css/reader.css
+index fe10d4c..762bf60 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpxftjp5dt/base/web/src/css/reader.css
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpbx8ypqjg/patch/web/src/css/reader.css
+@@ -1,3 +1,23 @@
+-.memo-reader { padding: 24px; }
+-.reader-feed { display: grid; gap: 20px; }
+-.reader-feed article { padding: 16px; border: 1px solid #bbb; }
++.memo-reader {
++  padding: 24px;
++}
++.reader-summary {
++  margin: 0 0 12px;
++}
++.reader-summary mark {
++  padding: 0 2px;
++  background: #fff3a3;
++}
++.reader-feed {
++  display: grid;
++  gap: 20px;
++}
++.reader-feed article {
++  padding: 16px;
++  border: 1px solid #bbb;
++}
++.reader-empty {
++  padding: 24px;
++  border: 1px dashed #bbb;
++  color: #555;
++}
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpxftjp5dt/base/web/src/lib/reader.ts b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpbx8ypqjg/patch/web/src/lib/reader.ts
+index c8e309c..13428a9 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpxftjp5dt/base/web/src/lib/reader.ts
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpbx8ypqjg/patch/web/src/lib/reader.ts
+@@ -1,8 +1,42 @@
+ import { Memo } from "@/types/proto/api/v1/memo_service";
++
+ export async function loadMemos(): Promise<Memo[]> {
+   const response = await fetch("/api/v1/memos?pageSize=100");
+   if (!response.ok) throw new Error("Memos unavailable");
+   const data = await response.json();
+-  return (data.memos || []).map((memo: unknown) => Memo.fromPartial({ ...(memo as Memo), displayTime: (memo as Memo).displayTime ? new Date(String((memo as Memo).displayTime)) : undefined }));
++  return (data.memos || []).map((memo: unknown) =>
++    Memo.fromPartial({
++      ...(memo as Memo),
++      displayTime: (memo as Memo).displayTime ? new Date(String((memo as Memo).displayTime)) : undefined,
++    }),
++  );
++}
++
++export const memosPromise =
++  typeof window !== "undefined" && typeof window.fetch === "function" ? loadMemos() : Promise.resolve([] as Memo[]);
++
++export function selectMemos(memos: Memo[], params: URLSearchParams): Memo[] {
++  const query = (params.get("q") ?? "").trim();
++  const tag = (params.get("tag") ?? "").trim();
++
++  if (!query && !tag) {
++    return memos;
++  }
++
++  const normalizedQuery = query.toLowerCase();
++
++  return memos.filter((memo) => {
++    if (query) {
++      const searchableText = `${memo.content}\n${memo.snippet}`.toLowerCase();
++      if (!searchableText.includes(normalizedQuery)) {
++        return false;
++      }
++    }
++
++    if (tag && !memo.tags.includes(tag)) {
++      return false;
++    }
++
++    return true;
++  });
+ }
+-export function selectMemos(memos: Memo[], _params: URLSearchParams): Memo[] { return memos; }
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpxftjp5dt/base/web/src/pages/Reader.tsx b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpbx8ypqjg/patch/web/src/pages/Reader.tsx
+index cc50adc..3d5cc50 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpxftjp5dt/base/web/src/pages/Reader.tsx
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpbx8ypqjg/patch/web/src/pages/Reader.tsx
+@@ -1,21 +1,107 @@
+-import { useEffect, useState } from "react";
++import { useEffect, useState, type ReactNode } from "react";
+ import MemoContent from "@/components/MemoContent";
+-import { loadMemos, selectMemos } from "@/lib/reader";
++import { memosPromise, selectMemos } from "@/lib/reader";
+ import { Memo } from "@/types/proto/api/v1/memo_service";
+ import "@/css/reader.css";
++
++interface HighlightedTextProps {
++  text: string;
++  query: string;
++}
++
++function HighlightedText({ text, query }: HighlightedTextProps): ReactNode {
++  if (!query) {
++    return text;
++  }
++
++  const lowerText = text.toLowerCase();
++  const lowerQuery = query.toLowerCase();
++  const nodes: ReactNode[] = [];
++  let startIndex = 0;
++  let matchIndex = lowerText.indexOf(lowerQuery);
++
++  while (matchIndex >= 0) {
++    if (matchIndex > startIndex) {
++      nodes.push(text.slice(startIndex, matchIndex));
++    }
++    nodes.push(<mark key={`${matchIndex}-${nodes.length}`}>{text.slice(matchIndex, matchIndex + query.length)}</mark>);
++    startIndex = matchIndex + query.length;
++    matchIndex = lowerText.indexOf(lowerQuery, startIndex);
++  }
++
++  if (startIndex < text.length) {
++    nodes.push(text.slice(startIndex));
++  }
++
++  return nodes;
++}
++
++function ReaderSummary({ count, query, tag }: { count: number; query: string; tag: string }) {
++  const noun = count === 1 ? "memo" : "memos";
++
++  if (!query && !tag) {
++    return (
++      <p className="reader-summary" role="status">
++        {count} {noun} found
++      </p>
++    );
++  }
++
++  return (
++    <p className="reader-summary" role="status">
++      {count} {noun} found matching {query ? <HighlightedText text={query} query={query} /> : null}
++      {query && tag ? " and " : null}
++      {tag ? (
++        <>
++          tag <HighlightedText text={tag} query={tag} />
++        </>
++      ) : null}
++    </p>
++  );
++}
++
+ export default function Reader() {
+   const [memos, setMemos] = useState<Memo[]>([]);
+   const [error, setError] = useState("");
+-  useEffect(() => { loadMemos().then(setMemos).catch(() => setError("Memos unavailable")); }, []);
+-  const params = new URLSearchParams(location.search);
++  const [params] = useState(() => new URLSearchParams(window.location.search));
++
++  useEffect(() => {
++    memosPromise.then(setMemos).catch(() => setError("Memos unavailable"));
++  }, []);
++
++  const query = (params.get("q") ?? "").trim();
++  const tag = (params.get("tag") ?? "").trim();
+   const visible = selectMemos(memos, params);
+-  return <main className="memo-reader">
+-    <header className="reader-toolbar"><h1>Public memo reader</h1><a href="/explore">Open Memos</a></header>
+-    {error && <p>{error}</p>}
+-    <section className="reader-feed">{visible.map(memo => <article key={memo.name} data-memo={memo.name}>
+-      <p className="reader-meta">{memo.creator} · {memo.displayTime?.toISOString()}</p>
+-      <MemoContent nodes={memo.nodes} readonly />
+-      <div className="reader-attachments">{memo.resources.map(resource => <a key={resource.name} href={resource.externalLink || `/file/${resource.name}/${resource.filename}`}>{resource.filename}</a>)}</div>
+-    </article>)}</section>
+-  </main>;
++
++  return (
++    <main className="memo-reader">
++      <header className="reader-toolbar">
++        <h1>Public memo reader</h1>
++        <a href="/explore">Open Memos</a>
++      </header>
++      {error && <p>{error}</p>}
++      <ReaderSummary count={visible.length} query={query} tag={tag} />
++      {visible.length > 0 ? (
++        <section className="reader-feed">
++          {visible.map((memo) => (
++            <article key={memo.name} data-memo={memo.name}>
++              <p className="reader-meta">
++                {memo.creator} · {memo.displayTime?.toISOString()}
++              </p>
++              <MemoContent nodes={memo.nodes} readonly />
++              <div className="reader-attachments">
++                {memo.resources.map((resource) => (
++                  <a key={resource.name} href={resource.externalLink || `/file/${resource.name}/${resource.filename}`}>
++                    {resource.filename}
++                  </a>
++                ))}
++              </div>
++            </article>
++          ))}
++        </section>
++      ) : (
++        <p className="reader-empty">No memos found</p>
++      )}
++    </main>
++  );
+ }

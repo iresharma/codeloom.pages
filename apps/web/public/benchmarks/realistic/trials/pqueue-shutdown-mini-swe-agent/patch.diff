@@ -1,0 +1,169 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpuxjjizw9/patch/benchmark_tests/cancellation.test.ts b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpuxjjizw9/patch/benchmark_tests/cancellation.test.ts
+new file mode 100644
+index 0000000..a02f0f3
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpuxjjizw9/patch/benchmark_tests/cancellation.test.ts
+@@ -0,0 +1,137 @@
++/* eslint-disable unicorn/filename-case -- The task requires this directory name. */
++import {test} from 'node:test';
++import assert from 'node:assert/strict';
++import PQueue from '../source/index.js';
++
++const createGate = () => {
++	const {promise: gate, resolve: release} = Promise.withResolvers<void>();
++	return {gate, release} as const;
++};
++
++test('clear() rejects every queued promise with AbortError and lets running work complete normally', async () => {
++	const queue = new PQueue({concurrency: 1});
++	const started: string[] = [];
++	const {gate, release} = createGate();
++
++	const runningTask = queue.add(async () => {
++		started.push('running');
++		await gate;
++		return 'running-result';
++	});
++
++	const queuedTasks = [
++		queue.add(() => {
++			started.push('queued-1');
++			return 'queued-1';
++		}),
++		queue.add(() => {
++			started.push('queued-2');
++			return 'queued-2';
++		}),
++	];
++
++	assert.equal(queue.pending, 1);
++	assert.equal(queue.size, 2);
++
++	let didIdleResolve = false;
++	let didPendingZeroResolve = false;
++	const idlePromise = queue.onIdle().then(() => {
++		didIdleResolve = true;
++	});
++	const pendingZeroPromise = queue.onPendingZero().then(() => {
++		didPendingZeroResolve = true;
++	});
++
++	queue.clear();
++
++	await assert.rejects(Promise.all(queuedTasks), {name: 'AbortError', message: 'The queue was cleared'});
++	assert.equal(queue.size, 0);
++
++	// `clear()` only removes waiting tasks, so `onIdle()` and `onPendingZero()`
++	// must still wait for the running task to finish.
++	await Promise.resolve();
++	assert.equal(didIdleResolve, false);
++	assert.equal(didPendingZeroResolve, false);
++
++	release();
++	assert.equal(await runningTask, 'running-result');
++	await Promise.all([idlePromise, pendingZeroPromise]);
++
++	assert.deepEqual(started, ['running']);
++});
++
++test('cancelling the first waiting task keeps the remaining tasks in queue order', async () => {
++	const queue = new PQueue({concurrency: 1});
++	const started: string[] = [];
++	const {gate, release} = createGate();
++
++	const runningTask = queue.add(async () => {
++		started.push('running');
++		await gate;
++		return 'running-result';
++	});
++
++	const controller = new AbortController();
++	const firstQueued = queue.add(() => {
++		started.push('first-queued');
++		return 'first';
++	}, {signal: controller.signal});
++	const secondQueued = queue.add(() => {
++		started.push('second-queued');
++		return 'second';
++	});
++	const thirdQueued = queue.add(() => {
++		started.push('third-queued');
++		return 'third';
++	});
++
++	controller.abort();
++	await assert.rejects(firstQueued, {name: 'AbortError'});
++	assert.equal(queue.size, 2);
++
++	release();
++	assert.equal(await runningTask, 'running-result');
++	assert.equal(await secondQueued, 'second');
++	assert.equal(await thirdQueued, 'third');
++	await queue.onIdle();
++
++	assert.deepEqual(started, ['running', 'second-queued', 'third-queued']);
++});
++
++test('cancelling a later waiting task keeps the tasks before and after it in queue order', async () => {
++	const queue = new PQueue({concurrency: 1});
++	const started: string[] = [];
++	const {gate, release} = createGate();
++
++	const runningTask = queue.add(async () => {
++		started.push('running');
++		await gate;
++		return 'running-result';
++	});
++
++	const firstQueued = queue.add(() => {
++		started.push('first-queued');
++		return 'first';
++	});
++	const controller = new AbortController();
++	const secondQueued = queue.add(() => {
++		started.push('second-queued');
++		return 'second';
++	}, {signal: controller.signal});
++	const thirdQueued = queue.add(() => {
++		started.push('third-queued');
++		return 'third';
++	});
++
++	controller.abort();
++	await assert.rejects(secondQueued, {name: 'AbortError'});
++	assert.equal(queue.size, 2);
++
++	release();
++	assert.equal(await runningTask, 'running-result');
++	assert.equal(await firstQueued, 'first');
++	assert.equal(await thirdQueued, 'third');
++	await queue.onIdle();
++
++	assert.deepEqual(started, ['running', 'first-queued', 'third-queued']);
++});
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp90y0tk_e/base/source/index.ts b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpuxjjizw9/patch/source/index.ts
+index 59b3d60..1f70316 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp90y0tk_e/base/source/index.ts
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpuxjjizw9/patch/source/index.ts
+@@ -957,7 +957,7 @@ export default class PQueue<QueueType extends Queue<RunFunction, EnqueueOptionsT
+ 			waitingTask.stopListeningForAbort?.();
+ 			waitingTask.isCleared = true;
+ 			waitingTask.promise?.catch(() => undefined);
+-			void error; // Regression: cleared promises never settle.
++			waitingTask.reject?.(error);
+ 		}
+ 
+ 		this.#waitingTasks.clear();
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp90y0tk_e/base/source/priority-queue.ts b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpuxjjizw9/patch/source/priority-queue.ts
+index f1b4bb6..c0c8642 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp90y0tk_e/base/source/priority-queue.ts
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpuxjjizw9/patch/source/priority-queue.ts
+@@ -110,7 +110,7 @@ export default class PriorityQueue implements Queue<RunFunction, PriorityQueueOp
+ 		const index = this.#findIndex(element => (typeof idOrRun === 'string' ? element.id : element.run) === idOrRun);
+ 
+ 		// Removing the first item is O(1). Aborting many tasks with one signal removes them in the order they were added, which is the queue order when they have the same priority, and a splice for each would be O(n²).
+-		if (index === this.#head && false) {
++		if (index === this.#head) {
+ 			this.#removeFirst();
+ 		} else if (index !== -1) {
+ 			this.#queue.splice(index, 1);

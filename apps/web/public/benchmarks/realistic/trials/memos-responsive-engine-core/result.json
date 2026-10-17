@@ -1,0 +1,55 @@
+{
+  "cost_is_conservative": false,
+  "cost_usd": 0.3872872001599999,
+  "elapsed_s": 2142.4543507500784,
+  "functional_verification": {
+    "pass": true
+  },
+  "id": "memos-responsive-engine-core",
+  "stage": "measured",
+  "submission": "checkout",
+  "system": "engine-core",
+  "task_id": "memos-responsive",
+  "termination": "completed",
+  "tool_evidence": {
+    "checks": {
+      "screenshots": true,
+      "tester_browser": true
+    },
+    "pass": true,
+    "required": {
+      "browser": true
+    }
+  },
+  "verification": {
+    "checks": [
+      {
+        "command": "cd web && ./node_modules/.bin/tsc --noEmit --skipLibCheck",
+        "kind": "trusted",
+        "output": "",
+        "repeat": 0,
+        "returncode": 0
+      },
+      {
+        "command": "python -m pytest -o addopts= -q /tmp/oracle/check.py",
+        "kind": "hidden",
+        "output": ".                                                                        [100%]\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-29qajo6n'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n1 passed, 1 warning in 6.27s\n",
+        "repeat": 0,
+        "returncode": 0
+      }
+    ],
+    "functional_pass": true,
+    "pass": true,
+    "reason": "verification",
+    "tool_evidence": {
+      "checks": {
+        "screenshots": true,
+        "tester_browser": true
+      },
+      "pass": true,
+      "required": {
+        "browser": true
+      }
+    }
+  }
+}

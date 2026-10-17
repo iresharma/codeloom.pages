@@ -1,0 +1,223 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp88o9as6r/base/web/src/css/reader.css b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmprsq_fc7y/patch/web/src/css/reader.css
+index fe10d4c..7e11160 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp88o9as6r/base/web/src/css/reader.css
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmprsq_fc7y/patch/web/src/css/reader.css
+@@ -1,3 +1,170 @@
+-.memo-reader { padding: 24px; }
+-.reader-feed { display: grid; gap: 20px; }
+-.reader-feed article { padding: 16px; border: 1px solid #bbb; }
++.memo-reader {
++  padding: 24px;
++  max-width: 100%;
++}
++
++.reader-feed {
++  display: grid;
++  gap: 20px;
++}
++
++.reader-feed article {
++  padding: 16px;
++  border: 1px solid #bbb;
++  background: #fff;
++  overflow-wrap: anywhere;
++}
++
++.reader-meta {
++  margin-bottom: 8px;
++  color: #555;
++  font-size: 0.875rem;
++  overflow-wrap: anywhere;
++}
++
++.reader-attachments {
++  display: flex;
++  flex-direction: column;
++  gap: 4px;
++  margin-top: 12px;
++}
++
++.reader-attachments a {
++  overflow-wrap: anywhere;
++}
++
++@media print {
++  /* A print view should only contain the memo cards, not reader navigation. */
++  .reader-toolbar {
++    display: none !important;
++  }
++
++  .memo-reader {
++    padding: 0;
++    background: #fff !important;
++    color: #000 !important;
++  }
++
++  .memo-reader,
++  .reader-feed,
++  .reader-feed article,
++  .reader-meta,
++  .reader-attachments {
++    max-width: 100%;
++  }
++
++  .reader-feed {
++    display: block;
++    gap: 0;
++  }
++
++  .reader-feed article {
++    /* Cards should not look like boxes when printed. */
++    padding: 0 0 16px 0;
++    margin: 0 0 16px 0;
++    border: none !important;
++    box-shadow: none !important;
++    background: #fff !important;
++    color: #000 !important;
++
++    /* Keep each short memo on one printed page where possible. */
++    break-inside: avoid;
++    page-break-inside: avoid;
++    orphans: 3;
++    widows: 3;
++  }
++
++  .reader-feed article * {
++    box-shadow: none !important;
++    text-shadow: none !important;
++    background: transparent !important;
++  }
++
++  .reader-meta {
++    margin-bottom: 4px;
++    color: #333 !important;
++    font-size: 10pt;
++  }
++
++  .reader-attachments {
++    margin-top: 8px;
++  }
++
++  .reader-feed article a,
++  .reader-attachments a {
++    color: #000 !important;
++    overflow-wrap: anywhere;
++    word-break: break-word;
++  }
++
++  /* Preserve Markdown tables as visible semantic tables. */
++  .reader-feed article table {
++    display: table;
++    width: 100% !important;
++    max-width: 100% !important;
++    table-layout: fixed;
++    border-collapse: collapse;
++    border: 1px solid #555 !important;
++  }
++
++  .reader-feed article th,
++  .reader-feed article td {
++    display: table-cell;
++    padding: 4px 6px;
++    border: 1px solid #555 !important;
++    vertical-align: top;
++    overflow-wrap: anywhere;
++    word-break: break-word;
++  }
++
++  .reader-feed article thead {
++    display: table-header-group;
++  }
++
++  .reader-feed article tr {
++    break-inside: avoid;
++    page-break-inside: avoid;
++  }
++
++  /* Preserve Markdown headings and keep them with the content that follows. */
++  .reader-feed article h1,
++  .reader-feed article h2,
++  .reader-feed article h3,
++  .reader-feed article h4,
++  .reader-feed article h5,
++  .reader-feed article h6 {
++    color: #000 !important;
++    break-after: avoid;
++    page-break-after: avoid;
++  }
++
++  /* Preserve code blocks and inline code without clipping long lines. */
++  .reader-feed article pre,
++  .reader-feed article pre code {
++    white-space: pre-wrap !important;
++    overflow-wrap: anywhere !important;
++    word-break: break-word !important;
++    overflow: visible !important;
++    max-width: 100% !important;
++    color: #000 !important;
++  }
++
++  .reader-feed article pre {
++    padding: 8px;
++    border: 1px solid #999 !important;
++  }
++
++  .reader-feed article code {
++    color: #000 !important;
++    overflow-wrap: anywhere;
++    word-break: break-word;
++  }
++
++  /* Constrain any unexpectedly long unbroken content. */
++  .reader-feed article p,
++  .reader-feed article span,
++  .reader-feed article div {
++    overflow-wrap: anywhere;
++    word-break: break-word;
++  }
++}
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp88o9as6r/base/web/src/lib/reader.ts b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmprsq_fc7y/patch/web/src/lib/reader.ts
+index c8e309c..9a2a70f 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp88o9as6r/base/web/src/lib/reader.ts
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmprsq_fc7y/patch/web/src/lib/reader.ts
+@@ -1,8 +1,37 @@
+ import { Memo } from "@/types/proto/api/v1/memo_service";
+-export async function loadMemos(): Promise<Memo[]> {
++
++async function requestMemos(): Promise<Memo[]> {
+   const response = await fetch("/api/v1/memos?pageSize=100");
+   if (!response.ok) throw new Error("Memos unavailable");
+   const data = await response.json();
+-  return (data.memos || []).map((memo: unknown) => Memo.fromPartial({ ...(memo as Memo), displayTime: (memo as Memo).displayTime ? new Date(String((memo as Memo).displayTime)) : undefined }));
++  return (data.memos || []).map((memo: unknown) =>
++    Memo.fromPartial({
++      ...(memo as Memo),
++      displayTime: (memo as Memo).displayTime ? new Date(String((memo as Memo).displayTime)) : undefined,
++    }),
++  );
++}
++
++let memosPromise: Promise<Memo[]> | null = null;
++
++function getMemosPromise(): Promise<Memo[]> {
++  if (!memosPromise) {
++    memosPromise = requestMemos();
++  }
++  return memosPromise;
++}
++
++// The reader page is rendered after the workspace/user bootstrap round-trips.
++// On a direct /reader visit, start loading memos while those round-trips are in
++// flight so the first paint already has memo content.
++if (typeof window !== "undefined" && window.location.pathname === "/reader") {
++  getMemosPromise();
++}
++
++export async function loadMemos(): Promise<Memo[]> {
++  return getMemosPromise();
++}
++
++export function selectMemos(memos: Memo[], _params: URLSearchParams): Memo[] {
++  return memos;
+ }
+-export function selectMemos(memos: Memo[], _params: URLSearchParams): Memo[] { return memos; }

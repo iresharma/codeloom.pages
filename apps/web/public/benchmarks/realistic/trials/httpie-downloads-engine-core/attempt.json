@@ -1,0 +1,8 @@
+{
+  "cap_usd": 4.0,
+  "id": "httpie-downloads-engine-core",
+  "stage": "measured",
+  "started_at": 1792215388.974188,
+  "system": "engine-core",
+  "task_id": "httpie-downloads"
+}

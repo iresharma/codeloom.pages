@@ -1,0 +1,306 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpivdf57se/patch/benchmark_tests/__init__.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpivdf57se/patch/benchmark_tests/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpivdf57se/patch/benchmark_tests/test_strict_mode.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpivdf57se/patch/benchmark_tests/test_strict_mode.py
+new file mode 100644
+index 0000000..19b5366
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpivdf57se/patch/benchmark_tests/test_strict_mode.py
+@@ -0,0 +1,114 @@
++import io
++import os
++import subprocess
++import sys
++from unittest import mock
++
++import pytest
++
++import dotenv
++from dotenv import DotEnvParseError
++from dotenv.main import DotEnv
++
++
++def run_dotenv_cli(args, cwd):
++    return subprocess.run(
++        ["dotenv", *args], capture_output=True, text=True, cwd=cwd
++    )
++
++
++def test_dotenv_parse_error_is_public_valueerror():
++    assert issubclass(dotenv.DotEnvParseError, ValueError)
++
++
++def test_dotenv_values_strict_stream_raises_with_line_and_path_none():
++    stream = io.StringIO("a=b\nnot a binding\ne=f\n")
++
++    with pytest.raises(DotEnvParseError) as exc_info:
++        dotenv.dotenv_values(stream=stream, strict=True)
++
++    assert exc_info.value.line == 2
++    assert exc_info.value.path is None
++
++
++def test_dotenv_values_strict_path_raises_with_line_and_path(tmp_path):
++    dotenv_path = tmp_path / ".env"
++    dotenv_path.write_text("a=b\nnot a binding\ne=f\n")
++
++    with pytest.raises(DotEnvParseError) as exc_info:
++        dotenv.dotenv_values(dotenv_path, strict=True)
++
++    assert exc_info.value.line == 2
++    assert exc_info.value.path == dotenv_path
++
++
++def test_load_dotenv_strict_does_not_set_environment(tmp_path):
++    dotenv_path = tmp_path / ".env"
++    dotenv_path.write_text("a=b\nnot a binding\ne=f\n")
++
++    with mock.patch.dict(os.environ, {}, clear=True):
++        with pytest.raises(DotEnvParseError):
++            dotenv.load_dotenv(dotenv_path, strict=True)
++
++        assert "a" not in os.environ
++        assert os.environ == {}
++
++        assert dotenv.load_dotenv(stream=io.StringIO("a=b"), strict=True) is True
++        assert os.environ == {"a": "b"}
++
++
++def test_load_dotenv_strict_stream_does_not_set_environment():
++    stream = io.StringIO("a=b\nnot a binding\ne=f\n")
++
++    with mock.patch.dict(os.environ, {}, clear=True):
++        with pytest.raises(DotEnvParseError) as exc_info:
++            dotenv.load_dotenv(stream=stream, strict=True)
++
++        assert exc_info.value.line == 2
++        assert exc_info.value.path is None
++        assert os.environ == {}
++
++
++def test_dotenv_strict_defaults_to_lenient(tmp_path):
++    dotenv_path = tmp_path / ".env"
++    dotenv_path.write_text("a=b\nnot a binding\ne=f\n")
++
++    result = dotenv.dotenv_values(dotenv_path)
++
++    assert result == {"a": "b", "e": "f"}
++
++
++def test_dotenv_class_strict_with_stream():
++    stream = io.StringIO("a=b\nnot a binding\n")
++
++    with pytest.raises(DotEnvParseError) as exc_info:
++        DotEnv(None, stream=stream, strict=True).dict()
++
++    assert exc_info.value.line == 2
++    assert exc_info.value.path is None
++
++
++def test_cli_run_strict_valid_file_runs_command(tmp_path):
++    (tmp_path / ".env").write_text("A=x\n")
++    command = [sys.executable, "-c", "import os; print(os.environ['A'])"]
++
++    result = run_dotenv_cli(["run", "--strict", *command], cwd=tmp_path)
++
++    assert result.returncode == 0
++    assert result.stdout == "x\n"
++
++
++def test_cli_run_strict_invalid_file_exits_nonzero_without_running(tmp_path):
++    marker = tmp_path / "command_ran"
++    (tmp_path / ".env").write_text("A=x\nnot a binding\n")
++    command = [
++        sys.executable,
++        "-c",
++        f"from pathlib import Path; Path({str(marker)!r}).write_text('ran')",
++    ]
++
++    result = run_dotenv_cli(["run", "--strict", *command], cwd=tmp_path)
++
++    assert result.returncode != 0
++    assert "Error parsing env file" in result.stderr
++    assert not marker.exists()
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpeo53aw9_/base/src/dotenv/__init__.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpivdf57se/patch/src/dotenv/__init__.py
+index dde24a0..8676e36 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpeo53aw9_/base/src/dotenv/__init__.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpivdf57se/patch/src/dotenv/__init__.py
+@@ -1,6 +1,6 @@
+ from typing import Any, Optional
+ 
+-from .main import dotenv_values, find_dotenv, get_key, load_dotenv, set_key, unset_key
++from .main import DotEnvParseError, dotenv_values, find_dotenv, get_key, load_dotenv, set_key, unset_key
+ 
+ 
+ def load_ipython_extension(ipython: Any) -> None:
+@@ -40,6 +40,7 @@ def get_cli_string(
+ 
+ 
+ __all__ = [
++    "DotEnvParseError",
+     "get_cli_string",
+     "load_dotenv",
+     "dotenv_values",
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpeo53aw9_/base/src/dotenv/cli.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpivdf57se/patch/src/dotenv/cli.py
+index c06c706..f4b005f 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpeo53aw9_/base/src/dotenv/cli.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpivdf57se/patch/src/dotenv/cli.py
+@@ -17,7 +17,7 @@ except ImportError:
+     )
+     sys.exit(1)
+ 
+-from .main import DotEnv, dotenv_values, set_key, unset_key
++from .main import DotEnvParseError, DotEnv, dotenv_values, set_key, unset_key
+ from .version import __version__
+ 
+ 
+@@ -189,19 +189,35 @@ def unset(ctx: click.Context, key: Any) -> None:
+     default=True,
+     help="Override variables from the environment file with those from the .env file.",
+ )
++@click.option(
++    "--strict",
++    is_flag=True,
++    default=False,
++    help="Fail if the .env file contains a malformed binding.",
++)
+ @click.argument("commandline", nargs=-1, type=click.UNPROCESSED)
+-def run(ctx: click.Context, override: bool, commandline: tuple[str, ...]) -> None:
++def run(
++    ctx: click.Context, override: bool, strict: bool, commandline: tuple[str, ...]
++) -> None:
+     """Run command with environment variables present."""
+     file = ctx.obj["FILE"]
+     if not os.path.isfile(file):
+         raise click.BadParameter(
+             f"Invalid value for '-f' \"{file}\" does not exist.", ctx=ctx
+         )
+-    dotenv_as_dict = {
+-        k: v
+-        for (k, v) in DotEnv(file, override=override, encoding="utf-8").dict().items()
+-        if v is not None and (override or k not in os.environ)
+-    }
++    try:
++        dotenv_as_dict = {
++            k: v
++            for (k, v) in DotEnv(
++                file, override=override, encoding="utf-8", strict=strict
++            )
++            .dict()
++            .items()
++            if v is not None and (override or k not in os.environ)
++        }
++    except DotEnvParseError as exc:
++        print(f"Error parsing env file: {exc}", file=sys.stderr)
++        sys.exit(1)
+ 
+     if not commandline:
+         click.echo("No command given.")
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpeo53aw9_/base/src/dotenv/main.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpivdf57se/patch/src/dotenv/main.py
+index 5faa7f0..1b68c73 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpeo53aw9_/base/src/dotenv/main.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpivdf57se/patch/src/dotenv/main.py
+@@ -19,6 +19,16 @@ StrPath = Union[str, "os.PathLike[str]"]
+ logger = logging.getLogger(__name__)
+ 
+ 
++class DotEnvParseError(ValueError):
++    """Raised when a .env file contains a malformed binding in strict mode."""
++
++    def __init__(self, line: int, path: Optional[StrPath]) -> None:
++        self.line = line
++        self.path = path
++        location = "the input stream" if path is None else f"file {path!s}"
++        super().__init__(f"Malformed .env binding on line {line} in {location}")
++
++
+ def _load_dotenv_disabled() -> bool:
+     """
+     Determine if dotenv loading has been disabled.
+@@ -48,6 +58,7 @@ class DotEnv:
+         encoding: Optional[str] = None,
+         interpolate: bool = True,
+         override: bool = True,
++        strict: bool = False,
+     ) -> None:
+         self.dotenv_path: Optional[StrPath] = dotenv_path
+         if isinstance(dotenv_path, str):
+@@ -60,6 +71,7 @@ class DotEnv:
+         self.encoding: Optional[str] = encoding
+         self.interpolate: bool = interpolate
+         self.override: bool = override
++        self.strict: bool = strict
+ 
+     @contextmanager
+     def _get_stream(self) -> Iterator[IO[str]]:
+@@ -94,7 +106,19 @@ class DotEnv:
+ 
+     def parse(self) -> Iterator[Tuple[str, Optional[str]]]:
+         with self._get_stream() as stream:
+-            for mapping in with_warn_for_invalid_lines(parse_stream(stream)):
++            for mapping in parse_stream(stream):
++                if mapping.error:
++                    if self.strict:
++                        path = (
++                            self.dotenv_path
++                            if self.dotenv_path and _is_file_or_fifo(self.dotenv_path)
++                            else None
++                        )
++                        raise DotEnvParseError(mapping.original.line, path)
++                    logger.warning(
++                        "python-dotenv could not parse statement starting at line %s",
++                        mapping.original.line,
++                    )
+                 if mapping.key is not None:
+                     yield mapping.key, mapping.value
+ 
+@@ -435,6 +459,7 @@ def load_dotenv(
+     override: bool = False,
+     interpolate: bool = True,
+     encoding: Optional[str] = "utf-8",
++    strict: bool = False,
+ ) -> bool:
+     """Parse a .env file and then load all the variables found as environment variables.
+ 
+@@ -448,6 +473,8 @@ def load_dotenv(
+             from the `.env` file.
+         interpolate: Whether to interpolate variables using POSIX variable expansion.
+         encoding: Encoding to be used to read the file.
++        strict: Whether to raise `DotEnvParseError` for malformed bindings instead
++            of ignoring them.
+     Returns:
+         Bool: True if at least one environment variable is set else False
+ 
+@@ -475,6 +502,7 @@ def load_dotenv(
+         interpolate=interpolate,
+         override=override,
+         encoding=encoding,
++        strict=strict,
+     )
+     return dotenv.set_as_environment_variables()
+ 
+@@ -485,6 +513,7 @@ def dotenv_values(
+     verbose: bool = False,
+     interpolate: bool = True,
+     encoding: Optional[str] = "utf-8",
++    strict: bool = False,
+ ) -> Dict[str, Optional[str]]:
+     """
+     Parse a .env file and return its content as a dict.
+@@ -500,6 +529,8 @@ def dotenv_values(
+         verbose: Whether to output a warning if the .env file is missing.
+         interpolate: Whether to interpolate variables using POSIX variable expansion.
+         encoding: Encoding to be used to read the file.
++        strict: Whether to raise `DotEnvParseError` for malformed bindings instead
++            of ignoring them.
+ 
+     If both `dotenv_path` and `stream` are `None`, `find_dotenv()` is used to find the
+     .env file.
+@@ -514,6 +545,7 @@ def dotenv_values(
+         interpolate=interpolate,
+         override=True,
+         encoding=encoding,
++        strict=strict,
+     ).dict()
+ 
+ 

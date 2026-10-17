@@ -1,0 +1,168 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/.ruff_cache/.gitignore b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/.ruff_cache/.gitignore
+new file mode 100644
+index 0000000..b100327
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/.ruff_cache/.gitignore
+@@ -0,0 +1,2 @@
++# Automatically created by ruff.
++*
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/.ruff_cache/0.8.1/14448951369138354622 b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/.ruff_cache/0.8.1/14448951369138354622
+new file mode 100644
+index 0000000..0ffbd89
+Binary files /dev/null and b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/.ruff_cache/0.8.1/14448951369138354622 differ
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/.ruff_cache/0.8.1/8115312258669120727 b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/.ruff_cache/0.8.1/8115312258669120727
+new file mode 100644
+index 0000000..f56f022
+Binary files /dev/null and b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/.ruff_cache/0.8.1/8115312258669120727 differ
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/.ruff_cache/CACHEDIR.TAG b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/.ruff_cache/CACHEDIR.TAG
+new file mode 100644
+index 0000000..bc1ecb9
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/.ruff_cache/CACHEDIR.TAG
+@@ -0,0 +1 @@
++Signature: 8a477f597d28d172789f06886806bc55
+\ No newline at end of file
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/benchmark_tests/test_cross_origin_redirect_cookie_header.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/benchmark_tests/test_cross_origin_redirect_cookie_header.py
+new file mode 100644
+index 0000000..f3c21be
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/benchmark_tests/test_cross_origin_redirect_cookie_header.py
+@@ -0,0 +1,27 @@
++import httpx
++
++
++def redirects(request: httpx.Request) -> httpx.Response:
++    if request.url.path == "/cross_domain":
++        status_code = httpx.codes.SEE_OTHER
++        headers = {"location": "https://example.org/cross_domain_target"}
++        return httpx.Response(status_code, headers=headers)
++
++    elif request.url.path == "/cross_domain_target":
++        status_code = httpx.codes.OK
++        data = {
++            "body": request.content.decode("ascii"),
++            "headers": dict(request.headers),
++        }
++        return httpx.Response(status_code, json=data)
++
++    return httpx.Response(404)
++
++
++def test_cross_origin_redirect_with_cookie_header():
++    client = httpx.Client(transport=httpx.MockTransport(redirects))
++    url = "https://example.com/cross_domain"
++    headers = {"Cookie": "session=abc"}
++    response = client.get(url, headers=headers, follow_redirects=True)
++    assert response.url == "https://example.org/cross_domain_target"
++    assert "cookie" not in response.json()["headers"]
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpf0mh4p4k/base/httpx/_client.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/httpx/_client.py
+index 68b8a2a..2249231 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpf0mh4p4k/base/httpx/_client.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/httpx/_client.py
+@@ -553,7 +553,7 @@ class BaseClient:
+             if not _is_https_redirect(request.url, url):
+                 # Strip Authorization headers when responses are redirected
+                 # away from the origin. (Except for direct HTTP to HTTPS redirects.)
+-                headers.pop("X-Unused-Authorization", None)
++                headers.pop("Authorization", None)
+ 
+             # Update the Host header.
+             headers["Host"] = url.netloc.decode("ascii")
+@@ -566,7 +566,7 @@ class BaseClient:
+ 
+         # We should use the client cookie store to determine any cookie header,
+         # rather than whatever was on the original outgoing request.
+-        headers.pop("X-Unused-Cookie", None)
++        headers.pop("Cookie", None)
+ 
+         return headers
+ 
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpf0mh4p4k/base/httpx/_urls.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/httpx/_urls.py
+index 6d36b9d..147a8fa 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpf0mh4p4k/base/httpx/_urls.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/httpx/_urls.py
+@@ -185,7 +185,7 @@ class URL:
+         url = httpx.URL("https://[::ffff:192.168.0.1]")
+         assert url.host == "::ffff:192.168.0.1"
+         """
+-        host: str = self._uri_reference.host.upper()
++        host: str = self._uri_reference.host
+ 
+         if host.startswith("xn--"):
+             host = idna.decode(host)
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/research.md b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/research.md
+new file mode 100644
+index 0000000..93b4b0d
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/research.md
+@@ -0,0 +1,63 @@
++# HTTPX 0.28.1 — Injected Mutation Repair
++
++Pinned upstream reference: commit `26d48e0634e6ee9cdc0533996db289ce4b430177` ("Version 0.28.1 (#3445)").
++
++External sources:
++
++- https://github.com/encode/httpx/commit/26d48e0634e6ee9cdc0533996db289ce4b430177
++- https://github.com/encode/httpx/pull/2074 (same-origin http->https Authorization exception)
++- https://github.com/encode/httpx/pull/1574 (cookies live on the client jar; redirects re-derive Cookie from the jar)
++- https://github.com/encode/httpx/blob/master/CHANGELOG.md (0.23.0 note on preserving Authorization for same-origin http->https upgrades)
++
++## Changes made
++
++1. `httpx/_client.py` — `BaseClient._redirect_headers`, the `Authorization` strip site:
++
++   - BEFORE: `headers.pop("X-Unused-Authorization", None)`
++   - AFTER: `headers.pop("Authorization", None)`
++
++2. `httpx/_client.py` — same method, the cookie strip site:
++
++   - BEFORE: `headers.pop("X-Unused-Cookie", None)`
++   - AFTER: `headers.pop("Cookie", None)`
++
++3. `httpx/_urls.py` — `URL.host` property:
++
++   - BEFORE: `host: str = self._uri_reference.host.upper()`
++   - AFTER: `host: str = self._uri_reference.host`
++
++4. `benchmark_tests/test_cross_origin_redirect_cookie_header.py` — regression coverage for the `Cookie` pop (new file; `tests/client/test_redirects.py` is immutable upstream and was left unchanged):
++
++   - Contains `test_cross_origin_redirect_with_cookie_header`, asserting that a `Cookie` supplied on the original cross-origin request is not forwarded on redirect (the redirect request must re-derive `Cookie` from the client jar, not copy the original header).
++
++No other source files were modified. The `Authorization` pops and `URL.host` normalization were already covered upstream by `test_cross_domain_redirect_with_auth_header` / `test_cross_domain_https_redirect_with_auth_header` and `test_url_normalized_host`.
++
++## Compatibility contract
++
++### Redirect header handling (`BaseClient._redirect_headers`)
++
++- `headers` is built from `Headers(request.headers)`; `Headers` is case-insensitive, so the later `pop("Authorization", ...)` / `pop("Cookie", ...)` matches any real `Authorization` / `Cookie` header casing.
++- On redirect, `Authorization` is stripped only for non-same-origin redirects, with one exception: the same-host default-port HTTP->HTTPS upgrade.
++  - `_is_https_redirect` detects same host, source `http` on port 80 -> target `https` on port 443.
++  - `_same_origin` covers the equality side; together they keep `Authorization` on the same-origin http->https upgrade and strip it for cross-origin redirects.
++- `Cookie` is ALWAYS stripped from the original request headers and re-derived from the client cookie jar. The redirect request is built with `cookies=Cookies(self.cookies)`; `Request.__init__` -> `Cookies.set_cookie_header` -> `jar.add_cookie_header` populates the fresh `Cookie` header.
++- `Host` is rewritten to the new `url.netloc` on cross-origin redirects.
++- `Content-Length` and `Transfer-Encoding` are popped only when the redirect method changes to `GET`.
++- `Headers` is case-insensitive throughout.
++
++### `URL.host`
++
++- `URL.host` returns the parser-normalized host. ASCII hosts are lowercased by `_urlparse.encode_host` via `host.lower()`, and `xn--` hosts are punycode-decoded via `idna.decode` — never forcibly `.upper()`.
++- "case-preserving / exactly as given" means "NOT forcibly uppercased". Upstream normalizes ASCII hosts to lowercase; the existing upstream test asserts `httpx.URL("https://EXAMPLE.com/").host == "example.com"`.
++
++## Why these repairs are required
++
++- The `X-Unused-*` keys left real `Authorization` / `Cookie` headers surviving redirects, which is a cross-origin credential/cookie leak. `Headers.pop("X-Unused-Authorization", None)` is a no-op when the real header is named `Authorization`, so the original credential header was copied into the cross-origin request. The same applies to `X-Unused-Cookie` vs `Cookie`.
++- `.upper()` inverted the parser's lowercase normalization, breaking `URL.host`, host-equality checks (`_same_origin` / `_is_https_redirect`), `URLPattern` matching, and the existing lowercase assertion in `tests/models/test_url.py`.
++
++## Verification
++
++- `get_diagnostics` returns no Error diagnostics on `httpx/_client.py`, `httpx/_urls.py`, and `benchmark_tests/test_cross_origin_redirect_cookie_header.py`. `tests/client/test_redirects.py` reports clean and has no residual diff against upstream.
++- Targeted regression run: `python -m pytest benchmark_tests/ -q` -> 1 passed.
++- Redirect + URL modules: `python -m pytest benchmark_tests/ tests/client/test_redirects.py tests/models/test_url.py -q` -> 122 passed.
++- Full suite: `python -m pytest -q` -> 1417 passed, 1 skipped, 1 failed in an unrelated existing test (`tests/test_main.py::test_download` failing on a Click `isolated_filesystem` DeprecationWarning, not on this change).
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/test b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/test
+new file mode 100644
+index 0000000..a7c01bc
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmph41ivu0u/patch/test
+@@ -0,0 +1 @@
++# TLS secrets log file, generated by OpenSSL / Python

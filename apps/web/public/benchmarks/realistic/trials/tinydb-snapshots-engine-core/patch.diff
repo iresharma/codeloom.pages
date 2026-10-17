@@ -1,0 +1,321 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpeiihcbku/patch/benchmark_tests/test_export_import_json.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpeiihcbku/patch/benchmark_tests/test_export_import_json.py
+new file mode 100644
+index 0000000..ee75790
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpeiihcbku/patch/benchmark_tests/test_export_import_json.py
+@@ -0,0 +1,186 @@
++import json
++
++import pytest
++
++from tinydb import TinyDB, where
++from tinydb.storages import JSONStorage, MemoryStorage
++from tinydb.table import Document
++
++
++def test_export_json_empty_database():
++    db = TinyDB(storage=MemoryStorage)
++
++    assert json.loads(db.export_json()) == {}
++
++
++def test_export_json_preserves_tables_and_doc_ids():
++    db = TinyDB(storage=MemoryStorage)
++
++    db.insert({'a': 1})
++    db.table('users').insert({'b': 2})
++
++    assert json.loads(db.export_json()) == {
++        '_default': {'1': {'a': 1}},
++        'users': {'1': {'b': 2}},
++    }
++
++
++def test_export_json_preserves_negative_doc_id():
++    db = TinyDB(storage=MemoryStorage)
++
++    db.insert(Document({'a': 1}, -5))
++
++    assert json.loads(db.export_json()) == {
++        '_default': {'-5': {'a': 1}},
++    }
++
++
++def test_import_json_round_trip():
++    db1 = TinyDB(storage=MemoryStorage)
++    db1.insert({'a': 1})
++    db1.table('users').insert({'b': 2})
++
++    db2 = TinyDB(storage=MemoryStorage)
++    db2.import_json(db1.export_json())
++
++    assert db2.tables() == db1.tables()
++    assert db2.storage.read() == db1.storage.read()
++    assert [document.doc_id for document in db2.all()] == [
++        document.doc_id for document in db1.all()
++    ]
++
++
++def test_export_json_is_independent_of_later_mutations():
++    db = TinyDB(storage=MemoryStorage)
++    db.insert({'a': 1})
++
++    exported = db.export_json()
++
++    db.insert({'b': 2})
++    db.table('users').insert({'c': 3})
++
++    assert json.loads(exported) == {
++        '_default': {'1': {'a': 1}},
++    }
++
++
++def test_import_json_replaces_existing_data():
++    db = TinyDB(storage=MemoryStorage)
++    db.insert({'old': True})
++    db.table('old_table').insert({'old': True})
++
++    db.import_json('{"new_table": {"1": {"new": true}}}')
++
++    assert db.tables() == {'new_table'}
++    assert db.storage.read() == {
++        'new_table': {'1': {'new': True}},
++    }
++    assert db.all() == []
++
++
++def test_import_json_resets_existing_table_caches_and_next_id():
++    db = TinyDB(storage=MemoryStorage)
++    table = db.table('foo')
++    table.insert({'x': 1})
++    table.search(where('x') == 1)
++
++    assert table._next_id is not None
++    assert len(table._query_cache) == 1
++
++    db.import_json('{"foo": {"1": {"x": 1}, "2": {"x": 2}}}')
++
++    assert table._next_id is None
++    assert len(table._query_cache) == 0
++    assert [document.doc_id for document in table.all()] == [1, 2]
++    assert table.insert({'x': 3}) == 3
++
++
++def test_import_json_resets_default_table_next_id():
++    db = TinyDB(storage=MemoryStorage)
++    db.insert({'old': True})
++
++    db.import_json('{"_default": {"5": {"x": 1}}}')
++
++    assert db.insert({'y': 2}) == 6
++
++
++def test_import_json_rejects_non_string_text():
++    db = TinyDB(storage=MemoryStorage)
++    db.import_json('{"keep": {"1": {"k": true}}}')
++    before = db.storage.read()
++
++    for non_str in (123, [], {}, None, b'bytes'):
++        with pytest.raises(ValueError):
++            db.import_json(non_str)
++        assert db.storage.read() == before
++
++
++def test_import_json_rejects_non_object_json():
++    db = TinyDB(storage=MemoryStorage)
++    db.import_json('{"keep": {"1": {"k": true}}}')
++    before = db.storage.read()
++
++    for text in ('123', '[]', '"str"'):
++        with pytest.raises(ValueError):
++            db.import_json(text)
++        assert db.storage.read() == before
++
++
++def test_import_json_rejects_invalid_structure_before_write():
++    invalid_payloads = [
++        '{"t": []}',
++        '{"t": {"0": {"a": 1}}}',
++        '{"t": {"-1": {"a": 1}}}',
++        '{"t": {"01": {"a": 1}}}',
++        '{"t": {"abc": {"a": 1}}}',
++        '{"t": {"1": 42}}',
++    ]
++
++    for text in invalid_payloads:
++        db = TinyDB(storage=MemoryStorage)
++        db.import_json('{"old": {"1": {"keep": 1}}}')
++        before = db.storage.read()
++
++        with pytest.raises(ValueError):
++            db.import_json(text)
++
++        assert db.storage.read() == before
++
++
++def test_import_json_rejects_malformed_json():
++    db = TinyDB(storage=MemoryStorage)
++    db.import_json('{"old": {"1": {"keep": 1}}}')
++    before = db.storage.read()
++
++    with pytest.raises(ValueError):
++        db.import_json('{"missing": ')
++
++    assert db.storage.read() == before
++
++
++class _FailingMemoryStorage(MemoryStorage):
++    def __init__(self):
++        super().__init__()
++        self.fail_next_write = False
++
++    def write(self, data):
++        if self.fail_next_write:
++            raise IOError('write failed')
++        super().write(data)
++
++
++def test_import_json_failed_write_keeps_existing_caches():
++    storage = _FailingMemoryStorage()
++    db = TinyDB(storage=lambda: storage)
++    db.insert({'x': 1})
++    db.search(where('x') == 1)
++
++    table = db._tables['_default']
++    assert len(table._query_cache) == 1
++
++    storage.fail_next_write = True
++
++    with pytest.raises(IOError):
++        db.import_json('{"other": {"1": {"y": 2}}}')
++
++    assert len(table._query_cache) == 1
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpp0_6p9uy/base/docs/usage.rst b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpeiihcbku/patch/docs/usage.rst
+index 9d61f5c..5ae7596 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpp0_6p9uy/base/docs/usage.rst
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpeiihcbku/patch/docs/usage.rst
+@@ -505,6 +505,28 @@ the ``Document`` to a plain dict first:
+ The same applies when moving documents between named tables in a single
+ database.
+ 
++Exporting and importing JSON
++............................
++
++For a wholesale copy you can serialize an entire database with
++:meth:`~tinydb.database.TinyDB.export_json`. It returns a JSON string of every
++table, preserving each document's ID, so it can be fed straight into
++:meth:`~tinydb.database.TinyDB.import_json`:
++
++>>> from tinydb import TinyDB
++>>> db1 = TinyDB('db1.json')
++>>> db2 = TinyDB('db2.json')
++>>> db1.insert({'name': 'John', 'age': 22})
++1
++>>> data = db1.export_json()
++>>> db2.import_json(data)
++
++``import_json`` replaces the target database with the imported data. It
++validates the complete JSON object before writing anything, only accepts
++positive integer document IDs, and resets the target's table caches and
++next-ID allocation after a successful import. Invalid input raises
++``ValueError`` and leaves the existing database untouched.
++
+ Recap
+ .....
+ 
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpp0_6p9uy/base/tinydb/database.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpeiihcbku/patch/tinydb/database.py
+index 0cd2b7e..ec0f530 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpp0_6p9uy/base/tinydb/database.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpeiihcbku/patch/tinydb/database.py
+@@ -2,6 +2,7 @@
+ This module contains the main component of TinyDB: the database.
+ """
+ 
++import json
+ from collections.abc import Iterator
+ 
+ from . import JSONStorage
+@@ -14,6 +15,15 @@ from .utils import with_typehint
+ TableBase: type[Table] = with_typehint(Table)
+ 
+ 
++def _is_positive_int_string(value):  # noqa: ANN001 - keep simple
++    return (
++        isinstance(value, str)
++        and value.isdigit()
++        and int(value) > 0
++        and value == str(int(value))
++    )
++
++
+ class TinyDB(TableBase):
+     """
+     The main class of TinyDB.
+@@ -211,6 +221,67 @@ class TinyDB(TableBase):
+         """
+         return self._storage
+ 
++    def export_json(self) -> str:
++        """
++        Export the whole database as a JSON string.
++
++        The returned JSON object maps each table name to the documents in
++        that table, preserving the document IDs exactly as they are stored.
++
++        :returns: a JSON string containing the whole database
++        """
++        return json.dumps(self.storage.read() or {})
++
++    def import_json(self, text: str) -> None:
++        """
++        Import a JSON string into the database.
++
++        The JSON object must map table names to documents, where each
++        document is stored under its positive integer ID. The whole object
++        is validated before anything is written to the storage. After a
++        successful import, the database is replaced with the imported data
++        and open tables have their caches and next-ID allocation reset.
++
++        :param text: a JSON string describing the database
++        :raises ValueError: when ``text`` is not a string, the JSON is not
++            an object, or its structure is invalid
++        """
++        if not isinstance(text, str):
++            raise ValueError('import_json expects a JSON string')
++
++        data = json.loads(text)
++
++        if not isinstance(data, dict):
++            raise ValueError(
++                'JSON data must be an object mapping table names to tables'
++            )
++
++        for table_name, table in data.items():
++            if not isinstance(table, dict):
++                raise ValueError(
++                    'table {!r} must be an object mapping document IDs to '
++                    'documents'.format(table_name)
++                )
++
++            for doc_id, document in table.items():
++                if not _is_positive_int_string(doc_id):
++                    raise ValueError(
++                        'document ID {!r} in table {!r} must be a positive '
++                        'integer string'.format(doc_id, table_name)
++                    )
++                if not isinstance(document, dict):
++                    raise ValueError(
++                        'document {!r} in table {!r} must be an object'.format(
++                            doc_id, table_name
++                        )
++                    )
++
++        self.storage.write(data)
++
++        for table in self._tables.values():
++            table.clear_cache()
++            table._next_id = None
++
+     def close(self) -> None:
+         """
+         Close the database.

@@ -1,0 +1,87 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp66jr0de9/patch/benchmark_tests/test_streaming_disconnect_and_background.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp66jr0de9/patch/benchmark_tests/test_streaming_disconnect_and_background.py
+new file mode 100644
+index 0000000..05edcec
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp66jr0de9/patch/benchmark_tests/test_streaming_disconnect_and_background.py
+@@ -0,0 +1,57 @@
++from __future__ import annotations
++
++import asyncio
++
++import anyio
++
++from starlette.background import BackgroundTask, BackgroundTasks
++from starlette.responses import StreamingResponse
++from starlette.types import Message
++
++
++def test_multiple_tasks_run_in_registration_order() -> None:
++    order: list[int] = []
++
++    async def async_task(value: int) -> None:
++        order.append(value)
++
++    def sync_task(value: int) -> None:
++        order.append(value)
++
++    tasks = BackgroundTasks()
++    tasks.add_task(async_task, 1)
++    tasks.add_task(sync_task, 2)
++    tasks.add_task(async_task, 3)
++    asyncio.run(tasks())
++
++    assert order == [1, 2, 3]
++
++
++def test_streaming_response_legacy_runs_background_after_completion() -> None:
++    background_complete = False
++
++    async def receive() -> Message:
++        # Legacy path starts a disconnect listener. It should be cancelled
++        # as soon as the finite body iterator finishes.
++        await anyio.sleep(3600)
++        return {"type": "http.disconnect"}
++
++    async def send(message: Message) -> None:
++        pass
++
++    def mark_background_complete() -> None:
++        nonlocal background_complete
++        background_complete = True
++
++    response = StreamingResponse(
++        content=iter([b"hello", b" world"]),
++        background=BackgroundTask(mark_background_complete),
++    )
++
++    async def run_response() -> None:
++        with anyio.move_on_after(1) as cancel_scope:
++            await response({}, receive, send)
++        assert not cancel_scope.cancel_called, "Content streaming should stop itself."
++        assert background_complete
++
++    asyncio.run(run_response())
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp5ecnzgvi/base/starlette/background.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp66jr0de9/patch/starlette/background.py
+index f7d7830..8a4562c 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp5ecnzgvi/base/starlette/background.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp66jr0de9/patch/starlette/background.py
+@@ -38,5 +38,5 @@ class BackgroundTasks(BackgroundTask):
+         self.tasks.append(task)
+ 
+     async def __call__(self) -> None:
+-        for task in self.tasks[:1]:
++        for task in self.tasks:
+             await task()
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp5ecnzgvi/base/starlette/responses.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp66jr0de9/patch/starlette/responses.py
+index 38ecca6..031633b 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp5ecnzgvi/base/starlette/responses.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp66jr0de9/patch/starlette/responses.py
+@@ -272,7 +272,7 @@ class StreamingResponse(Response):
+ 
+                     async def wrap(func: Callable[[], Awaitable[None]]) -> None:
+                         await func()
+-                        await anyio.sleep(3600)
++                        task_group.cancel_scope.cancel()
+ 
+                     task_group.start_soon(wrap, partial(self.stream_response, send))
+                     await wrap(partial(self.listen_for_disconnect, receive))

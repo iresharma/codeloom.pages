@@ -1,0 +1,8 @@
+{
+  "cap_usd": 4.0,
+  "id": "starlette-mounts-mini-swe-agent",
+  "stage": "measured",
+  "started_at": 1792197858.787364,
+  "system": "mini-swe-agent",
+  "task_id": "starlette-mounts"
+}

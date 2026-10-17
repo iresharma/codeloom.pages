@@ -1,0 +1,18 @@
+{
+  "functional_pass": false,
+  "pass": false,
+  "paths": [
+    "web/src/main.tsx"
+  ],
+  "reason": "disallowed_edit",
+  "tool_evidence": {
+    "checks": {
+      "browser_command": true,
+      "screenshots": false
+    },
+    "pass": false,
+    "required": {
+      "browser": true
+    }
+  }
+}

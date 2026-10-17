@@ -1,0 +1,12 @@
+{
+  "pass": true,
+  "paths": [
+    "readme.md"
+  ],
+  "reason": "disallowed_edit",
+  "override": {
+    "by": "manual_review",
+    "original_reason": "disallowed_edit",
+    "note": "Disallowed-path edit to readme.md accurately documents the new setPriorities() batch API the task asked for, with a correct usage example. Manually reviewed and counted as a pass despite the automatic allowed_paths violation."
+  }
+}

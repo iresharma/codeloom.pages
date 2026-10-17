@@ -1,0 +1,73 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpb5chdnb1/base/httpie/client.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmlp8r59r/patch/httpie/client.py
+index ed6953f..a448728 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpb5chdnb1/base/httpie/client.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmlp8r59r/patch/httpie/client.py
+@@ -133,11 +133,10 @@ def collect_messages(
+             yield response
+         break
+ 
+-    if httpie_session:
+-        if True:
+-            httpie_session.cookies = requests_session.cookies
+-            httpie_session.remove_cookies(expired_cookies)
+-            httpie_session.save()
++    if httpie_session and (not args.session_read_only or httpie_session.is_new()):
++        httpie_session.cookies = requests_session.cookies
++        httpie_session.remove_cookies(expired_cookies)
++        httpie_session.save()
+ 
+ 
+ # noinspection PyProtectedMember
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpb5chdnb1/base/httpie/legacy/v3_2_0_session_header_format.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmlp8r59r/patch/httpie/legacy/v3_2_0_session_header_format.py
+index 5738d1a..4d9e031 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpb5chdnb1/base/httpie/legacy/v3_2_0_session_header_format.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmlp8r59r/patch/httpie/legacy/v3_2_0_session_header_format.py
+@@ -70,4 +70,4 @@ def fix_layout(session: 'Session', *args, **kwargs) -> None:
+     if not isinstance(session['headers'], dict):
+         return None
+ 
+-    session['headers'] = []
++    session['headers'] = materialize_headers(session['headers'])
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpb5chdnb1/base/httpie/manager/tasks/sessions.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmlp8r59r/patch/httpie/manager/tasks/sessions.py
+index f84a1c4..a2c5598 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpb5chdnb1/base/httpie/manager/tasks/sessions.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpmlp8r59r/patch/httpie/manager/tasks/sessions.py
+@@ -27,6 +27,25 @@ def cli_sessions(env: Environment, args: argparse.Namespace) -> ExitStatus:
+         raise ValueError(f'Unexpected action: {action}')
+ 
+ 
++def _get_layout_fixers(session) -> list:
++    fixers = [
++        fixer
++        for version, fixer in FIXERS_TO_VERSIONS.items()
++        if is_version_greater(version, session.version)
++    ]
++
++    # The version metadata can already be up to date even when the data still
++    # uses a legacy layout (e.g., hand-edited sessions or files produced by
++    # older builds that didn't update the layout). Ensure `upgrade` migrates
++    # these stores to the supported list layout regardless.
++    if isinstance(session['cookies'], dict):
++        fixers.append(v3_1_0_session_cookie_format.fix_layout)
++    if isinstance(session['headers'], dict):
++        fixers.append(v3_2_0_session_header_format.fix_layout)
++
++    return list(dict.fromkeys(fixers))
++
++
+ def upgrade_session(env: Environment, args: argparse.Namespace, hostname: str, session_name: str):
+     session = get_httpie_session(
+         env=env,
+@@ -42,11 +61,7 @@ def upgrade_session(env: Environment, args: argparse.Namespace, hostname: str, s
+         env.log_error(f'{session_name!r} @ {hostname!r} does not exist.')
+         return ExitStatus.ERROR
+ 
+-    fixers = [
+-        fixer
+-        for version, fixer in FIXERS_TO_VERSIONS.items()
+-        if is_version_greater(version, session.version)
+-    ]
++    fixers = _get_layout_fixers(session)
+ 
+     if len(fixers) == 0:
+         env.stdout.write(f'{session_name!r} @ {hostname!r} is already up to date.\n')

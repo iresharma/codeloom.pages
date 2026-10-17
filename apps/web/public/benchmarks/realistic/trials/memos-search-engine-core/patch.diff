@@ -1,0 +1,277 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpm7ikbwvj/patch/web/src/lib/reader.test.mjs b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpm7ikbwvj/patch/web/src/lib/reader.test.mjs
+new file mode 100644
+index 0000000..2e809fc
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpm7ikbwvj/patch/web/src/lib/reader.test.mjs
+@@ -0,0 +1,121 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { createServer } from "vite";
++import { fileURLToPath } from "node:url";
++
++let server;
++let mod;
++
++test("load reader module through Vite alias resolution", async () => {
++  const src = fileURLToPath(new URL("../", import.meta.url));
++  server = await createServer({
++    root: fileURLToPath(new URL("../../", import.meta.url)),
++    configFile: false,
++    resolve: {
++      alias: [{ find: "@", replacement: src }],
++    },
++  });
++  mod = await server.ssrLoadModule("/src/lib/reader.ts");
++  assert.ok(mod.selectMemos);
++  assert.ok(mod.summarizeMemo);
++  await server.close();
++});
++
++test("selectMemos filters q as case-insensitive substring", async () => {
++  const queryMemos = [
++    { name: "a", content: "Alpha release", tags: [] },
++    { name: "b", content: "Beta planning", tags: [] },
++  ];
++  assert.deepEqual(
++    mod.selectMemos(queryMemos, new URLSearchParams("q=RELEASE")).map((m) => m.name),
++    ["a"],
++  );
++});
++
++test("selectMemos filters tag as case-insensitive whole entry, no slash expansion", async () => {
++  const tagMemos = [
++    { name: "a", content: "Alpha release", tags: ["release"] },
++    { name: "b", content: "Nested", tags: ["release/1"] },
++  ];
++  assert.deepEqual(
++    mod.selectMemos(tagMemos, new URLSearchParams("tag=Release")).map((m) => m.name),
++    ["a"],
++  );
++  assert.deepEqual(
++    mod.selectMemos(tagMemos, new URLSearchParams("tag=release/1")).map((m) => m.name),
++    ["b"],
++  );
++});
++
++test("selectMemos combines query and tag with AND", async () => {
++  const combinedMemos = [
++    { name: "hit", content: "Alpha release", tags: ["release"] },
++    { name: "query-only", content: "Alpha release", tags: ["planning"] },
++    { name: "tag-only", content: "Beta planning", tags: ["release"] },
++  ];
++  assert.deepEqual(
++    mod.selectMemos(combinedMemos, new URLSearchParams("q=alpha&tag=release")).map((m) => m.name),
++    ["hit"],
++  );
++});
++
++test("summarizeMemo uses snippet and truncates to 200 when query is empty", () => {
++  const snippet200 = "s".repeat(250);
++  const snippetSummary = mod.summarizeMemo({ content: "content", snippet: snippet200 }, "");
++  assert.equal(snippetSummary.length, 201);
++  assert.ok(snippetSummary.startsWith(snippet200.slice(0, 200)));
++  assert.ok(snippetSummary.endsWith("…"));
++});
++
++test("summarizeMemo windows the first case-insensitive match", () => {
++  const windowContent = "p".repeat(100) + "Release notes" + "s".repeat(100);
++  const windowSummary = mod.summarizeMemo({ content: windowContent, snippet: "" }, "release");
++  assert.ok(windowSummary.includes("Release"));
++  assert.ok(windowSummary.startsWith("…"));
++  assert.ok(windowSummary.endsWith("…"));
++});
++
++test("summarizeMemo falls back to 200-char truncation when query is absent", () => {
++  const fallbackContent = "c".repeat(250);
++  const fallbackSummary = mod.summarizeMemo({ content: fallbackContent, snippet: "" }, "missing");
++  assert.equal(fallbackSummary.length, 201);
++  assert.ok(fallbackSummary.startsWith("c".repeat(200)));
++  assert.ok(fallbackSummary.endsWith("…"));
++});
++
++test("selectMemos returns all memos when both query and tag are empty", async () => {
++  const allMemos = [
++    { name: "a", content: "Alpha release", tags: ["release"] },
++    { name: "b", content: "Beta planning", tags: ["planning"] },
++  ];
++  assert.deepEqual(
++    mod.selectMemos(allMemos, new URLSearchParams("")).map((m) => m.name),
++    ["a", "b"],
++  );
++});
++
++test("selectMemos trims whitespace from query and tag params", async () => {
++  const memos = [
++    { name: "a", content: "Alpha release", tags: ["release"] },
++  ];
++  assert.deepEqual(
++    mod.selectMemos(memos, new URLSearchParams("q=%20%20alpha%20%20")).map((m) => m.name),
++    ["a"],
++  );
++  assert.deepEqual(
++    mod.selectMemos(memos, new URLSearchParams("tag=%20Release%20")).map((m) => m.name),
++    ["a"],
++  );
++});
++
++test("summarizeMemo handles query at start and end of content", () => {
++  const startContent = "Release notes at start";
++  const startSummary = mod.summarizeMemo({ content: startContent, snippet: "" }, "release");
++  assert.ok(startSummary.includes("Release"));
++  assert.ok(!startSummary.startsWith("…"));
++
++  const endContent = "This is a release";
++  const endSummary = mod.summarizeMemo({ content: endContent, snippet: "" }, "release");
++  assert.ok(endSummary.includes("release"));
++  assert.ok(!endSummary.endsWith("…"));
++});
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp4v2rjpep/base/web/src/lib/reader.ts b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpm7ikbwvj/patch/web/src/lib/reader.ts
+index c8e309c..c27edeb 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp4v2rjpep/base/web/src/lib/reader.ts
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpm7ikbwvj/patch/web/src/lib/reader.ts
+@@ -1,8 +1,45 @@
+ import { Memo } from "@/types/proto/api/v1/memo_service";
++
+ export async function loadMemos(): Promise<Memo[]> {
+   const response = await fetch("/api/v1/memos?pageSize=100");
+   if (!response.ok) throw new Error("Memos unavailable");
+   const data = await response.json();
+-  return (data.memos || []).map((memo: unknown) => Memo.fromPartial({ ...(memo as Memo), displayTime: (memo as Memo).displayTime ? new Date(String((memo as Memo).displayTime)) : undefined }));
++  return (data.memos || []).map((memo: unknown) =>
++    Memo.fromPartial({
++      ...(memo as Memo),
++      displayTime: (memo as Memo).displayTime ? new Date(String((memo as Memo).displayTime)) : undefined,
++    }),
++  );
++}
++export function selectMemos(memos: Memo[], params: URLSearchParams): Memo[] {
++  const query = (params.get("q") ?? "").trim();
++  const tag = (params.get("tag") ?? "").trim();
++  return memos.filter((memo) => {
++    if (query && !(memo.content ?? "").toLowerCase().includes(query.toLowerCase())) return false;
++    if (tag && !(memo.tags ?? []).some((entry) => entry.toLowerCase() === tag.toLowerCase())) return false;
++    return true;
++  });
++}
++
++export function summarizeMemo(memo: Memo, query: string): string {
++  const content = memo.content ?? "";
++  if (!query) {
++    const source = memo.snippet || content;
++    return truncate(source, 200);
++  }
++  const index = content.toLowerCase().indexOf(query.toLowerCase());
++  if (index === -1) return truncate(content, 200);
++  const before = 40;
++  const after = 60;
++  const start = Math.max(0, index - before);
++  const end = Math.min(content.length, index + query.length + after);
++  let result = content.slice(start, end);
++  if (start > 0) result = "…" + result;
++  if (end < content.length) result = result + "…";
++  return result;
++}
++
++function truncate(text: string, limit: number): string {
++  if (text.length <= limit) return text;
++  return text.slice(0, limit) + "…";
+ }
+-export function selectMemos(memos: Memo[], _params: URLSearchParams): Memo[] { return memos; }
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp4v2rjpep/base/web/src/pages/Reader.tsx b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpm7ikbwvj/patch/web/src/pages/Reader.tsx
+index cc50adc..ae6772f 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp4v2rjpep/base/web/src/pages/Reader.tsx
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpm7ikbwvj/patch/web/src/pages/Reader.tsx
+@@ -1,21 +1,82 @@
+ import { useEffect, useState } from "react";
++import type { ReactNode } from "react";
+ import MemoContent from "@/components/MemoContent";
+-import { loadMemos, selectMemos } from "@/lib/reader";
++import { loadMemos, selectMemos, summarizeMemo } from "@/lib/reader";
+ import { Memo } from "@/types/proto/api/v1/memo_service";
+ import "@/css/reader.css";
++
++function highlight(text: string, query: string): ReactNode {
++  if (!query || !text) return text;
++  const lowerText = text.toLowerCase();
++  const lowerQuery = query.toLowerCase();
++  const parts: ReactNode[] = [];
++  let cursor = 0;
++  let key = 0;
++  let match = lowerText.indexOf(lowerQuery, cursor);
++  while (match !== -1) {
++    if (match > cursor) parts.push(text.slice(cursor, match));
++    parts.push(<mark key={key++}>{text.slice(match, match + query.length)}</mark>);
++    cursor = match + query.length;
++    match = lowerText.indexOf(lowerQuery, cursor);
++  }
++  if (cursor < text.length) parts.push(text.slice(cursor));
++  return parts;
++}
++
+ export default function Reader() {
+   const [memos, setMemos] = useState<Memo[]>([]);
+   const [error, setError] = useState("");
+-  useEffect(() => { loadMemos().then(setMemos).catch(() => setError("Memos unavailable")); }, []);
++  const [loading, setLoading] = useState(true);
++  useEffect(() => {
++    loadMemos()
++      .then(setMemos)
++      .catch(() => setError("Memos unavailable"))
++      .finally(() => setLoading(false));
++  }, []);
+   const params = new URLSearchParams(location.search);
++  const query = (params.get("q") ?? "").trim();
+   const visible = selectMemos(memos, params);
+-  return <main className="memo-reader">
+-    <header className="reader-toolbar"><h1>Public memo reader</h1><a href="/explore">Open Memos</a></header>
+-    {error && <p>{error}</p>}
+-    <section className="reader-feed">{visible.map(memo => <article key={memo.name} data-memo={memo.name}>
+-      <p className="reader-meta">{memo.creator} · {memo.displayTime?.toISOString()}</p>
+-      <MemoContent nodes={memo.nodes} readonly />
+-      <div className="reader-attachments">{memo.resources.map(resource => <a key={resource.name} href={resource.externalLink || `/file/${resource.name}/${resource.filename}`}>{resource.filename}</a>)}</div>
+-    </article>)}</section>
+-  </main>;
++  return (
++    <main className="memo-reader">
++      <header className="reader-toolbar">
++        <h1>Public memo reader</h1>
++        <a href="/explore">Open Memos</a>
++      </header>
++      {loading ? (
++        <p className="reader-status">Loading…</p>
++      ) : error ? (
++        <p className="reader-error">{error}</p>
++      ) : (
++        <>
++          <p role="status" className="reader-status">
++            {visible.length} {visible.length === 1 ? "memo" : "memos"} found
++          </p>
++          {visible.length === 0 ? (
++            <p role="status" className="reader-empty">
++              No memos found
++            </p>
++          ) : (
++            <section className="reader-feed">
++              {visible.map((memo) => (
++                <article key={memo.name} data-memo={memo.name}>
++                  <p className="reader-meta">
++                    {memo.creator} · {memo.displayTime?.toISOString()}
++                  </p>
++                  <p className="reader-summary">{highlight(summarizeMemo(memo, query), query)}</p>
++                  <MemoContent nodes={memo.nodes} readonly />
++                  <div className="reader-attachments">
++                    {memo.resources.map((resource) => (
++                      <a key={resource.name} href={resource.externalLink || `/file/${resource.name}/${resource.filename}`}>
++                        {resource.filename}
++                      </a>
++                    ))}
++                  </div>
++                </article>
++              ))}
++            </section>
++          )}
++        </>
++      )}
++    </main>
++  );
+ }

@@ -1,0 +1,26 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfomy96zd/base/starlette/datastructures.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpf07az64i/patch/starlette/datastructures.py
+index ba8c89f..ebaeaaa 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfomy96zd/base/starlette/datastructures.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpf07az64i/patch/starlette/datastructures.py
+@@ -201,7 +201,7 @@ class URLPath(str):
+             scheme = base_url.scheme
+ 
+         netloc = self.host or base_url.netloc
+-        path = str(self)
++        path = base_url.path.removesuffix("/") + str(self)
+         return URL(scheme=scheme, netloc=netloc, path=path)
+ 
+ 
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfomy96zd/base/starlette/routing.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpf07az64i/patch/starlette/routing.py
+index 22399c9..ba64355 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfomy96zd/base/starlette/routing.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpf07az64i/patch/starlette/routing.py
+@@ -453,7 +453,7 @@ class Mount(BaseRoute):
+             for route in self.routes or []:
+                 try:
+                     url = route.url_path_for(remaining_name, **remaining_params)
+-                    return URLPath(path=path_prefix.strip("/") + str(url), protocol=url.protocol)
++                    return URLPath(path=path_prefix.rstrip("/") + str(url), protocol=url.protocol, host=url.host)
+                 except NoMatchFound:
+                     pass
+         raise NoMatchFound(name, path_params)

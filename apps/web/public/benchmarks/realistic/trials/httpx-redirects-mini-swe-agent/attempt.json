@@ -1,0 +1,8 @@
+{
+  "cap_usd": 4.0,
+  "id": "httpx-redirects-mini-swe-agent",
+  "stage": "measured",
+  "started_at": 1792233608.358906,
+  "system": "mini-swe-agent",
+  "task_id": "httpx-redirects"
+}

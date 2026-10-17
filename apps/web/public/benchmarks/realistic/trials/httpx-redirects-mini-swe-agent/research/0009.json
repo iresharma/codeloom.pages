@@ -1,0 +1,12 @@
+{
+  "arguments": {
+    "url": "https://datatracker.ietf.org/doc/html/rfc7231"
+  },
+  "commit": null,
+  "ok": false,
+  "operation": "fetch",
+  "retrieved_at": 1792233761.2521222,
+  "sha256": "645d6baa446f3c261badd485f5eae10036e738d982d2dd70326219c024b084d6",
+  "text": "error: Source host outside task contract",
+  "url": "https://datatracker.ietf.org/doc/html/rfc7231"
+}

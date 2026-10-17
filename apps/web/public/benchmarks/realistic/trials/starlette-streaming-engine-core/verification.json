@@ -1,0 +1,20 @@
+{
+  "checks": [
+    {
+      "command": "python -m pytest -o addopts= -q tests/test_background.py",
+      "kind": "trusted",
+      "output": "........                                                                 [100%]\n8 passed in 0.22s\n",
+      "repeat": 0,
+      "returncode": 0
+    },
+    {
+      "command": "python -m pytest -o addopts= -q /tmp/oracle/check.py",
+      "kind": "hidden",
+      "output": ".                                                                        [100%]\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-36_0gv3v'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n1 passed, 1 warning in 0.18s\n",
+      "repeat": 0,
+      "returncode": 0
+    }
+  ],
+  "pass": true,
+  "reason": "verification"
+}

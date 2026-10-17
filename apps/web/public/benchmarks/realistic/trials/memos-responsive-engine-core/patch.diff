@@ -1,0 +1,189 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpq73x6a31/base/web/src/components/MemoContent/CodeBlock.tsx b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp9kqu1gzr/patch/web/src/components/MemoContent/CodeBlock.tsx
+index 70e334a..6601d7c 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpq73x6a31/base/web/src/components/MemoContent/CodeBlock.tsx
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp9kqu1gzr/patch/web/src/components/MemoContent/CodeBlock.tsx
+@@ -65,7 +65,7 @@ const CodeBlock: React.FC<Props> = ({ language, content }: Props) => {
+         <CopyIcon className="w-4 h-auto cursor-pointer hover:opacity-80" onClick={handleCopyButtonClick} />
+       </div>
+ 
+-      <div className="overflow-auto">
++      <div className="memo-content-scroll w-full overflow-auto">
+         <pre className={cn("no-wrap overflow-auto", "w-full p-2 bg-amber-50 dark:bg-zinc-700 relative")}>
+           <code
+             className={cn(`language-${formatedLanguage}`, "block text-sm leading-5")}
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpq73x6a31/base/web/src/components/MemoContent/Table.tsx b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp9kqu1gzr/patch/web/src/components/MemoContent/Table.tsx
+index 88edb13..49b80c8 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpq73x6a31/base/web/src/components/MemoContent/Table.tsx
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp9kqu1gzr/patch/web/src/components/MemoContent/Table.tsx
+@@ -9,28 +9,30 @@ interface Props {
+ 
+ const Table = ({ header, rows }: Props) => {
+   return (
+-    <table className="w-auto max-w-full border border-gray-300 dark:border-zinc-600 divide-y divide-gray-300 dark:divide-zinc-600">
+-      <thead className="text-sm font-medium leading-5 text-left text-gray-900 dark:text-gray-400">
+-        <tr className="divide-x divide-gray-300 dark:divide-zinc-600">
+-          {header.map((h, i) => (
+-            <th key={i} className="py-1 px-2">
+-              <Renderer key={`${h.type}-${i}`} index={String(i)} node={h} />
+-            </th>
+-          ))}
+-        </tr>
+-      </thead>
+-      <tbody className="divide-y divide-gray-300 dark:divide-zinc-600 text-sm leading-5 text-left text-gray-900 dark:text-gray-400">
+-        {rows.map((row, i) => (
+-          <tr key={i} className="divide-x divide-gray-300 dark:divide-zinc-600">
+-            {row.cells.map((r, j) => (
+-              <td key={j} className="py-1 px-2">
+-                <Renderer key={`${r.type}-${i}-${j}`} index={String(j)} node={r} />
+-              </td>
++    <div className="memo-content-scroll w-full overflow-x-auto">
++      <table className="w-auto max-w-full border border-gray-300 dark:border-zinc-600 divide-y divide-gray-300 dark:divide-zinc-600">
++        <thead className="text-sm font-medium leading-5 text-left text-gray-900 dark:text-gray-400">
++          <tr className="divide-x divide-gray-300 dark:divide-zinc-600">
++            {header.map((h, i) => (
++              <th key={i} className="py-1 px-2">
++                <Renderer key={`${h.type}-${i}`} index={String(i)} node={h} />
++              </th>
+             ))}
+           </tr>
+-        ))}
+-      </tbody>
+-    </table>
++        </thead>
++        <tbody className="divide-y divide-gray-300 dark:divide-zinc-600 text-sm leading-5 text-left text-gray-900 dark:text-gray-400">
++          {rows.map((row, i) => (
++            <tr key={i} className="divide-x divide-gray-300 dark:divide-zinc-600">
++              {row.cells.map((r, j) => (
++                <td key={j} className="py-1 px-2">
++                  <Renderer key={`${r.type}-${i}-${j}`} index={String(j)} node={r} />
++                </td>
++              ))}
++            </tr>
++          ))}
++        </tbody>
++      </table>
++    </div>
+   );
+ };
+ 
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp9kqu1gzr/patch/web/src/components/MemoContent/reader.responsive.test.mjs b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp9kqu1gzr/patch/web/src/components/MemoContent/reader.responsive.test.mjs
+new file mode 100644
+index 0000000..5f14312
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp9kqu1gzr/patch/web/src/components/MemoContent/reader.responsive.test.mjs
+@@ -0,0 +1,51 @@
++import assert from "node:assert/strict";
++import { readFileSync } from "node:fs";
++import { dirname, join } from "node:path";
++import test from "node:test";
++import { fileURLToPath } from "node:url";
++
++// Regression test for the /reader responsive feed. The mjs test keeps the
++// reader CSS and the two memo-content wrappers in lockstep without adding a
++// frontend test dependency to the repo.
++const here = dirname(fileURLToPath(import.meta.url));
++const read = (file) => readFileSync(join(here, file), "utf8");
++
++const codeBlockSource = read("CodeBlock.tsx");
++const tableSource = read("Table.tsx");
++const readerCss = read("../../css/reader.css");
++
++test("code block wraps its pre in the reader-scoped scroll container", () => {
++  assert.match(
++    codeBlockSource,
++    /<div className="memo-content-scroll w-full overflow-auto">\s*<pre[\s\S]*?<\/pre>\s*<\/div>/,
++    "CodeBlock.tsx should keep the pre inside .memo-content-scroll",
++  );
++});
++
++test("table wraps the table in the reader-scoped scroll container", () => {
++  assert.match(
++    tableSource,
++    /<div className="memo-content-scroll w-full overflow-x-auto">\s*<table[\s\S]*?<\/table>\s*<\/div>/,
++    "Table.tsx should keep the table inside .memo-content-scroll",
++  );
++});
++
++test("reader css provides the responsive grid and containment rules", () => {
++  const requiredCss = [
++    "grid-template-columns: minmax(0, 1fr);",
++    "min-width: 0;",
++    "overflow-wrap: anywhere;",
++    "word-break: break-word;",
++    ".reader-attachments a {",
++    ".reader-feed article img {",
++    ".reader-feed article .memo-content-scroll {",
++    "max-width: 100%;",
++    "overflow-x: auto;",
++    "display: block;",
++    "@media (min-width: 1024px)",
++    "repeat(2, minmax(0, 1fr));",
++  ];
++  for (const snippet of requiredCss) {
++    assert.ok(readerCss.includes(snippet), `reader.css should contain: ${snippet}`);
++  }
++});
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpq73x6a31/base/web/src/css/reader.css b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp9kqu1gzr/patch/web/src/css/reader.css
+index fe10d4c..71963ad 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpq73x6a31/base/web/src/css/reader.css
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp9kqu1gzr/patch/web/src/css/reader.css
+@@ -1,3 +1,57 @@
+ .memo-reader { padding: 24px; }
+-.reader-feed { display: grid; gap: 20px; }
+-.reader-feed article { padding: 16px; border: 1px solid #bbb; }
++
++.reader-feed {
++  display: grid;
++  gap: 20px;
++  grid-template-columns: minmax(0, 1fr);
++}
++
++.reader-feed article {
++  min-width: 0;
++  padding: 16px;
++  border: 1px solid #bbb;
++  overflow-wrap: anywhere;
++  word-break: break-word;
++}
++
++.reader-meta {
++  min-width: 0;
++  margin: 0 0 12px;
++  line-height: 1.5;
++  overflow-wrap: anywhere;
++  word-break: break-word;
++}
++
++.reader-attachments {
++  max-width: 100%;
++  min-width: 0;
++  display: flex;
++  flex-direction: column;
++  gap: 4px;
++  overflow-wrap: anywhere;
++  word-break: break-word;
++}
++
++.reader-attachments a {
++  max-width: 100%;
++  min-width: 0;
++  overflow-wrap: anywhere;
++  word-break: break-word;
++}
++
++.reader-feed article img {
++  max-width: 100%;
++  height: auto;
++}
++
++.reader-feed article .memo-content-scroll {
++  max-width: 100%;
++  overflow-x: auto;
++  display: block;
++}
++
++@media (min-width: 1024px) {
++  .reader-feed {
++    grid-template-columns: repeat(2, minmax(0, 1fr));
++  }
++}

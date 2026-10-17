@@ -1,0 +1,12 @@
+{
+  "arguments": {
+    "url": "https://duckduckgo.com/html/?q=HTTPX+timeouts+connect+read+write+pool"
+  },
+  "commit": null,
+  "ok": false,
+  "operation": "fetch",
+  "retrieved_at": 1792230842.049502,
+  "sha256": "645d6baa446f3c261badd485f5eae10036e738d982d2dd70326219c024b084d6",
+  "text": "error: Source host outside task contract",
+  "url": "https://duckduckgo.com/html/?q=HTTPX+timeouts+connect+read+write+pool"
+}

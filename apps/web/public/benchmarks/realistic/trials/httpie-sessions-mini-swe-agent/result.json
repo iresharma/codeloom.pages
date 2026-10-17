@@ -1,0 +1,55 @@
+{
+  "cost_is_conservative": false,
+  "cost_usd": 0.08916287952000004,
+  "elapsed_s": 889.448092665989,
+  "functional_verification": {
+    "pass": true
+  },
+  "id": "httpie-sessions-mini-swe-agent",
+  "stage": "measured",
+  "submission": "checkout",
+  "system": "mini-swe-agent",
+  "task_id": "httpie-sessions",
+  "termination": "completed",
+  "tool_evidence": {
+    "checks": {
+      "terminal_execution": true
+    },
+    "pass": true,
+    "required": {
+      "command_pattern": "python(?:3)?\\s+-m\\s+httpie\\b",
+      "terminal": true
+    }
+  },
+  "verification": {
+    "checks": [
+      {
+        "command": "python -m pytest -o addopts= -q tests/test_sessions.py",
+        "kind": "trusted",
+        "output": "............................................................s            [100%]\n=============================== warnings summary ===============================\ntests/test_sessions.py::TestSession::test_download_in_session\n  /task/httpie/core.py:100: ResourceWarning: unclosed file <_io.FileIO name='get.json' mode='ab+' closefd=True>\n    exit_status = main_program(\n  Enable tracemalloc to get traceback where the object was allocated.\n  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.\n\ntests/test_sessions.py::test_headers_old_layout_warning[headers1-True]\n  /usr/local/lib/python3.12/site-packages/rich/text.py:144: ResourceWarning: unclosed file <_io.BufferedReader name='/task/tests/fixtures/test.txt'>\n    def __init__(\n  Enable tracemalloc to get traceback where the object was allocated.\n  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.\n\ntests/test_sessions.py::test_secure_cookies_on_localhost[localhost_http_server-expected_cookies0]\n  /usr/local/lib/python3.12/site-packages/_pytest/fixtures.py:939: ResourceWarning: unclosed <socket.socket fd=20, family=2, type=1, proto=0, laddr=('127.0.0.1', 43599)>\n    next(it)\n  Enable tracemalloc to get traceback where the object was allocated.\n  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n60 passed, 1 skipped, 3 warnings in 4.23s\n",
+        "repeat": 0,
+        "returncode": 0
+      },
+      {
+        "command": "python -m pytest -o addopts= -q /tmp/oracle/check.py",
+        "kind": "hidden",
+        "output": ".                                                                        [100%]\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-ujyu011t'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n1 passed, 1 warning in 3.42s\n",
+        "repeat": 0,
+        "returncode": 0
+      }
+    ],
+    "functional_pass": true,
+    "pass": true,
+    "reason": "verification",
+    "tool_evidence": {
+      "checks": {
+        "terminal_execution": true
+      },
+      "pass": true,
+      "required": {
+        "command_pattern": "python(?:3)?\\s+-m\\s+httpie\\b",
+        "terminal": true
+      }
+    }
+  }
+}

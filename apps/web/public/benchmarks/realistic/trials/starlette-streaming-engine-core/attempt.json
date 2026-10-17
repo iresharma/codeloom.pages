@@ -1,0 +1,8 @@
+{
+  "cap_usd": 4.0,
+  "id": "starlette-streaming-engine-core",
+  "stage": "measured",
+  "started_at": 1792199513.059231,
+  "system": "engine-core",
+  "task_id": "starlette-streaming"
+}

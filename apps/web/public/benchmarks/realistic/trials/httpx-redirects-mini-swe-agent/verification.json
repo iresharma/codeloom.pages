@@ -1,0 +1,32 @@
+{
+  "checks": [
+    {
+      "command": "python -m pytest -o addopts= -q tests/client/test_redirects.py tests/models/test_url.py",
+      "kind": "trusted",
+      "output": "........................................................................ [ 59%]\n.................................................                        [100%]\n121 passed in 0.35s\n",
+      "repeat": 0,
+      "returncode": 0
+    },
+    {
+      "command": "python -m pytest -o addopts= -q /tmp/oracle/check.py",
+      "kind": "hidden",
+      "output": ".                                                                        [100%]\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-k_w41u4i'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n../usr/local/lib/python3.12/site-packages/_pytest/stepwise.py:51\n  /usr/local/lib/python3.12/site-packages/_pytest/stepwise.py:51: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/stepwise: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-b8aac70y'\n    session.config.cache.set(STEPWISE_CACHE_DIR, [])\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n1 passed, 2 warnings in 0.17s\n",
+      "repeat": 0,
+      "returncode": 0
+    }
+  ],
+  "functional_pass": true,
+  "pass": false,
+  "reason": "verification",
+  "tool_evidence": {
+    "checks": {
+      "github_source": true,
+      "source_linked_report": true,
+      "web_search": false
+    },
+    "pass": false,
+    "required": {
+      "research": true
+    }
+  }
+}

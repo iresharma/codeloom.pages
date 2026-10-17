@@ -1,0 +1,35 @@
+{
+  "cost_is_conservative": false,
+  "cost_usd": 0.09023336884800001,
+  "elapsed_s": 597.3744409580249,
+  "functional_verification": {
+    "pass": true
+  },
+  "id": "dotenv-strict-mini-swe-agent",
+  "stage": "measured",
+  "submission": "checkout",
+  "system": "mini-swe-agent",
+  "task_id": "dotenv-strict",
+  "termination": "completed",
+  "tool_evidence": null,
+  "verification": {
+    "checks": [
+      {
+        "command": "python -m pytest -q tests",
+        "kind": "trusted",
+        "output": "........................................................................ [ 25%]\n........................................................................ [ 50%]\n........................................................................ [ 76%]\n....................................................................     [100%]\n=============================== warnings summary ===============================\ntests/test_cli.py: 32 warnings\n  /task/tests/conftest.py:8: DeprecationWarning: 'isolated_filesystem' is deprecated and will be removed in Click 9.0. Use 'tempfile.TemporaryDirectory' or pytest's 'tmp_path' fixture with absolute paths instead.\n    with runner.isolated_filesystem():\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n284 passed, 1 skipped, 32 warnings in 8.12s\n",
+        "repeat": 0,
+        "returncode": 0
+      },
+      {
+        "command": "python -m pytest -o addopts= -q /tmp/oracle/check.py",
+        "kind": "hidden",
+        "output": ".                                                                        [100%]\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-ieo265z8'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n1 passed, 1 warning in 0.03s\n",
+        "repeat": 0,
+        "returncode": 0
+      }
+    ],
+    "pass": true,
+    "reason": "verification"
+  }
+}

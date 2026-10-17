@@ -1,0 +1,55 @@
+{
+  "cost_is_conservative": false,
+  "cost_usd": 0.112463919288,
+  "elapsed_s": 948.1000442079967,
+  "functional_verification": {
+    "pass": false
+  },
+  "id": "memos-search-mini-swe-agent",
+  "stage": "measured",
+  "submission": "checkout",
+  "system": "mini-swe-agent",
+  "task_id": "memos-search",
+  "termination": "completed",
+  "tool_evidence": {
+    "checks": {
+      "browser_command": true,
+      "screenshots": false
+    },
+    "pass": false,
+    "required": {
+      "browser": true
+    }
+  },
+  "verification": {
+    "checks": [
+      {
+        "command": "cd web && ./node_modules/.bin/tsc --noEmit --skipLibCheck",
+        "kind": "trusted",
+        "output": "",
+        "repeat": 0,
+        "returncode": 0
+      },
+      {
+        "command": "python -m pytest -o addopts= -q /tmp/oracle/check.py",
+        "kind": "hidden",
+        "output": "F                                                                        [100%]\n=================================== FAILURES ===================================\n________________________________ test_rendering ________________________________\n\n    def test_rendering():\n      with sync_playwright() as p:\n        browser = p.chromium.launch(args=['--no-sandbox','--disable-dev-shm-usage'])\n        page = browser.new_page()\n        errors=[]\n        page.on('pageerror', lambda error: errors.append(str(error)))\n        page.goto('http://127.0.0.1:3001/reader?q=ALPHA&tag=release',wait_until='networkidle')\n>       assert page.locator('article').count()==1\nE       AssertionError: assert 0 == 1\nE        +  where 0 = count()\nE        +    where count = <Locator frame=<Frame name= url='http://127.0.0.1:3001/reader?q=ALPHA&tag=release'> selector='article'>.count\nE        +      where <Locator frame=<Frame name= url='http://127.0.0.1:3001/reader?q=ALPHA&tag=release'> selector='article'> = locator('article')\nE        +        where locator = <Page url='http://127.0.0.1:3001/reader?q=ALPHA&tag=release'>.locator\n\n/tmp/oracle/check.py:10: AssertionError\n=============================== warnings summary ===============================\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:475: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-xmkvtan0'\n    config.cache.set(\"cache/nodeids\", sorted(self.cached_nodeids))\n\n../usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429\n  /usr/local/lib/python3.12/site-packages/_pytest/cacheprovider.py:429: PytestCacheWarning: could not create cache path /tmp/oracle/.pytest_cache/v/cache/lastfailed: [Errno 13] Permission denied: '/tmp/oracle/pytest-cache-files-c1wjjzw1'\n    config.cache.set(\"cache/lastfailed\", self.lastfailed)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED ../tmp/oracle/check.py::test_rendering - AssertionError: assert 0 == 1\n1 failed, 2 warnings in 4.50s\n",
+        "repeat": 0,
+        "returncode": 1
+      }
+    ],
+    "functional_pass": false,
+    "pass": false,
+    "reason": "verification",
+    "tool_evidence": {
+      "checks": {
+        "browser_command": true,
+        "screenshots": false
+      },
+      "pass": false,
+      "required": {
+        "browser": true
+      }
+    }
+  }
+}

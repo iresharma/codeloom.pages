@@ -1,0 +1,17 @@
+{
+  "arguments": {
+    "args": [
+      "api",
+      "repos/encode/httpx/contents/httpx/_transports/mock.py?ref=26d48e0634e6ee9cdc0533996db289ce4b430177",
+      "-H",
+      "Accept: application/vnd.github.raw"
+    ]
+  },
+  "commit": "26d48e0634e6ee9cdc0533996db289ce4b430177",
+  "ok": true,
+  "operation": "github",
+  "retrieved_at": 1792234062.066646,
+  "sha256": "3d3a34779ebb4484d7c46ae48ba90deffebbc300317f088c0dcb972626428c4a",
+  "text": "from __future__ import annotations\n\nimport typing\n\nfrom .._models import Request, Response\nfrom .base import AsyncBaseTransport, BaseTransport\n\nSyncHandler = typing.Callable[[Request], Response]\nAsyncHandler = typing.Callable[[Request], typing.Coroutine[None, None, Response]]\n\n\n__all__ = [\"MockTransport\"]\n\n\nclass MockTransport(AsyncBaseTransport, BaseTransport):\n    def __init__(self, handler: SyncHandler | AsyncHandler) -> None:\n        self.handler = handler\n\n    def handle_request(\n        self,\n        request: Request,\n    ) -> Response:\n        request.read()\n        response = self.handler(request)\n        if not isinstance(response, Response):  # pragma: no cover\n            raise TypeError(\"Cannot use an async handler in a sync Client\")\n        return response\n\n    async def handle_async_request(\n        self,\n        request: Request,\n    ) -> Response:\n        await request.aread()\n        response = self.handler(request)\n\n        # Allow handler to *optionally* be an `async` function.\n        # If it is, then the `response` variable need to be awaited to actually\n        # return the result.\n\n        if not isinstance(response, Response):\n            response = await response\n\n        return response\n",
+  "url": "https://api.github.com/repos/encode/httpx/contents/httpx/_transports/mock.py?ref=26d48e0634e6ee9cdc0533996db289ce4b430177"
+}

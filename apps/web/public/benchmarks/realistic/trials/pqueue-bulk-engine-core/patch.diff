@@ -1,0 +1,448 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp85ja519p/patch/benchmark_tests/set-priorities.ts b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp85ja519p/patch/benchmark_tests/set-priorities.ts
+new file mode 100644
+index 0000000..4cb1c43
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp85ja519p/patch/benchmark_tests/set-priorities.ts
+@@ -0,0 +1,322 @@
++/* eslint-disable @typescript-eslint/triple-slash-reference -- The directive makes node types available to this non-source test file. */
++/* eslint-disable require-unicode-regexp -- The assertions match literal error messages. */
++/// <reference types="node" />
++import {test} from 'node:test';
++import assert from 'node:assert/strict';
++import PQueue, {
++	PriorityQueue,
++	type Queue,
++	type QueueAddOptions,
++	type RunFunction,
++} from '../source/index.js';
++
++const tick = async () => new Promise<void>(resolve => {
++	setImmediate(resolve);
++});
++
++const assertInvalidBatchPriorityIsRejected = async (priority: number) => {
++	const atomicRunOrder: string[] = [];
++	const atomicQueue = new PQueue({concurrency: 1, autoStart: false});
++
++	atomicQueue.add(() => {
++		atomicRunOrder.push('a');
++	}, {id: 'a', priority: 0});
++	atomicQueue.add(() => {
++		atomicRunOrder.push('b');
++	}, {id: 'b', priority: 0});
++
++	assert.throws(() => {
++		atomicQueue.setPriorities([
++			{id: 'b', priority: 9},
++			{id: 'a', priority},
++		]);
++	}, {
++		name: 'TypeError',
++		message: /Expected `priority` to be a finite number/,
++	});
++
++	atomicQueue.start();
++	await atomicQueue.onIdle();
++
++	assert.deepEqual(atomicRunOrder, ['a', 'b']);
++	return atomicRunOrder;
++};
++
++const assertInvalidPriorityQueuePriorityIsRejected = async (priority: number) => {
++	const invalidPriorityQueue = new PriorityQueue();
++	invalidPriorityQueue.enqueue(async () => 'a', {id: 'a', priority: 0});
++
++	assert.throws(() => {
++		invalidPriorityQueue.setPriorities([
++			{id: 'a', priority: 9},
++			{id: 'missing', priority},
++		]);
++	}, {
++		name: 'TypeError',
++		message: /Expected `priority` to be a finite number/,
++	});
++
++	assert.equal(invalidPriorityQueue.size, 1);
++	assert.equal(await invalidPriorityQueue.dequeue()!(), 'a');
++	return 'a' as const;
++};
++
++test('setPriorities with an empty batch is a no-op', async () => {
++	const emptyBatchRunOrder: string[] = [];
++	const emptyBatchQueue = new PQueue({concurrency: 1, autoStart: false});
++
++	emptyBatchQueue.add(() => {
++		emptyBatchRunOrder.push('a');
++	}, {id: 'a', priority: 0});
++	emptyBatchQueue.add(() => {
++		emptyBatchRunOrder.push('b');
++	}, {id: 'b', priority: 0});
++
++	emptyBatchQueue.setPriorities([]);
++	assert.equal(emptyBatchQueue.size, 2);
++
++	emptyBatchQueue.start();
++	await emptyBatchQueue.onIdle();
++
++	assert.deepEqual(emptyBatchRunOrder, ['a', 'b']);
++});
++
++test('setPriorities validates the whole batch before applying any update', async () => {
++	const invalidBatchRunOrders = await Promise.all([
++		assertInvalidBatchPriorityIsRejected(NaN),
++		assertInvalidBatchPriorityIsRejected(Infinity),
++		assertInvalidBatchPriorityIsRejected(-Infinity),
++		assertInvalidBatchPriorityIsRejected('high' as unknown as number),
++	]);
++
++	assert.deepEqual(invalidBatchRunOrders, [
++		['a', 'b'],
++		['a', 'b'],
++		['a', 'b'],
++		['a', 'b'],
++	]);
++});
++
++test('setPriorities rejects non-waiting ids before applying any update', async () => {
++	let releaseRunning!: () => void;
++	// eslint-disable-next-line unicorn/prefer-promise-with-resolvers
++	const blocker = new Promise<void>(resolve => {
++		releaseRunning = resolve;
++	});
++
++	const nonWaitingQueue = new PQueue({concurrency: 1});
++	const running = nonWaitingQueue.add(async () => blocker, {id: 'running', priority: 0});
++	await tick();
++
++	const nonWaitingRunOrder: string[] = [];
++	const nonWaitingPriorities: Array<number | undefined> = [];
++	const waiting = nonWaitingQueue.add(() => {
++		nonWaitingRunOrder.push('waiting');
++		nonWaitingPriorities.push(nonWaitingQueue.runningTasks[0]?.priority);
++	}, {id: 'waiting', priority: 0});
++
++	assert.deepEqual(nonWaitingQueue.runningTasks.map(({id}) => id), ['running']);
++
++	assert.throws(() => {
++		nonWaitingQueue.setPriorities([
++			{id: 'waiting', priority: 9},
++			{id: 'running', priority: 1},
++		]);
++	}, {
++		name: 'ReferenceError',
++		message: /No promise function with the id "running" exists in the queue\./,
++	});
++
++	assert.throws(() => {
++		nonWaitingQueue.setPriorities([
++			{id: 'waiting', priority: 9},
++			{id: 'unknown', priority: 1},
++		]);
++	}, {
++		name: 'ReferenceError',
++		message: /No promise function with the id "unknown" exists in the queue\./,
++	});
++
++	releaseRunning();
++	await running;
++	await waiting;
++
++	assert.deepEqual(nonWaitingRunOrder, ['waiting']);
++	assert.deepEqual(nonWaitingPriorities, [0]);
++});
++
++test('setPriorities reorders waiting tasks and leaves untouched tasks in FIFO order', async () => {
++	const reorderedRunOrder: string[] = [];
++	const reorderedQueue = new PQueue({concurrency: 1, autoStart: false});
++
++	for (const reorderedTaskId of ['a', 'b', 'c', 'd']) {
++		reorderedQueue.add(() => {
++			reorderedRunOrder.push(reorderedTaskId);
++		}, {id: reorderedTaskId, priority: 0});
++	}
++
++	reorderedQueue.setPriorities([
++		{id: 'd', priority: 3},
++		{id: 'b', priority: 2},
++	]);
++
++	reorderedQueue.start();
++	await reorderedQueue.onIdle();
++
++	assert.deepEqual(reorderedRunOrder, ['d', 'b', 'a', 'c']);
++});
++
++test('duplicate ids in setPriorities apply in order and the last priority wins', async () => {
++	let duplicatePriorityWhileRunning: number | undefined;
++	const duplicateQueue = new PQueue({concurrency: 1, autoStart: false});
++
++	const duplicateTask = duplicateQueue.add(() => {
++		duplicatePriorityWhileRunning = duplicateQueue.runningTasks[0]?.priority;
++	}, {id: 'task', priority: 0});
++
++	duplicateQueue.setPriorities([
++		{id: 'task', priority: 5},
++		{id: 'task', priority: -2},
++		{id: 'task', priority: 4},
++	]);
++
++	duplicateQueue.start();
++	await duplicateTask;
++
++	assert.equal(duplicatePriorityWhileRunning, 4);
++});
++
++test('setPriorities falls back when the custom queue lacks setPriorities', async () => {
++	class FifoQueue implements Queue<RunFunction, QueueAddOptions> {
++		readonly #items: Array<{run: RunFunction; id: string | undefined}> = [];
++
++		get size() {
++			return this.#items.length;
++		}
++
++		enqueue(run: RunFunction, options?: Partial<QueueAddOptions>) {
++			this.#items.push({run, id: options?.id});
++		}
++
++		dequeue() {
++			return this.#items.shift()?.run;
++		}
++
++		filter() {
++			return this.#items.map(({run}) => run);
++		}
++
++		setPriority() {} // eslint-disable-line @typescript-eslint/no-empty-function
++
++		remove(id: string) {
++			const index = this.#items.findIndex(item => item.id === id);
++			if (index !== -1) {
++				this.#items.splice(index, 1);
++			}
++		}
++	}
++
++	const fallbackObserved: Array<{id: string; priority: number | undefined}> = [];
++	const fallbackQueue = new PQueue({concurrency: 1, autoStart: false, queueClass: FifoQueue});
++
++	fallbackQueue.add(() => {
++		fallbackObserved.push({
++			id: 'first',
++			priority: fallbackQueue.runningTasks.find(({id}) => id === 'first')?.priority,
++		});
++	}, {id: 'first', priority: 0});
++	fallbackQueue.add(() => {
++		fallbackObserved.push({
++			id: 'second',
++			priority: fallbackQueue.runningTasks.find(({id}) => id === 'second')?.priority,
++		});
++	}, {id: 'second', priority: 0});
++
++	fallbackQueue.setPriorities([
++		{id: 'second', priority: 9},
++		{id: 'first', priority: 4},
++	]);
++
++	fallbackQueue.start();
++	await fallbackQueue.onIdle();
++
++	// The custom queue ignores priorities, so tasks still run in FIFO order, but their metadata is updated.
++	assert.deepEqual(fallbackObserved, [
++		{id: 'first', priority: 4},
++		{id: 'second', priority: 9},
++	]);
++});
++
++test('PriorityQueue.setPriorities applies updates in order and the last duplicate wins', async () => {
++	const reorderPriorityQueue = new PriorityQueue();
++
++	for (const reorderPriorityQueueId of ['a', 'b', 'c']) {
++		reorderPriorityQueue.enqueue(async () => reorderPriorityQueueId, {id: reorderPriorityQueueId, priority: 0});
++	}
++
++	reorderPriorityQueue.setPriorities([
++		{id: 'c', priority: -1},
++		{id: 'c', priority: 2},
++		{id: 'b', priority: 1},
++	]);
++
++	assert.deepEqual(await Promise.all([
++		reorderPriorityQueue.dequeue()!(),
++		reorderPriorityQueue.dequeue()!(),
++		reorderPriorityQueue.dequeue()!(),
++	]), ['c', 'b', 'a']);
++});
++
++test('PriorityQueue.setPriorities validates before mutation and treats an empty batch as a no-op', async () => {
++	const invalidPriorityQueueResults = await Promise.all([
++		assertInvalidPriorityQueuePriorityIsRejected(NaN),
++		assertInvalidPriorityQueuePriorityIsRejected(Infinity),
++		assertInvalidPriorityQueuePriorityIsRejected(-Infinity),
++		assertInvalidPriorityQueuePriorityIsRejected('high' as unknown as number),
++	]);
++
++	assert.deepEqual(invalidPriorityQueueResults, ['a', 'a', 'a', 'a']);
++
++	const priorityQueueValidationQueue = new PriorityQueue();
++	priorityQueueValidationQueue.enqueue(async () => 'a', {id: 'a', priority: 0});
++	priorityQueueValidationQueue.enqueue(async () => 'b', {id: 'b', priority: 0});
++
++	assert.throws(() => {
++		priorityQueueValidationQueue.setPriorities([
++			{id: 'b', priority: 9},
++			{id: 'unknown', priority: 1},
++		]);
++	}, {
++		name: 'ReferenceError',
++		message: /No promise function with the id "unknown" exists in the queue\./,
++	});
++
++	assert.deepEqual(await Promise.all([
++		priorityQueueValidationQueue.dequeue()!(),
++		priorityQueueValidationQueue.dequeue()!(),
++	]), ['a', 'b']);
++
++	priorityQueueValidationQueue.setPriorities([]);
++});
++test('PQueue.setPriorities validates priorities before ids in a mixed invalid batch', async () => {
++	const mixedValidationRunOrder: string[] = [];
++	const mixedValidationQueue = new PQueue({concurrency: 1, autoStart: false});
++
++	mixedValidationQueue.add(() => {
++		mixedValidationRunOrder.push('a');
++	}, {id: 'a', priority: 0});
++
++	assert.throws(() => {
++		mixedValidationQueue.setPriorities([
++			{id: 'missing', priority: NaN},
++		]);
++	}, {
++		name: 'TypeError',
++		message: /Expected `priority` to be a finite number/,
++	});
++
++	mixedValidationQueue.start();
++	await mixedValidationQueue.onIdle();
++
++	assert.deepEqual(mixedValidationRunOrder, ['a']);
++});
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp87e86aw9/base/source/index.ts b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp85ja519p/patch/source/index.ts
+index 2b9b9e5..6b8da45 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp87e86aw9/base/source/index.ts
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp85ja519p/patch/source/index.ts
+@@ -767,6 +767,16 @@ export default class PQueue<QueueType extends Queue<RunFunction, EnqueueOptionsT
+ 		});
+ 	}
+ 
++	#findWaitingTask(id: string): WaitingTask | undefined {
++		for (const waitingTask of this.#waitingTasks) {
++			if (waitingTask.id === id) {
++				return waitingTask;
++			}
++		}
++
++		return undefined;
++	}
++
+ 	/**
+ 	Get or set the default timeout. A change applies to tasks added after it.
+ 
+@@ -851,6 +861,55 @@ export default class PQueue<QueueType extends Queue<RunFunction, EnqueueOptionsT
+ 		throw new ReferenceError(`No promise function with the id "${id}" exists in the queue.`);
+ 	}
+ 
++	/**
++	Changes the priorities of waiting tasks, found by their `id`. Throws a `ReferenceError` if no waiting task has an `id`, for example because the task already started. Throws a `TypeError` if a `priority` is not a finite number. All updates are validated before any is applied, so the batch is atomic.
++
++	@example
++	```
++	import PQueue from 'p-queue';
++
++	const queue = new PQueue({concurrency: 1});
++
++	queue.add(async () => '🦄', {priority: 1});
++	queue.add(async () => '🦀', {priority: 0, id: '🦀'});
++	queue.add(async () => '🦄', {priority: 1});
++
++	queue.setPriorities([{id: '🦀', priority: 2}]);
++	// '🦀' runs second
++	```
++	*/
++	setPriorities(updates: ReadonlyArray<{id: string; priority: number}>) {
++		for (const {priority} of updates) {
++			if (typeof priority !== 'number' || !Number.isFinite(priority)) {
++				throw new TypeError(`Expected \`priority\` to be a finite number, got \`${priority}\` (${typeof priority})`);
++			}
++		}
++
++		for (const {id} of updates) {
++			if (this.#findWaitingTask(id) === undefined) {
++				throw new ReferenceError(`No promise function with the id "${id}" exists in the queue.`);
++			}
++		}
++
++		if (updates.length === 0) {
++			return;
++		}
++
++		if (this.#queue.setPriorities) {
++			this.#queue.setPriorities(updates);
++
++			for (const {id, priority} of updates) {
++				this.#findWaitingTask(id)!.priority = priority;
++			}
++
++			return;
++		}
++
++		for (const {id, priority} of updates) {
++			this.setPriority(id, priority);
++		}
++	}
++
+ 	/**
+ 	Adds a sync or async task to the queue.
+ 
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp87e86aw9/base/source/priority-queue.ts b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp85ja519p/patch/source/priority-queue.ts
+index c0c8642..ad458cc 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp87e86aw9/base/source/priority-queue.ts
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp85ja519p/patch/source/priority-queue.ts
+@@ -104,6 +104,24 @@ export default class PriorityQueue implements Queue<RunFunction, PriorityQueueOp
+ 		this.enqueue(item!.run, {priority, id});
+ 	}
+ 
++	setPriorities(updates: ReadonlyArray<{id: string; priority: number}>) {
++		for (const {priority} of updates) {
++			if (typeof priority !== 'number' || !Number.isFinite(priority)) {
++				throw new TypeError(`Expected \`priority\` to be a finite number, got \`${priority}\` (${typeof priority})`);
++			}
++		}
++
++		for (const {id} of updates) {
++			if (this.#findIndex(element => element.id === id) === -1) {
++				throw new ReferenceError(`No promise function with the id "${id}" exists in the queue.`);
++			}
++		}
++
++		for (const {id, priority} of updates) {
++			this.setPriority(id, priority);
++		}
++	}
++
+ 	remove(id: string): void;
+ 	remove(run: RunFunction): void;
+ 	remove(idOrRun: string | RunFunction): void {
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp87e86aw9/base/source/queue.ts b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp85ja519p/patch/source/queue.ts
+index b1c256a..7908d01 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp87e86aw9/base/source/queue.ts
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp85ja519p/patch/source/queue.ts
+@@ -6,5 +6,9 @@ export type Queue<Element, Options> = {
+ 	dequeue: () => Element | undefined;
+ 	enqueue: (run: Element, options?: Partial<Options>) => void;
+ 	setPriority: (id: string, priority: number) => void;
++	setPriorities?: (updates: ReadonlyArray<{
++		id: string;
++		priority: number;
++	}>) => void;
+ 	remove: (id: string) => void;
+ };

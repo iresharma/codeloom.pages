@@ -1,0 +1,17 @@
+{
+  "arguments": {
+    "args": [
+      "api",
+      "repos/encode/httpx/commits/26d48e0634e6ee9cdc0533996db289ce4b430177",
+      "-H",
+      "Accept: application/vnd.github.patch"
+    ]
+  },
+  "commit": null,
+  "ok": false,
+  "operation": "github",
+  "retrieved_at": 1792233691.607643,
+  "sha256": "6cd431450d7c912aeed56fe50fb3f9db1831438f4133cebfcf4f3c65cff6dff9",
+  "text": "error: Only pinned repository metadata, contents and trees are available",
+  "url": null
+}

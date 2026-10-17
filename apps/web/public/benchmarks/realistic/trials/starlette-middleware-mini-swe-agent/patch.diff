@@ -1,0 +1,26 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp188lizkk/base/starlette/middleware/gzip.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpr7ka1he_/patch/starlette/middleware/gzip.py
+index 4577749..c4f1644 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp188lizkk/base/starlette/middleware/gzip.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpr7ka1he_/patch/starlette/middleware/gzip.py
+@@ -50,7 +50,7 @@ class IdentityResponder:
+         if message_type == "http.response.start":
+             # Don't send the initial message until we've determined how to
+             # modify the outgoing headers correctly.
+-            self.initial_message = {**message, "headers": []}
++            self.initial_message = {**message, "headers": list(message["headers"])}
+             headers = Headers(raw=self.initial_message["headers"])
+             self.content_encoding_set = "content-encoding" in headers
+             self.content_type_is_excluded = headers.get("content-type", "").startswith(DEFAULT_EXCLUDED_CONTENT_TYPES)
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp188lizkk/base/starlette/responses.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpr7ka1he_/patch/starlette/responses.py
+index 4fa9c9d..e4a9d71 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp188lizkk/base/starlette/responses.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpr7ka1he_/patch/starlette/responses.py
+@@ -131,7 +131,7 @@ class Response:
+             cookie[key]["partitioned"] = True  # pragma: no cover
+ 
+         cookie_val = cookie.output(header="").strip()
+-        self.headers["set-cookie"] = cookie_val
++        self.headers.append("set-cookie", cookie_val)
+ 
+     def delete_cookie(
+         self,

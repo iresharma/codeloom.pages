@@ -1,0 +1,8 @@
+{
+  "cap_usd": 4.0,
+  "id": "dotenv-strict-mini-swe-agent",
+  "stage": "measured",
+  "started_at": 1792207074.841821,
+  "system": "mini-swe-agent",
+  "task_id": "dotenv-strict"
+}

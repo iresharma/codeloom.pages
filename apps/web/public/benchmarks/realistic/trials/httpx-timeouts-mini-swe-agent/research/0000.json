@@ -1,0 +1,12 @@
+{
+  "arguments": {
+    "query": "HTTPX timeouts"
+  },
+  "commit": null,
+  "ok": false,
+  "operation": "search",
+  "retrieved_at": 1792230721.4380631,
+  "sha256": "e17b7b932a5c0f950b889399ddd3409447e149a304f2b11a92c8e56414126a69",
+  "text": "error: BRAVE_API_KEY unavailable on research host",
+  "url": null
+}

@@ -1,0 +1,351 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpb4y_fpg3/patch/web/src/lib/reader.test.mjs b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpb4y_fpg3/patch/web/src/lib/reader.test.mjs
+new file mode 100644
+index 0000000..b5f9e64
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpb4y_fpg3/patch/web/src/lib/reader.test.mjs
+@@ -0,0 +1,199 @@
++/* global URL URLSearchParams Response */
++import assert from "node:assert/strict";
++import { resolve } from "node:path";
++import test from "node:test";
++import { createServer } from "vite";
++
++const root = new URL("../../", import.meta.url).pathname;
++
++const server = await createServer({
++  root,
++  appType: "custom",
++  configFile: false,
++  logLevel: "silent",
++  resolve: {
++    alias: {
++      "@/": `${resolve(root, "src")}/`,
++    },
++  },
++  server: {
++    middlewareMode: true,
++  },
++});
++
++const { loadReaderMemos, MemoNotFoundError, normalizeMemoName } = await server.ssrLoadModule("/src/lib/reader.ts");
++
++test("normalizeMemoName accepts a bare uid and a full memos/uid", () => {
++  assert.equal(normalizeMemoName("alpha"), "memos/alpha");
++  assert.equal(normalizeMemoName("memos/alpha"), "memos/alpha");
++  assert.equal(normalizeMemoName("memos/abc-123_XYZ"), "memos/abc-123_XYZ");
++});
++
++test("normalizeMemoName rejects empty, malformed, and traversal values", () => {
++  const invalidValues = [
++    "",
++    "users/1",
++    "memos/../x",
++    "memos/alpha/../..",
++    "memos/alpha/..",
++    "memos//alpha",
++    "memos/alpha/",
++    "memos/..",
++    "alpha/.hidden",
++    "a/b",
++    "memos/alpha with space",
++    "memos/\u0000alpha",
++    "\u0000",
++  ];
++  for (const value of invalidValues) {
++    assert.equal(normalizeMemoName(value), null, `expected ${JSON.stringify(value)} to be invalid`);
++  }
++});
++
++test("loadReaderMemos uses the feed when memo is absent", async () => {
++  const feedRequestedUrls = [];
++  globalThis.fetch = async (url) => {
++    feedRequestedUrls.push(String(url));
++    return new Response(JSON.stringify({ memos: [] }), {
++      status: 200,
++      headers: { "content-type": "application/json" },
++    });
++  };
++
++  const feedResultMemos = await loadReaderMemos(new URLSearchParams());
++
++  assert.deepEqual(feedRequestedUrls, ["/api/v1/memos?pageSize=100"]);
++  assert.deepEqual(feedResultMemos, []);
++});
++
++test("loadReaderMemos fetches and parses a single bare Memo", async () => {
++  let singleRequestedUrl = "";
++  globalThis.fetch = async (url) => {
++    singleRequestedUrl = String(url);
++    return new Response(
++      JSON.stringify({
++        name: "memos/alpha",
++        creator: "users/1",
++        displayTime: "2023-11-14T22:13:20Z",
++        content: "",
++        nodes: [],
++        resources: [],
++      }),
++      {
++        status: 200,
++        headers: { "content-type": "application/json" },
++      },
++    );
++  };
++
++  const singleResultMemos = await loadReaderMemos(new URLSearchParams("memo=alpha"));
++
++  assert.equal(singleRequestedUrl, "/api/v1/memos/alpha");
++  assert.equal(singleResultMemos.length, 1);
++  assert.equal(singleResultMemos[0].name, "memos/alpha");
++  assert.equal(singleResultMemos[0].creator, "users/1");
++  assert.ok(singleResultMemos[0].displayTime instanceof Date);
++});
++
++test("loadReaderMemos throws MemoNotFoundError on 404", async () => {
++  globalThis.fetch = async () => new Response("", { status: 404 });
++
++  await assert.rejects(
++    () => loadReaderMemos(new URLSearchParams("memo=missing")),
++    (error) => error instanceof MemoNotFoundError && error.message === "Memo not found",
++  );
++});
++
++test("loadReaderMemos throws MemoNotFoundError on invalid memo without requesting", async () => {
++  let invalidMemoRequested = false;
++  globalThis.fetch = async () => {
++    invalidMemoRequested = true;
++    return new Response("", { status: 200 });
++  };
++
++  await assert.rejects(
++    () => loadReaderMemos(new URLSearchParams("memo=memos/../x")),
++    (error) => error instanceof MemoNotFoundError,
++  );
++  assert.equal(invalidMemoRequested, false);
++});
++
++test("loadReaderMemos throws Error 'Memos unavailable' on non-ok non-404 response", async () => {
++  globalThis.fetch = async () => new Response("", { status: 500 });
++
++  await assert.rejects(
++    () => loadReaderMemos(new URLSearchParams("memo=alpha")),
++    (error) => error instanceof Error && error.message === "Memos unavailable" && !(error instanceof MemoNotFoundError),
++  );
++});
++
++test("loadReaderMemos throws Error 'Memos unavailable' on network failure", async () => {
++  globalThis.fetch = async () => {
++    throw new TypeError("Network error");
++  };
++
++  await assert.rejects(
++    () => loadReaderMemos(new URLSearchParams("memo=alpha")),
++    (error) => error instanceof Error && error.message === "Memos unavailable" && !(error instanceof MemoNotFoundError),
++  );
++});
++
++test("loadReaderMemos accepts full memos/uid format", async () => {
++  let requestedUrl = "";
++  globalThis.fetch = async (url) => {
++    requestedUrl = String(url);
++    return new Response(
++      JSON.stringify({
++        name: "memos/beta",
++        creator: "users/1",
++        displayTime: "2023-11-14T22:13:30Z",
++        content: "",
++        nodes: [],
++        resources: [],
++      }),
++      {
++        status: 200,
++        headers: { "content-type": "application/json" },
++      },
++    );
++  };
++
++  const betaResult = await loadReaderMemos(new URLSearchParams("memo=memos/beta"));
++
++  assert.equal(requestedUrl, "/api/v1/memos/beta");
++  assert.equal(betaResult.length, 1);
++  assert.equal(betaResult[0].name, "memos/beta");
++});
++
++test("loadReaderMemos with null memo returns feed (no memo param)", async () => {
++  const feedUrls = [];
++  globalThis.fetch = async (url) => {
++    feedUrls.push(String(url));
++    return new Response(
++      JSON.stringify({
++        memos: [
++          {
++            name: "memos/alpha",
++            creator: "users/1",
++            displayTime: "2023-11-14T22:13:20Z",
++            content: "",
++            nodes: [],
++            resources: [],
++          },
++        ],
++      }),
++      {
++        status: 200,
++        headers: { "content-type": "application/json" },
++      },
++    );
++  };
++
++  const feedResult = await loadReaderMemos(new URLSearchParams());
++
++  assert.deepEqual(feedUrls, ["/api/v1/memos?pageSize=100"]);
++  assert.equal(feedResult.length, 1);
++  assert.equal(feedResult[0].name, "memos/alpha");
++});
++
++await server.close();
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpixajin68/base/web/src/lib/reader.ts b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpb4y_fpg3/patch/web/src/lib/reader.ts
+index c8e309c..3c4825f 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpixajin68/base/web/src/lib/reader.ts
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpb4y_fpg3/patch/web/src/lib/reader.ts
+@@ -1,8 +1,74 @@
+ import { Memo } from "@/types/proto/api/v1/memo_service";
++
+ export async function loadMemos(): Promise<Memo[]> {
+   const response = await fetch("/api/v1/memos?pageSize=100");
+   if (!response.ok) throw new Error("Memos unavailable");
+   const data = await response.json();
+-  return (data.memos || []).map((memo: unknown) => Memo.fromPartial({ ...(memo as Memo), displayTime: (memo as Memo).displayTime ? new Date(String((memo as Memo).displayTime)) : undefined }));
++  return (data.memos || []).map((memo: unknown) =>
++    Memo.fromPartial({
++      ...(memo as Memo),
++      displayTime: (memo as Memo).displayTime ? new Date(String((memo as Memo).displayTime)) : undefined,
++    }),
++  );
++}
++
++export function selectMemos(memos: Memo[], _params: URLSearchParams): Memo[] {
++  void _params;
++  return memos;
++}
++
++export class MemoNotFoundError extends Error {
++  constructor() {
++    super("Memo not found");
++    this.name = "MemoNotFoundError";
++  }
++}
++
++const MEMO_UID_PATTERN = /^[A-Za-z0-9_-]+$/;
++
++export function normalizeMemoName(value: string): string | null {
++  if (value.includes("\0")) {
++    return null;
++  }
++  const uid = value.startsWith("memos/") ? value.slice("memos/".length) : value;
++  if (!MEMO_UID_PATTERN.test(uid)) {
++    return null;
++  }
++  return `memos/${uid}`;
++}
++
++export async function loadMemo(name: string): Promise<Memo[]> {
++  try {
++    const response = await fetch(`/api/v1/${name}`);
++    if (response.status === 404) {
++      throw new MemoNotFoundError();
++    }
++    if (!response.ok) {
++      throw new Error("Memos unavailable");
++    }
++    const memo: unknown = await response.json();
++    return [
++      Memo.fromPartial({
++        ...(memo as Memo),
++        displayTime: (memo as Memo).displayTime ? new Date(String((memo as Memo).displayTime)) : undefined,
++      }),
++    ];
++  } catch (error) {
++    if (error instanceof MemoNotFoundError) {
++      throw error;
++    }
++    throw new Error("Memos unavailable");
++  }
++}
++
++export async function loadReaderMemos(params: URLSearchParams): Promise<Memo[]> {
++  const memo = params.get("memo");
++  if (memo === null) {
++    return loadMemos();
++  }
++  const normalized = normalizeMemoName(memo);
++  if (!normalized) {
++    throw new MemoNotFoundError();
++  }
++  return loadMemo(normalized);
+ }
+-export function selectMemos(memos: Memo[], _params: URLSearchParams): Memo[] { return memos; }
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpixajin68/base/web/src/pages/Reader.tsx b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpb4y_fpg3/patch/web/src/pages/Reader.tsx
+index cc50adc..14899e5 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpixajin68/base/web/src/pages/Reader.tsx
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpb4y_fpg3/patch/web/src/pages/Reader.tsx
+@@ -1,21 +1,48 @@
+ import { useEffect, useState } from "react";
++import { useLocation } from "react-router-dom";
+ import MemoContent from "@/components/MemoContent";
+-import { loadMemos, selectMemos } from "@/lib/reader";
++import { loadReaderMemos, MemoNotFoundError, selectMemos } from "@/lib/reader";
+ import { Memo } from "@/types/proto/api/v1/memo_service";
+ import "@/css/reader.css";
++
+ export default function Reader() {
++  const location = useLocation();
++  const params = new URLSearchParams(location.search);
+   const [memos, setMemos] = useState<Memo[]>([]);
+   const [error, setError] = useState("");
+-  useEffect(() => { loadMemos().then(setMemos).catch(() => setError("Memos unavailable")); }, []);
+-  const params = new URLSearchParams(location.search);
++  useEffect(() => {
++    setError("");
++    loadReaderMemos(new URLSearchParams(location.search))
++      .then(setMemos)
++      .catch((err: unknown) => {
++        setError(err instanceof MemoNotFoundError ? "Memo not found" : "Memos unavailable");
++      });
++  }, [location.search]);
+   const visible = selectMemos(memos, params);
+-  return <main className="memo-reader">
+-    <header className="reader-toolbar"><h1>Public memo reader</h1><a href="/explore">Open Memos</a></header>
+-    {error && <p>{error}</p>}
+-    <section className="reader-feed">{visible.map(memo => <article key={memo.name} data-memo={memo.name}>
+-      <p className="reader-meta">{memo.creator} · {memo.displayTime?.toISOString()}</p>
+-      <MemoContent nodes={memo.nodes} readonly />
+-      <div className="reader-attachments">{memo.resources.map(resource => <a key={resource.name} href={resource.externalLink || `/file/${resource.name}/${resource.filename}`}>{resource.filename}</a>)}</div>
+-    </article>)}</section>
+-  </main>;
++  return (
++    <main className="memo-reader">
++      <header className="reader-toolbar">
++        <h1>Public memo reader</h1>
++        <a href="/explore">Open Memos</a>
++      </header>
++      {error && <p role="alert">{error}</p>}
++      <section className="reader-feed">
++        {visible.map((memo) => (
++          <article key={memo.name} data-memo={memo.name}>
++            <p className="reader-meta">
++              {memo.creator || "Unknown author"} · {memo.displayTime?.toISOString()}
++            </p>
++            <MemoContent nodes={memo.nodes} readonly />
++            <div className="reader-attachments">
++              {memo.resources.map((resource) => (
++                <a key={resource.name} href={resource.externalLink || `/file/${resource.name}/${resource.filename}`}>
++                  {resource.filename}
++                </a>
++              ))}
++            </div>
++          </article>
++        ))}
++      </section>
++    </main>
++  );
+ }

@@ -1,0 +1,203 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpkzi4zyt9/patch/benchmark_tests/test_url_path_regressions.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpkzi4zyt9/patch/benchmark_tests/test_url_path_regressions.py
+new file mode 100644
+index 0000000..7777e8b
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpkzi4zyt9/patch/benchmark_tests/test_url_path_regressions.py
+@@ -0,0 +1,140 @@
++from __future__ import annotations
++
++import pytest
++
++from starlette.applications import Starlette
++from starlette.datastructures import URLPath
++from starlette.requests import Request
++from starlette.responses import JSONResponse, Response
++from starlette.routing import Host, Mount, Route, Router
++from starlette.testclient import TestClient
++from starlette.types import Receive, Scope, Send
++
++
++async def some_app(scope: Scope, receive: Receive, send: Send) -> None:
++    response = Response("some", media_type="text/plain")
++    await response(scope, receive, send)
++
++
++def test_nested_named_mount_reversal() -> None:
++    app = Starlette(
++        routes=[
++            Mount(
++                "/mount",
++                name="mount",
++                routes=[Mount("/static", some_app, name="static")],
++            )
++        ]
++    )
++    assert app.url_path_for("mount:static", path="123") == "/mount/static/123"
++
++
++def test_nested_named_mount_reversal_at_root() -> None:
++    app = Starlette(
++        routes=[
++            Mount(
++                "/",
++                name="root",
++                routes=[Mount("/static", some_app, name="static")],
++            )
++        ]
++    )
++    assert app.url_path_for("root:static", path="123") == "/static/123"
++
++
++def test_urlpath_make_absolute_url_preserves_base_path() -> None:
++    url = URLPath("/users", protocol="http").make_absolute_url("https://www.example.org/sub_path/")
++    assert str(url) == "https://www.example.org/sub_path/users"
++
++
++def test_urlpath_make_absolute_url_preserves_string_base_path() -> None:
++    url = URLPath("/users").make_absolute_url("https://www.example.org/sub_path/")
++    assert str(url) == "https://www.example.org/sub_path/users"
++
++
++def test_urlpath_make_absolute_url_scheme_selection() -> None:
++    assert str(URLPath("/", protocol="http").make_absolute_url("https://example.org/")) == "https://example.org/"
++    assert str(URLPath("/ws", protocol="websocket").make_absolute_url("https://example.org/")) == "wss://example.org/ws"
++
++
++def test_nested_host_metadata_survives_absolute_url() -> None:
++    app = Starlette(
++        routes=[
++            Mount(
++                "/mount",
++                name="mount",
++                routes=[
++                    Host(
++                        "api.example.org:8080",
++                        name="api",
++                        app=Router([Route("/users", some_app, name="users")]),
++                    )
++                ],
++            )
++        ]
++    )
++    assert (
++        app.url_path_for("mount:api:users").make_absolute_url("https://whatever")
++        == "https://api.example.org:8080/mount/users"
++    )
++
++
++def test_escaped_path_params_and_raw_path() -> None:
++    captured: dict[str, object] = {}
++
++    async def endpoint(request: Request) -> JSONResponse:
++        captured["path"] = request.scope["path"]
++        captured["raw_path"] = request.scope["raw_path"]
++        return JSONResponse({"path": request.scope["path"]})
++
++    app = Starlette(routes=[Route("/{path:path}", endpoint)])
++    client = TestClient(app)
++    response = client.get("/he%2Fllo")
++    assert response.status_code == 200
++    assert captured["path"] == "/he/llo"
++    assert captured["raw_path"] == b"/he%2Fllo"
++    assert app.url_path_for("endpoint", path="he/llo") == "/he/llo"
++
++
++def test_request_isolation_with_root_path_and_nested_mount() -> None:
++    async def endpoint(request: Request) -> JSONResponse:
++        request.state.counter = getattr(request.state, "counter", 0) + 1
++        return JSONResponse(
++            {
++                "root_path": request.scope.get("root_path"),
++                "app_root_path": request.scope.get("app_root_path"),
++                "effective_app_root_path": request.scope.get("app_root_path", request.scope.get("root_path", "")),
++                "counter": request.state.counter,
++                "static": str(request.url_for("mount:static")),
++            }
++        )
++
++    app = Starlette(
++        routes=[
++            Route("/", endpoint, name="homepage"),
++            Mount(
++                "/mount",
++                name="mount",
++                routes=[Route("/", endpoint, name="static")],
++            ),
++        ]
++    )
++    client = TestClient(app, base_url="https://www.example.org/", root_path="/sub_path")
++
++    first = client.get("/sub_path/")
++    second = client.get("/sub_path/mount/")
++    assert first.json() == {
++        "root_path": "/sub_path",
++        "app_root_path": None,
++        "effective_app_root_path": "/sub_path",
++        "counter": 1,
++        "static": "https://www.example.org/sub_path/mount/",
++    }
++    assert second.json() == {
++        "root_path": "/sub_path/mount",
++        "app_root_path": "/sub_path",
++        "effective_app_root_path": "/sub_path",
++        "counter": 1,
++        "static": "https://www.example.org/sub_path/mount/",
++    }
++    assert first.json()["counter"] == second.json()["counter"] == 1
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpqda821vw/base/starlette/datastructures.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpkzi4zyt9/patch/starlette/datastructures.py
+index ba8c89f..38eabec 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpqda821vw/base/starlette/datastructures.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpkzi4zyt9/patch/starlette/datastructures.py
+@@ -201,7 +201,7 @@ class URLPath(str):
+             scheme = base_url.scheme
+ 
+         netloc = self.host or base_url.netloc
+-        path = str(self)
++        path = base_url.path.rstrip("/") + str(self)
+         return URL(scheme=scheme, netloc=netloc, path=path)
+ 
+ 
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpqda821vw/base/starlette/routing.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpkzi4zyt9/patch/starlette/routing.py
+index 22399c9..821fbdb 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpqda821vw/base/starlette/routing.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpkzi4zyt9/patch/starlette/routing.py
+@@ -11,7 +11,7 @@ from collections.abc import Awaitable, Collection, Generator, Sequence
+ from contextlib import AbstractAsyncContextManager, AbstractContextManager, asynccontextmanager
+ from enum import Enum
+ from re import Pattern
+-from typing import Any, Callable, TypeVar
++from typing import Any, Callable, TypeVar, cast
+ 
+ from starlette._exception_handler import wrap_app_handling_exceptions
+ from starlette._utils import get_route_path, is_async_callable
+@@ -64,9 +64,10 @@ def request_response(
+     Takes a function or coroutine `func(request) -> response`,
+     and returns an ASGI application.
+     """
+-    f: Callable[[Request], Awaitable[Response]] = (
+-        func if is_async_callable(func) else functools.partial(run_in_threadpool, func)
+-    )
++    if is_async_callable(func):
++        f = cast(Callable[[Request], Awaitable[Response]], func)
++    else:
++        f = cast(Callable[[Request], Awaitable[Response]], functools.partial(run_in_threadpool, func))
+ 
+     async def app(scope: Scope, receive: Receive, send: Send) -> None:
+         request = Request(scope, receive, send)
+@@ -453,7 +454,7 @@ class Mount(BaseRoute):
+             for route in self.routes or []:
+                 try:
+                     url = route.url_path_for(remaining_name, **remaining_params)
+-                    return URLPath(path=path_prefix.strip("/") + str(url), protocol=url.protocol)
++                    return URLPath(path=path_prefix.rstrip("/") + str(url), protocol=url.protocol, host=url.host)
+                 except NoMatchFound:
+                     pass
+         raise NoMatchFound(name, path_params)
+@@ -726,6 +727,7 @@ class Router:
+             return
+ 
+         partial = None
++        partial_scope: Scope = {}
+ 
+         for route in self.routes:
+             # Determine if any route matches the incoming scope,

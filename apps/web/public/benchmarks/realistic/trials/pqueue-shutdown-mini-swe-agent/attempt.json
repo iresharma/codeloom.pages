@@ -1,0 +1,8 @@
+{
+  "cap_usd": 4.0,
+  "id": "pqueue-shutdown-mini-swe-agent",
+  "stage": "measured",
+  "started_at": 1792212988.745343,
+  "system": "mini-swe-agent",
+  "task_id": "pqueue-shutdown"
+}

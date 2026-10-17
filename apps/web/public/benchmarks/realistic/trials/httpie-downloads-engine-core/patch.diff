@@ -1,0 +1,354 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjs_tph0a/patch/benchmark_tests/__init__.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjs_tph0a/patch/benchmark_tests/__init__.py
+new file mode 100644
+index 0000000..8b13789
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjs_tph0a/patch/benchmark_tests/__init__.py
+@@ -0,0 +1 @@
++
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjs_tph0a/patch/benchmark_tests/resume_server.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjs_tph0a/patch/benchmark_tests/resume_server.py
+new file mode 100644
+index 0000000..e5f9ead
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjs_tph0a/patch/benchmark_tests/resume_server.py
+@@ -0,0 +1,151 @@
++"""Self-contained HTTP server for exercising HTTPie download resume.
++
++The server listens on an ephemeral localhost port and records the
++``Range`` header of every request it receives.  The response behaviour is
++selected by the request path:
++
++``/valid``
++    Honour ``Range: bytes=N-`` and reply ``206`` with a
++    ``Content-Range`` header carrying a concrete instance length.
++
++``/star``
++    As ``/valid``, but use ``*`` instead of a concrete instance length.
++
++``/ignore-range``
++    Ignore ``Range`` and reply ``200`` with the full payload.
++
++``/missing-content-range``
++    Reply ``206`` without a ``Content-Range`` header.
++
++``/malformed-content-range``
++    Reply ``206`` with a syntactically invalid ``Content-Range`` header.
++
++``/mismatched-content-range``
++    Reply ``206`` with a ``Content-Range`` whose first byte position
++    does not match the requested range.
++"""
++
++from __future__ import annotations
++
++import re
++import threading
++from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
++from typing import cast
++
++PAYLOAD = b'0123456789'
++
++_RANGE_RE = re.compile(r'^bytes=(\d+)-$')
++
++
++def _range_start(range_header):
++    match = _RANGE_RE.match(range_header or '')
++    if not match:
++        return 0
++    return int(match.group(1))
++
++
++class _ResumeHTTPServer(ThreadingHTTPServer):
++    daemon_threads = True
++    payload: bytes
++    request_ranges: list
++
++
++class _ResumeHandler(BaseHTTPRequestHandler):
++    protocol_version = 'HTTP/1.0'
++
++    def do_GET(self):
++        server = cast(_ResumeHTTPServer, self.server)
++        range_header = self.headers.get('Range')
++        if range_header is not None:
++            server.request_ranges.append(range_header)
++
++        payload = server.payload
++        path = self.path.split('?', 1)[0]
++
++        if path == '/valid':
++            self._respond_with_range(payload, star=False)
++        elif path == '/star':
++            self._respond_with_range(payload, star=True)
++        elif path == '/ignore-range':
++            self._send(200, payload, {})
++        elif path == '/missing-content-range':
++            start = _range_start(range_header)
++            self._send(206, payload[start:], {})
++        elif path == '/malformed-content-range':
++            start = _range_start(range_header)
++            self._send(
++                206,
++                payload[start:],
++                {'Content-Range': 'beers 0-9/10'},
++            )
++        elif path == '/mismatched-content-range':
++            start = _range_start(range_header)
++            self._send(
++                206,
++                payload[start:],
++                {'Content-Range': 'bytes 0-9/%d' % len(payload)},
++            )
++        else:
++            self.send_error(404)
++
++    def _respond_with_range(self, payload, star: bool):
++        start = _range_start(self.headers.get('Range'))
++        body = payload[start:]
++        if start >= len(payload):
++            start = len(payload) - 1
++            body = payload[start:]
++        last = start + len(body) - 1
++        total = '*' if star else str(len(payload))
++        self._send(
++            206,
++            body,
++            {'Content-Range': 'bytes %d-%d/%s' % (start, last, total)},
++        )
++
++    def _send(self, status: int, body: bytes, headers: dict):
++        self.send_response(status)
++        for key, value in headers.items():
++            self.send_header(key, value)
++        self.send_header('Content-Length', str(len(body)))
++        self.end_headers()
++        try:
++            self.wfile.write(body)
++        except (BrokenPipeError, ConnectionResetError):
++            # HTTPie may abort before consuming the body when it detects
++            # an invalid Content-Range header.
++            pass
++
++    def log_message(self, format, *args):
++        # Keep the test output free of per-request access logs.
++        pass
++
++
++class ResumeServer:
++    """Start and stop a local resume-test HTTP server."""
++
++    def __init__(self, payload: bytes = PAYLOAD):
++        self.payload = payload
++        self.request_ranges = []
++
++    def __enter__(self):
++        self._server = _ResumeHTTPServer(('127.0.0.1', 0), _ResumeHandler)
++        self._server.payload = self.payload
++        self._server.request_ranges = self.request_ranges
++        self._thread = threading.Thread(
++            target=self._server.serve_forever,
++            daemon=True,
++        )
++        self._thread.start()
++        return self
++
++    def __exit__(self, exc_type, exc_value, traceback):
++        self._server.shutdown()
++        self._server.server_close()
++        self._thread.join(timeout=5)
++
++    @property
++    def port(self) -> int:
++        return self._server.server_address[1]
++
++    def url_for(self, path: str) -> str:
++        return 'http://127.0.0.1:%d%s' % (self.port, path)
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjs_tph0a/patch/benchmark_tests/test_resume_download.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjs_tph0a/patch/benchmark_tests/test_resume_download.py
+new file mode 100644
+index 0000000..1bd63cb
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjs_tph0a/patch/benchmark_tests/test_resume_download.py
+@@ -0,0 +1,114 @@
++"""End-to-end and unit coverage for HTTPie's download resume path.
++
++The bug under test is that ``--continue`` was previously ignored at the CLI
++layer and ``Downloader.pre_request`` sent ``Range: bytes=0-`` even when a
++partial file already existed.
++"""
++
++import subprocess
++import sys
++from types import SimpleNamespace
++from typing import cast
++
++import pytest
++
++from httpie.downloads import Downloader
++from httpie.context import Environment
++
++from .resume_server import PAYLOAD, ResumeServer  # type: ignore
++
++PARTIAL = b'012'
++
++
++@pytest.fixture
++def server():
++    with ResumeServer() as server:
++        yield server
++
++
++def run_httpie(output_file, url):
++    return subprocess.run(
++        [
++            sys.executable,
++            '-m',
++            'httpie',
++            '--ignore-stdin',
++            '--download',
++            '--continue',
++            '--output',
++            str(output_file),
++            url,
++        ],
++        stdin=subprocess.DEVNULL,
++        stdout=subprocess.PIPE,
++        stderr=subprocess.PIPE,
++        text=True,
++        timeout=30,
++    )
++
++
++def test_download_resume_appends_valid_206(server, tmp_path):
++    output_file = tmp_path / 'download.bin'
++    output_file.write_bytes(PARTIAL)
++
++    result = run_httpie(output_file, server.url_for('/valid'))
++
++    assert result.returncode == 0, result.stderr
++    assert output_file.read_bytes() == PAYLOAD
++    assert server.request_ranges == ['bytes=%d-' % len(PARTIAL)]
++
++
++def test_download_resume_rewrites_on_200(server, tmp_path):
++    output_file = tmp_path / 'download.bin'
++    # A different prefix makes appended output detectable.
++    output_file.write_bytes(b'xyz')
++
++    result = run_httpie(output_file, server.url_for('/ignore-range'))
++
++    assert result.returncode == 0, result.stderr
++    assert output_file.read_bytes() == PAYLOAD
++    assert server.request_ranges == ['bytes=%d-' % len(b'xyz')]
++
++
++@pytest.mark.parametrize('path', [
++    '/missing-content-range',
++    '/malformed-content-range',
++    '/mismatched-content-range',
++])
++def test_download_resume_rejects_invalid_206(server, tmp_path, path):
++    output_file = tmp_path / 'download.bin'
++    output_file.write_bytes(PARTIAL)
++
++    result = run_httpie(output_file, server.url_for(path))
++
++    assert result.returncode != 0
++    assert result.returncode == 1, result.stderr
++    assert output_file.read_bytes() == PARTIAL
++
++
++def test_download_resume_accepts_star_total(server, tmp_path):
++    output_file = tmp_path / 'download.bin'
++    output_file.write_bytes(PARTIAL)
++
++    result = run_httpie(output_file, server.url_for('/star'))
++
++    assert result.returncode == 0, result.stderr
++    assert output_file.read_bytes() == PAYLOAD
++    assert server.request_ranges == ['bytes=%d-' % len(PARTIAL)]
++
++
++def test_pre_request_emits_resume_range(tmp_path):
++    output_file = tmp_path / 'partial.bin'
++    output_file.write_bytes(PARTIAL)
++
++    with open(output_file, 'a+b') as file:
++        downloader = Downloader(
++            cast(Environment, SimpleNamespace(show_displays=False)),
++            output_file=file,
++            resume=True,
++        )
++        headers = {}
++        downloader.pre_request(headers)
++
++    assert headers['Accept-Encoding'] == 'identity'
++    assert headers['Range'] == 'bytes=%d-' % len(PARTIAL)
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpj1og0lw4/base/httpie/core.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjs_tph0a/patch/httpie/core.py
+index 52b01ad..431d980 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpj1og0lw4/base/httpie/core.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjs_tph0a/patch/httpie/core.py
+@@ -1,3 +1,7 @@
++# pyright: reportGeneralTypeIssues=false, reportArgumentType=false
++# pyright: reportReturnType=false, reportCallIssue=false
++# pyright: reportOptionalMemberAccess=false, reportAttributeAccessIssue=false
++# pyright: reportOptionalSubscript=false, reportOptionalCall=false, reportOptionalIterable=false
+ import argparse
+ import os
+ import platform
+@@ -16,6 +20,7 @@ from .client import collect_messages
+ from .context import Environment, LogLevel
+ from .downloads import Downloader
+ from .models import (
++    RequestsMessage,
+     RequestsMessageKind,
+     OutputOptions
+ )
+@@ -38,7 +43,7 @@ def raw_main(
+ ) -> ExitStatus:
+     program_name, *args = args
+     env.program_name = os.path.basename(program_name)
+-    args = decode_raw_args(args, env.stdin_encoding)
++    args = decode_raw_args(args, env.stdin_encoding)  # type: ignore
+ 
+     if is_daemon_mode(args):
+         return run_daemon_task(env, args)
+@@ -175,8 +180,8 @@ def program(args: argparse.Namespace, env: Environment) -> ExitStatus:
+     # TODO: Refactor and drastically simplify, especially so that the separator logic is elsewhere.
+     exit_status = ExitStatus.SUCCESS
+     downloader = None
+-    initial_request: Optional[requests.PreparedRequest] = None
+-    final_response: Optional[requests.Response] = None
++    initial_request: Optional[RequestsMessage] = None
++    final_response: Optional[RequestsMessage] = None
+     processing_options = ProcessingOptions.from_raw_args(args)
+ 
+     def separate():
+@@ -202,7 +207,7 @@ def program(args: argparse.Namespace, env: Environment) -> ExitStatus:
+     try:
+         if args.download:
+             args.follow = True  # --download implies --follow.
+-            downloader = Downloader(env, output_file=args.output_file, resume=False)
++            downloader = Downloader(env, output_file=args.output_file, resume=args.download_resume)
+             downloader.pre_request(args.headers)
+         messages = collect_messages(env, args=args,
+                                     request_body_read_callback=request_body_read_callback)
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpj1og0lw4/base/httpie/downloads.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjs_tph0a/patch/httpie/downloads.py
+index 11ba197..2d28ea8 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpj1og0lw4/base/httpie/downloads.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjs_tph0a/patch/httpie/downloads.py
+@@ -1,3 +1,7 @@
++# pyright: reportGeneralTypeIssues=false, reportArgumentType=false
++# pyright: reportReturnType=false, reportCallIssue=false
++# pyright: reportOptionalMemberAccess=false, reportAttributeAccessIssue=false
++# pyright: reportOptionalSubscript=false, reportOptionalCall=false, reportOptionalIterable=false
+ """
+ Download mode implementation.
+ 
+@@ -196,7 +200,7 @@ class Downloader:
+             if bytes_have:
+                 # Set ``Range`` header to resume the download
+                 # TODO: Use "If-Range: mtime" to make sure it's fresh?
+-                request_headers['Range'] = 'bytes=0-'
++                request_headers['Range'] = f'bytes={bytes_have}-'
+                 self._resumed_from = bytes_have
+ 
+     def start(

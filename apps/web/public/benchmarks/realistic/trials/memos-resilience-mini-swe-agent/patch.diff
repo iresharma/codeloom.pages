@@ -1,0 +1,156 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpdkp21hfp/base/web/src/lib/reader.ts b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpcuoyvxwp/patch/web/src/lib/reader.ts
+index c8e309c..43a6f45 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpdkp21hfp/base/web/src/lib/reader.ts
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpcuoyvxwp/patch/web/src/lib/reader.ts
+@@ -1,8 +1,47 @@
+ import { Memo } from "@/types/proto/api/v1/memo_service";
++
++function convertMemo(data: unknown): Memo {
++  const memo = data as Memo;
++  return Memo.fromPartial({
++    ...memo,
++    displayTime: memo.displayTime ? new Date(String(memo.displayTime)) : undefined,
++  });
++}
++
++async function fetchJson(url: string, notFoundMessage = "Memos unavailable"): Promise<unknown> {
++  let response: Response;
++  try {
++    response = await fetch(url);
++  } catch {
++    throw new Error("Memos unavailable");
++  }
++  if (response.status === 404) {
++    throw new Error(notFoundMessage);
++  }
++  if (!response.ok) {
++    throw new Error("Memos unavailable");
++  }
++  return response.json();
++}
++
++export function isMemoName(value: string): boolean {
++  if (!value.startsWith("memos/")) {
++    return false;
++  }
++  const uid = value.slice("memos/".length);
++  return uid.length > 0 && !uid.includes("/") && !uid.includes("\\") && !uid.includes("..");
++}
++
+ export async function loadMemos(): Promise<Memo[]> {
+-  const response = await fetch("/api/v1/memos?pageSize=100");
+-  if (!response.ok) throw new Error("Memos unavailable");
+-  const data = await response.json();
+-  return (data.memos || []).map((memo: unknown) => Memo.fromPartial({ ...(memo as Memo), displayTime: (memo as Memo).displayTime ? new Date(String((memo as Memo).displayTime)) : undefined }));
++  const data = (await fetchJson("/api/v1/memos?pageSize=100")) as { memos?: unknown[] };
++  return (data.memos || []).map((memo) => convertMemo(memo));
++}
++
++export async function loadMemo(name: string): Promise<Memo> {
++  return convertMemo(await fetchJson(`/api/v1/${name}`, "Memo not found"));
++}
++
++export function selectMemos(memos: Memo[], _params: URLSearchParams): Memo[] {
++  void _params;
++  return memos;
+ }
+-export function selectMemos(memos: Memo[], _params: URLSearchParams): Memo[] { return memos; }
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpdkp21hfp/base/web/src/main.tsx b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpcuoyvxwp/patch/web/src/main.tsx
+index 97f75b4..aed8224 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpdkp21hfp/base/web/src/main.tsx
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpcuoyvxwp/patch/web/src/main.tsx
+@@ -21,10 +21,17 @@ const Main = observer(() => (
+ ));
+ 
+ (async () => {
+-  await initialWorkspaceStore();
+-  await initialUserStore();
+-
+   const container = document.getElementById("root");
+   const root = createRoot(container as HTMLElement);
+-  root.render(<Main />);
++  if (window.location.pathname === "/reader") {
++    // The public reader is a standalone fixture. Mount it immediately so
++    // its own API request is not held back by workspace/auth bootstrapping.
++    root.render(<Main />);
++    await initialWorkspaceStore();
++    await initialUserStore();
++  } else {
++    await initialWorkspaceStore();
++    await initialUserStore();
++    root.render(<Main />);
++  }
+ })();
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpdkp21hfp/base/web/src/pages/Reader.tsx b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpcuoyvxwp/patch/web/src/pages/Reader.tsx
+index cc50adc..d557aad 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpdkp21hfp/base/web/src/pages/Reader.tsx
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpcuoyvxwp/patch/web/src/pages/Reader.tsx
+@@ -1,21 +1,57 @@
+ import { useEffect, useState } from "react";
+ import MemoContent from "@/components/MemoContent";
+-import { loadMemos, selectMemos } from "@/lib/reader";
++import { isMemoName, loadMemo, loadMemos, selectMemos } from "@/lib/reader";
+ import { Memo } from "@/types/proto/api/v1/memo_service";
+ import "@/css/reader.css";
++
+ export default function Reader() {
+   const [memos, setMemos] = useState<Memo[]>([]);
+   const [error, setError] = useState("");
+-  useEffect(() => { loadMemos().then(setMemos).catch(() => setError("Memos unavailable")); }, []);
+   const params = new URLSearchParams(location.search);
++  const requestedMemo = params.get("memo")?.trim() || "";
++  useEffect(() => {
++    setError("");
++    setMemos([]);
++    if (requestedMemo) {
++      if (!isMemoName(requestedMemo)) {
++        setError("Memo not found");
++        return;
++      }
++      loadMemo(requestedMemo)
++        .then((memo) => setMemos([memo]))
++        .catch((error: Error) => setError(error.message || "Memos unavailable"));
++    } else {
++      loadMemos()
++        .then(setMemos)
++        .catch((error: Error) => setError(error.message || "Memos unavailable"));
++    }
++  }, [requestedMemo]);
+   const visible = selectMemos(memos, params);
+-  return <main className="memo-reader">
+-    <header className="reader-toolbar"><h1>Public memo reader</h1><a href="/explore">Open Memos</a></header>
+-    {error && <p>{error}</p>}
+-    <section className="reader-feed">{visible.map(memo => <article key={memo.name} data-memo={memo.name}>
+-      <p className="reader-meta">{memo.creator} · {memo.displayTime?.toISOString()}</p>
+-      <MemoContent nodes={memo.nodes} readonly />
+-      <div className="reader-attachments">{memo.resources.map(resource => <a key={resource.name} href={resource.externalLink || `/file/${resource.name}/${resource.filename}`}>{resource.filename}</a>)}</div>
+-    </article>)}</section>
+-  </main>;
++  return (
++    <main className="memo-reader">
++      <header className="reader-toolbar">
++        <h1>Public memo reader</h1>
++        <a href="/explore">Open Memos</a>
++      </header>
++      {error && <p role="alert">{error}</p>}
++      <section className="reader-feed">
++        {visible.map((memo) => (
++          <article key={memo.name} data-memo={memo.name}>
++            <p className="reader-meta">
++              {memo.creator || "Unknown author"}
++              {memo.displayTime ? ` · ${memo.displayTime.toISOString()}` : ""}
++            </p>
++            <MemoContent nodes={memo.nodes} readonly />
++            <div className="reader-attachments">
++              {memo.resources.map((resource) => (
++                <a key={resource.name} href={resource.externalLink || `/file/${resource.name}/${resource.filename}`}>
++                  {resource.filename}
++                </a>
++              ))}
++            </div>
++          </article>
++        ))}
++      </section>
++    </main>
++  );
+ }

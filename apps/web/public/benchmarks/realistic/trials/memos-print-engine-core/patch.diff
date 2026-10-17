@@ -1,0 +1,421 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp53cu9s8k/patch/benchmark_tests/test_reader_print_css.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp53cu9s8k/patch/benchmark_tests/test_reader_print_css.py
+new file mode 100644
+index 0000000..d8bf318
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp53cu9s8k/patch/benchmark_tests/test_reader_print_css.py
+@@ -0,0 +1,305 @@
++#!/usr/bin/env python3
++"""
++Test suite for Reader print CSS implementation.
++Tests verify that the print view for /reader page preserves semantic Markdown tables,
++pre/code blocks, headings, metadata, and attachments while hiding navigation and
++flattening card layouts for print.
++"""
++
++import json
++import re
++import subprocess
++import sys
++from pathlib import Path
++
++
++def test_css_syntax_and_structure():
++    """Test 1: Verify CSS file syntax and structure."""
++    css_path = Path("web/src/css/reader.css")
++    assert css_path.exists(), f"CSS file not found: {css_path}"
++    
++    css_content = css_path.read_text()
++    
++    # Check brace balance
++    open_braces = css_content.count('{')
++    close_braces = css_content.count('}')
++    assert open_braces == close_braces, f"Unbalanced braces: {open_braces} open, {close_braces} close"
++    assert css_content.rstrip().endswith('}'), "CSS file should end with closing brace"
++    
++    # Check @media print block exists
++    assert '@media print' in css_content, "@media print block not found"
++    
++    # Extract print block
++    match = re.search(r'@media print\s*\{', css_content)
++    assert match, "Could not find @media print opening"
++    
++    print("✓ Test 1 passed: CSS syntax and structure valid")
++    return True
++
++
++def test_screen_rules_unchanged():
++    """Test 2: Verify screen rules remain unchanged."""
++    css_path = Path("web/src/css/reader.css")
++    css_content = css_path.read_text()
++    
++    # Extract screen rules (before @media print)
++    screen_rules = css_content.split('@media print')[0]
++    
++    expected_screen_rules = [
++        '.memo-reader { padding: 24px; }',
++        '.reader-feed { display: grid; gap: 20px; }',
++        '.reader-feed article { padding: 16px; border: 1px solid #bbb; }',
++    ]
++    
++    for rule in expected_screen_rules:
++        assert rule in screen_rules, f"Expected screen rule missing: {rule}"
++    
++    print("✓ Test 2 passed: Screen rules unchanged")
++    return True
++
++
++def test_print_block_contains_all_requirements():
++    """Test 3: Verify print block contains all 10 required rules."""
++    css_path = Path("web/src/css/reader.css")
++    css_content = css_path.read_text()
++    
++    # Extract print block content
++    match = re.search(r'@media print\s*\{(.*)\}$', css_content, re.DOTALL)
++    assert match, "Could not extract @media print block"
++    
++    print_block = match.group(1)
++    
++    # Test each requirement
++    requirements = [
++        # 1. Hide toolbar
++        ('.reader-toolbar', 'display: none !important'),
++        # 2. Block flow feed
++        ('.reader-feed', 'display: block !important'),
++        # 3. Flatten cards
++        ('.reader-feed article', 'border: none !important'),
++        ('.reader-feed article', 'break-inside: avoid'),
++        # 4. Black text and transparent backgrounds
++        ('.reader-feed', 'color: #000 !important'),
++        ('.reader-feed *', 'background: transparent !important'),
++        # 5. Semantic tables
++        ('.reader-feed table', 'border-collapse: collapse'),
++        ('.reader-feed th', 'border: 1px solid #333 !important'),
++        # 6. Preserve pre/code with wrapping
++        ('.reader-feed pre', 'white-space: pre-wrap !important'),
++        ('.reader-feed .overflow-auto', 'overflow: visible !important'),
++        # 7. Constrain long content
++        ('.reader-feed img', 'max-width: 100% !important'),
++        # 8. Blockquote semantics
++        ('.reader-feed blockquote', 'border-inline-start: 4px solid #999 !important'),
++        # 9. Avoid orphaning headings
++        ('.reader-feed h1', 'break-after: avoid'),
++        # 10. Keep metadata/attachments with card
++        ('.reader-meta', 'break-inside: avoid'),
++        ('.reader-attachments a', 'word-break: break-all'),
++    ]
++    
++    for selector, property_text in requirements:
++        # Normalize whitespace for matching
++        print_block_normalized = re.sub(r'\s+', ' ', print_block)
++        selector_pattern = re.escape(selector)
++        # Look for selector followed by content that includes the property
++        pattern = f'{selector_pattern}[^{{]*\\{{[^}}]*{re.escape(property_text)}'
++        assert re.search(pattern, print_block_normalized, re.IGNORECASE), \
++            f"Requirement missing: {selector} should contain '{property_text}'"
++    
++    print("✓ Test 3 passed: All 10 print requirements present")
++    return True
++
++
++def test_print_rules_inside_media_block():
++    """Test 4: Verify all print rules are inside @media print block."""
++    css_path = Path("web/src/css/reader.css")
++    css_content = css_path.read_text()
++    
++    # Split by @media print
++    parts = css_content.split('@media print')
++    assert len(parts) == 2, "Should have exactly one @media print block"
++    
++    screen_part, print_part = parts
++    
++    # Verify no !important in screen rules
++    assert '!important' not in screen_part, "Screen rules should not use !important"
++    
++    # Verify print block ends with closing brace and nothing after
++    print_part_stripped = print_part.rstrip()
++    assert print_part_stripped.endswith('}'), "Print block should end with closing brace"
++    
++    print("✓ Test 4 passed: Print rules properly scoped in @media block")
++    return True
++
++
++def test_css_specificity_and_overrides():
++    """Test 5: Verify CSS uses proper specificity for overrides."""
++    css_path = Path("web/src/css/reader.css")
++    css_content = css_path.read_text()
++    
++    # Extract print block
++    match = re.search(r'@media print\s*\{(.*)\}$', css_content, re.DOTALL)
++    print_block = match.group(1)
++    
++    # Check that overriding rules use !important where needed
++    important_rules = [
++        'display: none !important',  # toolbar
++        'display: block !important',  # feed
++        'border: none !important',  # article
++        'color: #000 !important',  # feed color
++        'background: transparent !important',  # backgrounds
++    ]
++    
++    for rule in important_rules:
++        assert rule in print_block, f"Critical override missing: {rule}"
++    
++    print("✓ Test 5 passed: CSS specificity and overrides correct")
++    return True
++
++
++def test_css_no_tailwind_conflicts():
++    """Test 6: Verify print CSS doesn't introduce Tailwind conflicts."""
++    css_path = Path("web/src/css/reader.css")
++    css_content = css_path.read_text()
++    
++    # This is a scoped CSS file for reader only, verify no global selectors
++    # that would conflict with other parts of the app
++    match = re.search(r'@media print\s*\{(.*)\}$', css_content, re.DOTALL)
++    print_block = match.group(1)
++    
++    # All print rules should be scoped to .reader-* or nested under .reader-feed
++    print_lines = print_block.split('\n')
++    for line in print_lines:
++        line = line.strip()
++        if line and not line.startswith('/*') and '{' in line:
++            # Extract selector
++            selector = line.split('{')[0].strip()
++            # Should be scoped to reader classes or valid child selectors
++            assert 'reader' in selector or selector.startswith('.') or selector.startswith('*'), \
++                f"Unexpected global selector in print block: {selector}"
++    
++    print("✓ Test 6 passed: No Tailwind conflicts detected")
++    return True
++
++
++def test_table_preservation():
++    """Test 7: Verify table semantics are preserved for print."""
++    css_path = Path("web/src/css/reader.css")
++    css_content = css_path.read_text()
++    
++    match = re.search(r'@media print\s*\{(.*)\}$', css_content, re.DOTALL)
++    print_block = match.group(1)
++    
++    # Check table-specific rules
++    assert 'border-collapse: collapse' in print_block, "Tables should use border-collapse"
++    assert '.reader-feed table' in print_block, "Table rules should be scoped to .reader-feed"
++    assert '.reader-feed th' in print_block or '.reader-feed td' in print_block, \
++        "Table cell styling should be defined"
++    
++    print("✓ Test 7 passed: Table preservation rules present")
++    return True
++
++
++def test_code_block_wrapping():
++    """Test 8: Verify code blocks wrap instead of clip in print."""
++    css_path = Path("web/src/css/reader.css")
++    css_content = css_path.read_text()
++    
++    match = re.search(r'@media print\s*\{(.*)\}$', css_content, re.DOTALL)
++    print_block = match.group(1)
++    
++    # Check code block wrapping rules
++    assert 'white-space: pre-wrap !important' in print_block, \
++        "Code should use white-space: pre-wrap for wrapping"
++    assert 'overflow: visible !important' in print_block, \
++        "Code blocks should use overflow: visible"
++    assert '.overflow-auto' in print_block, \
++        "overflow-auto container should be handled"
++    
++    print("✓ Test 8 passed: Code block wrapping rules present")
++    return True
++
++
++def test_image_and_link_constraints():
++    """Test 9: Verify images and links are constrained for print."""
++    css_path = Path("web/src/css/reader.css")
++    css_content = css_path.read_text()
++    
++    match = re.search(r'@media print\s*\{(.*)\}$', css_content, re.DOTALL)
++    print_block = match.group(1)
++    
++    # Check image constraints
++    assert '.reader-feed img' in print_block, "Image rules should be scoped to .reader-feed"
++    assert 'max-width: 100% !important' in print_block, "Images should be constrained to 100% width"
++    
++    # Check link wrapping
++    assert '.reader-feed a' in print_block, "Link rules should be scoped to .reader-feed"
++    
++    print("✓ Test 9 passed: Image and link constraints present")
++    return True
++
++
++def test_metadata_and_attachments_kept_with_card():
++    """Test 10: Verify metadata and attachments stay with their card."""
++    css_path = Path("web/src/css/reader.css")
++    css_content = css_path.read_text()
++    
++    match = re.search(r'@media print\s*\{(.*)\}$', css_content, re.DOTALL)
++    print_block = match.group(1)
++    
++    # Check metadata rules
++    assert '.reader-meta' in print_block, "Metadata should have print rules"
++    assert '.reader-attachments' in print_block, "Attachments should have print rules"
++    assert 'break-inside: avoid' in print_block, "Elements should use break-inside: avoid"
++    
++    # Check attachment filename wrapping
++    assert '.reader-attachments a' in print_block, "Attachment links should have rules"
++    assert 'word-break: break-all' in print_block, "Long filenames should break properly"
++    
++    print("✓ Test 10 passed: Metadata and attachments rules present")
++    return True
++
++
++def main():
++    """Run all tests."""
++    tests = [
++        test_css_syntax_and_structure,
++        test_screen_rules_unchanged,
++        test_print_block_contains_all_requirements,
++        test_print_rules_inside_media_block,
++        test_css_specificity_and_overrides,
++        test_css_no_tailwind_conflicts,
++        test_table_preservation,
++        test_code_block_wrapping,
++        test_image_and_link_constraints,
++        test_metadata_and_attachments_kept_with_card,
++    ]
++    
++    print("=" * 70)
++    print("Testing Reader Print CSS Implementation")
++    print("=" * 70)
++    
++    passed = 0
++    failed = 0
++    
++    for test_func in tests:
++        try:
++            test_func()
++            passed += 1
++        except AssertionError as e:
++            print(f"✗ {test_func.__name__} failed: {e}")
++            failed += 1
++        except Exception as e:
++            print(f"✗ {test_func.__name__} error: {e}")
++            failed += 1
++    
++    print("=" * 70)
++    print(f"Results: {passed} passed, {failed} failed")
++    print("=" * 70)
++    
++    return 0 if failed == 0 else 1
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjq6eftoo/base/web/src/css/reader.css b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp53cu9s8k/patch/web/src/css/reader.css
+index fe10d4c..4e08e6d 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpjq6eftoo/base/web/src/css/reader.css
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp53cu9s8k/patch/web/src/css/reader.css
+@@ -1,3 +1,105 @@
+ .memo-reader { padding: 24px; }
+ .reader-feed { display: grid; gap: 20px; }
+ .reader-feed article { padding: 16px; border: 1px solid #bbb; }
++
++@media print {
++  .memo-reader {
++    color: #000;
++    background: #fff;
++    padding: 12px;
++  }
++
++  .reader-toolbar {
++    display: none !important;
++  }
++
++  .reader-feed {
++    display: block !important;
++    gap: 0 !important;
++    color: #000 !important;
++    background: transparent !important;
++    text-shadow: none !important;
++    box-shadow: none !important;
++  }
++
++  .reader-feed * {
++    color: #000 !important;
++    background: transparent !important;
++    text-shadow: none !important;
++    box-shadow: none !important;
++  }
++
++  .reader-feed article {
++    border: none !important;
++    box-shadow: none !important;
++    break-inside: avoid;
++    page-break-inside: avoid;
++    margin-bottom: 16px;
++    padding-bottom: 16px;
++    overflow-wrap: anywhere;
++  }
++
++  .reader-feed table {
++    border-collapse: collapse;
++    width: 100% !important;
++    max-width: 100%;
++    border: 1px solid #333 !important;
++  }
++
++  .reader-feed th,
++  .reader-feed td {
++    border: 1px solid #333 !important;
++    padding: 4px 8px;
++    text-align: left;
++    white-space: normal;
++    overflow-wrap: anywhere;
++  }
++
++  .reader-feed pre,
++  .reader-feed code {
++    white-space: pre-wrap !important;
++    overflow-wrap: anywhere;
++  }
++
++  .reader-feed pre {
++    max-width: 100% !important;
++    overflow: visible !important;
++  }
++
++  .reader-feed .overflow-auto {
++    overflow: visible !important;
++  }
++
++  .reader-feed img {
++    max-width: 100% !important;
++    height: auto;
++  }
++
++  .reader-feed a {
++    overflow-wrap: anywhere;
++  }
++
++  .reader-feed blockquote {
++    border-inline-start: 4px solid #999 !important;
++  }
++
++  .reader-feed h1,
++  .reader-feed h2,
++  .reader-feed h3,
++  .reader-feed h4,
++  .reader-feed h5,
++  .reader-feed h6 {
++    break-after: avoid;
++    page-break-after: avoid;
++  }
++
++  .reader-meta,
++  .reader-attachments {
++    break-inside: avoid;
++    page-break-inside: avoid;
++  }
++
++  .reader-attachments a {
++    word-break: break-all;
++  }
++}

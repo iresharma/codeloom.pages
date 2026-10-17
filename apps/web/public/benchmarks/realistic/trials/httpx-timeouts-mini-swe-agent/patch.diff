@@ -1,0 +1,211 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfooq9lsb/patch/benchmark_tests/test_timeout_propagation.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfooq9lsb/patch/benchmark_tests/test_timeout_propagation.py
+new file mode 100644
+index 0000000..6771f03
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfooq9lsb/patch/benchmark_tests/test_timeout_propagation.py
+@@ -0,0 +1,107 @@
++import httpx
++
++
++def test_timeout_tuple_preserves_connect_read_write_pool_order():
++    timeout = httpx.Timeout((1, 2, 3, 4))
++
++    assert timeout.connect == 1
++    assert timeout.read == 2
++    assert timeout.write == 3
++    assert timeout.pool == 4
++
++
++def test_timeout_tuple_short_fields_are_none():
++    timeout = httpx.Timeout((1, 2))
++
++    assert timeout.connect == 1
++    assert timeout.read == 2
++    assert timeout.write is None
++    assert timeout.pool is None
++
++
++def test_timeout_none_disables_all_timeouts():
++    timeout = httpx.Timeout(None)
++
++    assert timeout.as_dict() == {
++        "connect": None,
++        "read": None,
++        "write": None,
++        "pool": None,
++    }
++
++
++def test_build_request_explicit_extension_wins():
++    client = httpx.Client(timeout=5.0)
++
++    request = client.build_request(
++        "GET",
++        "http://example.com",
++        timeout=10.0,
++        extensions={
++            "timeout": {"connect": 1, "read": 2, "write": 3, "pool": 4}
++        },
++    )
++
++    assert request.extensions["timeout"] == {
++        "connect": 1,
++        "read": 2,
++        "write": 3,
++        "pool": 4,
++    }
++
++
++def test_build_request_inherits_client_timeout():
++    client = httpx.Client(timeout=5.0)
++
++    request = client.build_request("GET", "http://example.com")
++
++    assert request.extensions["timeout"] == {
++        "connect": 5.0,
++        "read": 5.0,
++        "write": 5.0,
++        "pool": 5.0,
++    }
++
++
++def test_send_raw_request_inherits_client_timeout():
++    seen = {}
++
++    def handler(request):
++        seen["extensions"] = request.extensions
++        return httpx.Response(200, text="ok")
++
++    client = httpx.Client(transport=httpx.MockTransport(handler), timeout=7.5)
++    client.send(httpx.Request("GET", "http://example.com"))
++
++    assert seen["extensions"]["timeout"] == {
++        "connect": 7.5,
++        "read": 7.5,
++        "write": 7.5,
++        "pool": 7.5,
++    }
++
++
++def test_send_raw_request_explicit_extension_wins():
++    seen = {}
++
++    def handler(request):
++        seen["extensions"] = request.extensions
++        return httpx.Response(200, text="ok")
++
++    client = httpx.Client(transport=httpx.MockTransport(handler), timeout=7.5)
++    client.send(
++        httpx.Request(
++            "GET",
++            "http://example.com",
++            extensions={
++                "timeout": {"connect": 1, "read": 2, "write": 3, "pool": 4}
++            },
++        )
++    )
++
++    assert seen["extensions"]["timeout"] == {
++        "connect": 1,
++        "read": 2,
++        "write": 3,
++        "pool": 4,
++    }
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmppqcloedg/base/httpx/_client.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfooq9lsb/patch/httpx/_client.py
+index e361106..2249231 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmppqcloedg/base/httpx/_client.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfooq9lsb/patch/httpx/_client.py
+@@ -588,7 +588,7 @@ class BaseClient:
+                 if isinstance(self.timeout, UseClientDefault)
+                 else Timeout(self.timeout)
+             )
+-            request.extensions = dict(**request.extensions, timeout=Timeout(None).as_dict())
++            request.extensions = dict(**request.extensions, timeout=timeout.as_dict())
+ 
+ 
+ class Client(BaseClient):
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmppqcloedg/base/httpx/_config.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfooq9lsb/patch/httpx/_config.py
+index 2ac5c98..467a6c9 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmppqcloedg/base/httpx/_config.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfooq9lsb/patch/httpx/_config.py
+@@ -106,7 +106,7 @@ class Timeout:
+             # Passed as a tuple.
+             self.connect = timeout[0]
+             self.read = timeout[1]
+-            self.write = None if len(timeout) < 3 else timeout[1]
++            self.write = None if len(timeout) < 3 else timeout[2]
+             self.pool = None if len(timeout) < 4 else timeout[3]
+         elif not (
+             isinstance(connect, UnsetType)
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfooq9lsb/patch/research.md b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfooq9lsb/patch/research.md
+new file mode 100644
+index 0000000..87c0a76
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfooq9lsb/patch/research.md
+@@ -0,0 +1,59 @@
++# Researcher briefing: HTTPX timeout propagation
++
++## Sources
++
++- Official HTTPX timeout documentation, "Timeouts", fetched from
++  <https://www.python-httpx.org/advanced/timeouts/> via the research transport on
++  2025-10-17.
++- Pinned upstream GitHub commit
++  `26d48e0634e6ee9cdc0533996db289ce4b430177`
++  (`encode/httpx`), accessed through the GitHub Contents API:
++  - `httpx/_client.py`
++  - `httpx/_config.py`
++
++> Note: the `research.py search` endpoint reported
++> `error: BRAVE_API_KEY unavailable on research host`, so the web briefing was
++> obtained through the official documentation via the research transport's fetch
++> capability, alongside the pinned GitHub source.
++
++## Compatibility contract
++
++HTTPX has two layers at which a request timeout can be specified:
++
++1. The client default, `Client(timeout=...)` / `AsyncClient(timeout=...)`, which is
++   used for every request when no request-level timeout is provided.
++2. A per-request timeout, supplied either as the `timeout=` argument to
++   `request()`/`stream()`/`build_request()`, or directly in
++   `request.extensions["timeout"]`.
++
++The contract is:
++
++- An explicit `request.extensions["timeout"]` always wins. Neither
++  `build_request()` nor `send()` may overwrite an extension that the caller has
++  already set.
++- If `request.extensions` does not contain a `"timeout"` key, the request inherits
++  the client timeout by default. This must also hold when a raw `httpx.Request`
++  is passed directly to `client.send()`; `send()` normalizes the timeout into
++  `request.extensions` before dispatch.
++- A caller-supplied `timeout=None` disables timeouts; it normalizes to a timeout
++  extension whose `connect`, `read`, `write`, and `pool` values are all `None`.
++- A `Timeout` tuple is ordered as `(connect, read, write, pool)` and each field
++  must retain its respective value. Shorter tuples leave the trailing fields
++  disabled (`None`), e.g. `(1, 2)` means `connect=1`, `read=2`, `write=None`,
++  `pool=None`.
++- The wire/extension representation is `Timeout.as_dict()`: individual
++  `connect`/`read`/`write`/`pool` keys with `float` or `None` values. A flat
++  default such as `Timeout(5.0)` must fan out to every key.
++
++## Required changes
++
++- In `httpx/_config.py`, fix the tuple branch in `Timeout.__init__` so
++  `write` reads `timeout[2]` instead of `timeout[1]`. This restores the
++  `(connect, read, write, pool)` field order documented above.
++- In `httpx/_client.py`, fix `BaseClient._set_timeout` so the computed timeout
++  (`client.timeout` or a normalized request-level `Timeout`) is placed into
++  `request.extensions` as `timeout.as_dict()`, instead of accidentally disabling
++  timeouts with `Timeout(None).as_dict()`.
++
++The pinned commit already contains both of these correct forms, so aligning the
++checkout with that commit restores the intended behavior.
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfooq9lsb/patch/test b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfooq9lsb/patch/test
+new file mode 100644
+index 0000000..a7c01bc
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpfooq9lsb/patch/test
+@@ -0,0 +1 @@
++# TLS secrets log file, generated by OpenSSL / Python

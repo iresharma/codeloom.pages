@@ -1,0 +1,151 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp1oa08wnm/patch/benchmark_tests/queued-cancellation.ts b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp1oa08wnm/patch/benchmark_tests/queued-cancellation.ts
+new file mode 100644
+index 0000000..ee8b561
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp1oa08wnm/patch/benchmark_tests/queued-cancellation.ts
+@@ -0,0 +1,132 @@
++/* eslint-disable @typescript-eslint/triple-slash-reference, unicorn/filename-case -- node types are needed for this file outside tsconfig, and the directory name is mandated by the change. */
++/// <reference types="node" />
++import {test} from 'node:test';
++import assert from 'node:assert/strict';
++import PQueue from '../source/index.js';
++
++const flush = async () => new Promise<void>(resolve => {
++	setTimeout(resolve, 0);
++});
++
++test('aborting the first queued item removes it and keeps stable order', async () => {
++	const queue = new PQueue({autoStart: false});
++	const order: string[] = [];
++	const controller = new AbortController();
++
++	const first = queue.add(async () => {
++		order.push('first');
++		return 'first';
++	}, {signal: controller.signal});
++	const second = queue.add(async () => {
++		order.push('second');
++		return 'second';
++	});
++	const third = queue.add(async () => {
++		order.push('third');
++		return 'third';
++	});
++
++	controller.abort();
++
++	await assert.rejects(first, {name: 'AbortError'});
++	// eslint-disable-next-line @typescript-eslint/await-thenable
++	await queue.start();
++	await queue.onIdle();
++	assert.deepEqual(order, ['second', 'third']);
++	assert.equal(await second, 'second');
++	assert.equal(await third, 'third');
++});
++
++test('aborting a later queued item removes it and keeps stable order', async () => {
++	const laterQueue = new PQueue({autoStart: false});
++	const laterOrder: string[] = [];
++	const laterController = new AbortController();
++
++	const laterFirst = laterQueue.add(async () => {
++		laterOrder.push('first');
++		return 'first';
++	});
++	const laterSecond = laterQueue.add(async () => {
++		laterOrder.push('second');
++		return 'second';
++	}, {signal: laterController.signal});
++	const laterThird = laterQueue.add(async () => {
++		laterOrder.push('third');
++		return 'third';
++	});
++
++	laterController.abort();
++
++	await assert.rejects(laterSecond, {name: 'AbortError'});
++	// eslint-disable-next-line @typescript-eslint/await-thenable
++	await laterQueue.start();
++	await laterQueue.onIdle();
++	assert.deepEqual(laterOrder, ['first', 'third']);
++	assert.equal(await laterFirst, 'first');
++	assert.equal(await laterThird, 'third');
++});
++
++test('clear() rejects every queued promise with AbortError and running work completes normally', async () => {
++	const clearingQueue = new PQueue({concurrency: 1});
++	let releaseClearingFirst!: () => void;
++	// eslint-disable-next-line unicorn/prefer-promise-with-resolvers
++	const clearingFirstGate = new Promise<void>(resolve => {
++		releaseClearingFirst = resolve;
++	});
++
++	let didClearingFirstRun = false;
++	let didClearingSecondRun = false;
++
++	const clearingFirstResult = clearingQueue.add(async () => {
++		didClearingFirstRun = true;
++		await clearingFirstGate;
++		return 'first-result';
++	});
++	const clearingSecondResult = clearingQueue.add(async () => {
++		didClearingSecondRun = true;
++		return 'second';
++	});
++
++	clearingQueue.clear();
++
++	await assert.rejects(clearingSecondResult, {name: 'AbortError', message: 'The queue was cleared'});
++	assert.equal(didClearingSecondRun, false);
++
++	releaseClearingFirst();
++	assert.equal(await clearingFirstResult, 'first-result');
++	assert.equal(didClearingFirstRun, true);
++	// eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
++	assert.equal(await clearingQueue.onIdle(), undefined);
++	assert.equal(clearingQueue.pending, 0);
++});
++
++test('onPendingZero waits for running work after clear()', async () => {
++	const pendingQueue = new PQueue({concurrency: 1});
++	let releasePendingFirst!: () => void;
++	// eslint-disable-next-line unicorn/prefer-promise-with-resolvers
++	const pendingFirstGate = new Promise<void>(resolve => {
++		releasePendingFirst = resolve;
++	});
++
++	const pendingFirstResult = pendingQueue.add(async () => {
++		await pendingFirstGate;
++		return 'first-result';
++	});
++	const pendingSecondResult = pendingQueue.add(async () => 'second');
++
++	pendingQueue.clear();
++	await assert.rejects(pendingSecondResult, {name: 'AbortError', message: 'The queue was cleared'});
++
++	let isPendingZeroResolved = false;
++	const pendingZero = pendingQueue.onPendingZero().then(() => {
++		isPendingZeroResolved = true;
++	});
++
++	await flush();
++	assert.equal(isPendingZeroResolved, false);
++
++	releasePendingFirst();
++	assert.equal(await pendingFirstResult, 'first-result');
++	await pendingZero;
++	assert.equal(isPendingZeroResolved, true);
++});
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpn1nkwkq3/base/source/index.ts b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp1oa08wnm/patch/source/index.ts
+index 59b3d60..1f70316 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmpn1nkwkq3/base/source/index.ts
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp1oa08wnm/patch/source/index.ts
+@@ -957,7 +957,7 @@ export default class PQueue<QueueType extends Queue<RunFunction, EnqueueOptionsT
+ 			waitingTask.stopListeningForAbort?.();
+ 			waitingTask.isCleared = true;
+ 			waitingTask.promise?.catch(() => undefined);
+-			void error; // Regression: cleared promises never settle.
++			waitingTask.reject?.(error);
+ 		}
+ 
+ 		this.#waitingTasks.clear();

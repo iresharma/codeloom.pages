@@ -1,0 +1,17 @@
+{
+  "arguments": {
+    "args": [
+      "api",
+      "repos/encode/httpx/contents/docs/advanced/timeouts.md?ref=26d48e0634e6ee9cdc0533996db289ce4b430177",
+      "-H",
+      "Accept: application/vnd.github.raw"
+    ]
+  },
+  "commit": "26d48e0634e6ee9cdc0533996db289ce4b430177",
+  "ok": true,
+  "operation": "github",
+  "retrieved_at": 1792230943.080229,
+  "sha256": "48959a587ecc6430f9051ab1b1c76fcebc3f3e95ec01199281aab813a2dcfaa1",
+  "text": "HTTPX is careful to enforce timeouts everywhere by default.\n\nThe default behavior is to raise a `TimeoutException` after 5 seconds of\nnetwork inactivity.\n\n## Setting and disabling timeouts\n\nYou can set timeouts for an individual request:\n\n```python\n# Using the top-level API:\nhttpx.get('http://example.com/api/v1/example', timeout=10.0)\n\n# Using a client instance:\nwith httpx.Client() as client:\n    client.get(\"http://example.com/api/v1/example\", timeout=10.0)\n```\n\nOr disable timeouts for an individual request:\n\n```python\n# Using the top-level API:\nhttpx.get('http://example.com/api/v1/example', timeout=None)\n\n# Using a client instance:\nwith httpx.Client() as client:\n    client.get(\"http://example.com/api/v1/example\", timeout=None)\n```\n\n## Setting a default timeout on a client\n\nYou can set a timeout on a client instance, which results in the given\n`timeout` being used as the default for requests made with this client:\n\n```python\nclient = httpx.Client()              # Use a default 5s timeout everywhere.\nclient = httpx.Client(timeout=10.0)  # Use a default 10s timeout everywhere.\nclient = httpx.Client(timeout=None)  # Disable all timeouts by default.\n```\n\n## Fine tuning the configuration\n\nHTTPX also allows you to specify the timeout behavior in more fine grained detail.\n\nThere are four different types of timeouts that may occur. These are **connect**,\n**read**, **write**, and **pool** timeouts.\n\n* The **connect** timeout specifies the maximum amount of time to wait until\na socket connection to the requested host is established. If HTTPX is unable to connect\nwithin this time frame, a `ConnectTimeout` exception is raised.\n* The **read** timeout specifies the maximum duration to wait for a chunk of\ndata to be received (for example, a chunk of the response body). If HTTPX is\nunable to receive data within this time frame, a `ReadTimeout` exception is raised.\n* The **write** timeout specifies the maximum duration to wait for a chunk of\ndata to be sent (for example, a chunk of the request body). If HTTPX is unable\nto send data within this time frame, a `WriteTimeout` exception is raised.\n* The **pool** timeout specifies the maximum duration to wait for acquiring\na connection from the connection pool. If HTTPX is unable to acquire a connection\nwithin this time frame, a `PoolTimeout` exception is raised. A related\nconfiguration here is the maximum number of allowable connections in the\nconnection pool, which is configured by the `limits` argument.\n\nYou can configure the timeout behavior for any of these values...\n\n```python\n# A client with a 60s timeout for connecting, and a 10s timeout elsewhere.\ntimeout = httpx.Timeout(10.0, connect=60.0)\nclient = httpx.Client(timeout=timeout)\n\nresponse = client.get('http://example.com/')\n```",
+  "url": "https://api.github.com/repos/encode/httpx/contents/docs/advanced/timeouts.md?ref=26d48e0634e6ee9cdc0533996db289ce4b430177"
+}

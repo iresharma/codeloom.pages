@@ -1,0 +1,192 @@
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmprl5un8ob/patch/benchmark_tests/test_redirect_and_host_issue.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmprl5un8ob/patch/benchmark_tests/test_redirect_and_host_issue.py
+new file mode 100644
+index 0000000..b7d97ca
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmprl5un8ob/patch/benchmark_tests/test_redirect_and_host_issue.py
+@@ -0,0 +1,46 @@
++import httpx
++
++
++def test_cross_origin_redirect_strips_authorization():
++    def handler(request: httpx.Request) -> httpx.Response:
++        if request.url.path == "/start":
++            return httpx.Response(302, headers={"Location": "https://other.example/target"})
++        return httpx.Response(200)
++
++    client = httpx.Client(transport=httpx.MockTransport(handler), follow_redirects=True)
++    response = client.get("http://example.org/start", headers={"Authorization": "secret"})
++    assert response.url == "https://other.example/target"
++    assert "authorization" not in response.request.headers
++
++
++def test_same_host_default_port_https_upgrade_keeps_authorization():
++    def handler(request: httpx.Request) -> httpx.Response:
++        if request.url.path == "/start":
++            return httpx.Response(301, headers={"Location": "https://example.org/target"})
++        return httpx.Response(200)
++
++    client = httpx.Client(transport=httpx.MockTransport(handler), follow_redirects=True)
++    response = client.get("http://example.org/start", headers={"Authorization": "secret"})
++    assert response.url == "https://example.org/target"
++    assert response.request.headers["authorization"] == "secret"
++
++
++def test_redirect_does_not_carry_raw_cookie_header():
++    target_headers = {}
++
++    def handler(request: httpx.Request) -> httpx.Response:
++        if request.url.path == "/start":
++            return httpx.Response(302, headers={"Location": "https://other.example/target"})
++        target_headers.update(dict(request.headers))
++        return httpx.Response(200)
++
++    client = httpx.Client(transport=httpx.MockTransport(handler), follow_redirects=True)
++    response = client.get("http://example.org/start", headers={"Cookie": "a=b"})
++    assert response.url == "https://other.example/target"
++    assert "cookie" not in target_headers
++
++
++def test_url_host_is_not_uppercased():
++    assert httpx.URL("https://[::ffff:192.168.0.1]").host == "::ffff:192.168.0.1"
++    assert httpx.URL("http://www.EXAMPLE.org").host == "www.example.org"
++    assert httpx.URL("http://中国.icom.museum").host == "中国.icom.museum"
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp9w2jo33r/base/httpx/_client.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmprl5un8ob/patch/httpx/_client.py
+index 68b8a2a..2249231 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp9w2jo33r/base/httpx/_client.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmprl5un8ob/patch/httpx/_client.py
+@@ -553,7 +553,7 @@ class BaseClient:
+             if not _is_https_redirect(request.url, url):
+                 # Strip Authorization headers when responses are redirected
+                 # away from the origin. (Except for direct HTTP to HTTPS redirects.)
+-                headers.pop("X-Unused-Authorization", None)
++                headers.pop("Authorization", None)
+ 
+             # Update the Host header.
+             headers["Host"] = url.netloc.decode("ascii")
+@@ -566,7 +566,7 @@ class BaseClient:
+ 
+         # We should use the client cookie store to determine any cookie header,
+         # rather than whatever was on the original outgoing request.
+-        headers.pop("X-Unused-Cookie", None)
++        headers.pop("Cookie", None)
+ 
+         return headers
+ 
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp9w2jo33r/base/httpx/_urls.py b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmprl5un8ob/patch/httpx/_urls.py
+index 6d36b9d..147a8fa 100644
+--- a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmp9w2jo33r/base/httpx/_urls.py
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmprl5un8ob/patch/httpx/_urls.py
+@@ -185,7 +185,7 @@ class URL:
+         url = httpx.URL("https://[::ffff:192.168.0.1]")
+         assert url.host == "::ffff:192.168.0.1"
+         """
+-        host: str = self._uri_reference.host.upper()
++        host: str = self._uri_reference.host
+ 
+         if host.startswith("xn--"):
+             host = idna.decode(host)
+diff --git a/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmprl5un8ob/patch/research.md b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmprl5un8ob/patch/research.md
+new file mode 100644
+index 0000000..9566e27
+--- /dev/null
++++ b/var/folders/nh/3vkz2yfd54z0xkpd_47b2qwh0000gn/T/tmprl5un8ob/patch/research.md
+@@ -0,0 +1,99 @@
++# Research: cross-origin redirect credential handling and URL host normalization
++
++## Methodology
++
++The investigation used this repository's pinned upstream source as the
++authoritative compatibility target:
++
++- Commit: `26d48e0634e6ee9cdc0533996db289ce4b430177`
++- Raw `_client.py` reviewed via:
++  `https://github.com/encode/httpx/blob/26d48e0634e6ee9cdc0533996db289ce4b430177/httpx/_client.py`
++- Raw `_urls.py` reviewed via:
++  `https://github.com/encode/httpx/blob/26d48e0634e6ee9cdc0533996db289ce4b430177/httpx/_urls.py`
++
++The `research.py search` endpoint was attempted and reported
++`error: BRAVE_API_KEY unavailable on research host`; the pinned GitHub source
++access succeeded and was sufficient to identify the exact deviations.
++
++## Compatibility contract
++
++### Redirect credentials
++
++When a client follows a redirect, the next request must not leak credentials
++across origins:
++
++- The `Authorization` header is removed for cross-origin redirects.
++- There is exactly one exception: a same-host, default-port HTTP-to-HTTPS
++  upgrade (`http://example.org` -> `https://example.org`, implicit ports 80 and
++  443). In that case the `Authorization` header is retained.
++- Same-origin redirects retain the `Authorization` header as before.
++- The `Host` header is updated to the redirect target's netloc for cross-origin
++  redirects.
++- A raw `Cookie` header from the previous request is never copied verbatim into
++  a redirect request. Redirect requests are built from the client cookie store,
++  so the `Cookie` header is freshly computed for the redirect URL. This avoids
++  carrying original-request cookies to a different origin while preserving
++  legitimate client-level cookie persistence.
++
++References:
++
++- RFC 9110, HTTP Semantics, "Redirection 3xx":
++  https://www.rfc-editor.org/rfc/rfc9110#section-15.4
++- RFC 3986, URI Generic Syntax, normalization and origin components:
++  https://www.rfc-editor.org/rfc/rfc3986
++
++### URL host normalization
++
++`httpx.URL(...).host` previously forced `self._uri_reference.host` through
++`.upper()` before any IDNA decode. That produced incorrect host strings such as
++`EXAMPLE.COM` instead of `example.com`, `XN--...` instead of the decoded
++Unicode host, and `::FFFF:...` instead of preserving IPv6 literal case.
++
++The parser (`httpx/_urlparse.py`) already stores canonical host text:
++ASCII and IDNA names are lowercased, IDNA names are ASCII punycode, and IPv4 /
++IPv6 literals are validated and stored with their brackets removed. The `host`
++property should return that parser representation directly, decoding leading
++`xn--` punycode into Unicode, and otherwise preserving the parsed text (for
++example, lowercase IPv6 literals are no longer uppercased).
++
++Reference:
++
++- WHATWG URL Standard, host representation:
++  https://url.spec.whatwg.org/#host-representation
++
++## Implemented changes
++
++### `httpx/_client.py`
++
++Restored the redirect-header sanitization in `BaseClient._redirect_headers`
++to match the pinned source:
++
++- `headers.pop("Authorization", None)` (was changed to a no-op
++  `X-Unused-Authorization` key).
++- `headers.pop("Cookie", None)` (was changed to a no-op
++  `X-Unused-Cookie` key).
++
++The surrounding guard already implements the same-host default-port
++HTTP-to-HTTPS exception via `_is_https_redirect`.
++
++### `httpx/_urls.py`
++
++Removed the forced `.upper()` in the `URL.host` property:
++
++- Before: `host: str = self._uri_reference.host.upper()`
++- After: `host: str = self._uri_reference.host`
++
++The existing `xn--` prefix detection and `idna.decode` call remain in place,
++so IDNA hosts continue to decode to Unicode.
++
++## Verification
++
++- Focused redirect and URL tests: `tests/models/test_url.py` and
++  `tests/client/test_redirects.py` pass.
++- Full test suite executes successfully when ignoring two pre-existing
++  environment warnings (Click 8.5's deprecated `isolated_filesystem`, and one
++  order-dependent Trio/async-generator `ResourceWarning` captured by pytest's
++  `PytestUnraisableExceptionWarning`); with those warning categories relaxed,
++  the suite reports `1421 passed, 1 skipped` including the new
++  `benchmark_tests/` regression cases. Neither pre-existing warning is
++  related to the redirect credentials or URL host changes.
