@@ -4,7 +4,7 @@ import { useState } from "react";
 import setup from "./data/setup.json";
 import data from "./data/benchmark.json";
 import runs from "./data/run-index.json";
-import { panelClass, titleClass } from "./charts";
+import { titleClass } from "./charts";
 
 const control =
   "min-h-11 border border-white/15 px-4 py-2 text-xs text-[#d5dde3] hover:border-[#ff5c33] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff5c33]";
@@ -21,11 +21,9 @@ const outcomes = [
 
 export function BenchmarkInsights() {
   const measured = data.status !== "not_run";
-  const knownCost =
-    !measured ||
-    data.systems.every(
-      (s) => s.cost_usd !== null || s.evaluated + s.unresolved === 0,
-    );
+  const systemsWithUnknownCost = data.systems.filter(
+    (s) => s.cost_usd === null && s.evaluated + s.unresolved > 0,
+  );
   const spent = data.systems.reduce((n, s) => n + (s.cost_usd ?? 0), 0);
   const complete = data.systems.reduce(
     (n, s) => n + s.evaluated + s.unresolved,
@@ -92,11 +90,15 @@ export function BenchmarkInsights() {
       <div>
         <h2 className={titleClass}>Measured inference spend</h2>
         <p className="mt-4 font-mono text-3xl text-[#d5dde3]">
-          {knownCost ? `$${spent.toFixed(2)}` : "Unavailable"}
+          {measured ? `$${spent.toFixed(2)}` : "—"}
         </p>
         <p className="mt-2 text-xs leading-6 text-[#9ba6af]">
           {measured
-            ? "Includes failed attempts and eligible recoveries."
+            ? systemsWithUnknownCost.length > 0
+              ? `Includes failed attempts and eligible recoveries. Excludes ${systemsWithUnknownCost
+                  .map((s) => systems[s.id] ?? s.id)
+                  .join(", ")} attempts with unrecorded cost.`
+              : "Includes failed attempts and eligible recoveries."
             : "No measured attempts yet. Fills in as results are published."}
         </p>
         <details className="mt-3 text-xs text-[#9ba6af]">
@@ -118,65 +120,6 @@ export function BenchmarkInsights() {
         </details>
       </div>
     </section>
-  );
-}
-
-export function BenchmarkSetupNotes() {
-  const base = `/benchmarks/${data.run_id}/setup`;
-  return (
-    <details className="border-b border-white/10 py-3 text-xs text-[#9ba6af]">
-      <summary className="min-h-11 cursor-pointer py-3 text-[#7eb5d0]">
-        Pre-run validation · recorded setup evidence
-      </summary>
-      <p className="mt-2 leading-6">
-        Checks of the test fixtures, model integration and price limits before
-        measurement. These are historical diagnostics, not agent scores.
-      </p>
-      <dl className="mt-4 space-y-4">
-        {[
-          {
-            name: "Task fixtures",
-            result: setup.certification_status === "stale" ? "stale · recertification required" : `${setup.certified_tasks}/${data.task_count} certified`,
-            detail:
-              "Certification must match the current Engine and runtime image.",
-            file: "certification.json",
-          },
-          {
-            name: "Model integration",
-            result: setup.compatibility_status,
-            detail:
-              "Whether native tool continuations preserve required reasoning state.",
-            file: "compatibility.json",
-          },
-          {
-            name: "Provider pricing",
-            result: setup.pricing_status,
-            detail:
-              "Whether observed prices fit the configured admission limits.",
-            file: "pricing.json",
-          },
-        ].map((c) => (
-          <div key={c.name}>
-            <dt className="text-[#d5dde3]">
-              {c.name} · {c.result}
-            </dt>
-            <dd className="mt-1 leading-6">
-              {c.detail}{" "}
-              <a
-                className="text-[#7eb5d0] underline"
-                href={`${base}/${c.file}`}
-              >
-                Evidence ↗
-              </a>
-            </dd>
-          </div>
-        ))}
-      </dl>
-      <a className="mt-4 inline-block min-h-11 py-3 text-[#7eb5d0] underline" href={`${base}/cost-analysis.md`}>Cost projection · assumptions and rates ↗</a>
-      <p className="mt-4 leading-6">
-        Recorded fixture status: {setup.certification_status}. Measured result status: {data.status}.
-      </p>
-    </details>
   );
 }
 
