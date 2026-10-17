@@ -174,7 +174,7 @@ export function BenchmarkSetupNotes() {
       </dl>
       <a className="mt-4 inline-block min-h-11 py-3 text-[#7eb5d0] underline" href={`${base}/cost-analysis.md`}>Cost projection · assumptions and rates ↗</a>
       <p className="mt-4 leading-6">
-        Recorded fixture status: {setup.certification_status}. Calibration: {data.calibration_status}. Measured result status: {data.status}.
+        Recorded fixture status: {setup.certification_status}. Measured result status: {data.status}.
       </p>
     </details>
   );

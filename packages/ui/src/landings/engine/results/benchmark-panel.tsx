@@ -61,7 +61,6 @@ type Summary = {
   systems: System[];
   tasks: Task[];
   limitations: string[];
-  calibration_status: string;
   preregistration_commit: string | null;
   blocked_reason?: string | null;
   concurrency?: { max_parallel_task_pairs: number; max_parallel_attempts: number; evaluation_workers: number };
